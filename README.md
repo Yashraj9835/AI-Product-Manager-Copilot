@@ -355,14 +355,11 @@ gunicorn
 
 # 👨‍💻 Author
 
-**Partha Sarathi Majhi**
+**Yash Raj**
 
-🎓 B.Tech (Artificial Intelligence & Machine Learning)
+Infosys Springboard virtual 7.0 Internship 
 
-📍 Rungta College of Engineering and Technology
 
-💼 Aspiring AI Engineer | Generative AI | Agentic AI | RAG | LLMs | Product AI
 
-🔗 LinkedIn: *(Add your profile link here)*
 
 ⭐ If you found this project useful, don't forget to **Star** this repository!
