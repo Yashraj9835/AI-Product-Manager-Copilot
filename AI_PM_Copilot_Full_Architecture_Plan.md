@@ -465,12 +465,3 @@ ai-pm-copilot/
 
 ---
 
-## 7. Immediate Next Steps From Where You Are
-
-Since Milestone 1 already covers ingestion/preprocessing/categorization scaffolding on FastAPI + PostgreSQL + Celery/Redis, the next concrete actions are:
-
-1. Confirm your `raw_items` and `data_sources` tables match (or extend) the schema above.
-2. Get one CSV/manual upload adapter fully working end-to-end (upload → raw_items → Celery task fires → mark processed) before touching real API integrations — this validates the whole async plumbing cheaply.
-3. Stub Module 4's classification task with a hardcoded/mock response first, wire the pipeline, then swap in the real Claude call — decouples "is my pipeline correct" from "is my prompt good."
-
-If you want, I can generate the actual FastAPI project skeleton (models, first migration, one working ingestion endpoint + Celery task) as real code next.
