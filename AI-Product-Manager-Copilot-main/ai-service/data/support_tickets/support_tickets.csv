@@ -1,0 +1,301 @@
+ticket_id,issue,status
+1,Wrong item delivered,In Progress
+2,Payment failed,Closed
+3,Wrong item delivered,Open
+4,Restaurant closed after accepting order,Open
+5,Coupon not working,In Progress
+6,Order delayed,Closed
+7,Restaurant closed after accepting order,Closed
+8,Coupon not working,In Progress
+9,Wrong item delivered,Open
+10,Payment failed,Closed
+11,Order delayed,Open
+12,Coupon not working,Closed
+13,Refund not received,Closed
+14,Restaurant closed after accepting order,In Progress
+15,Wrong item delivered,Closed
+16,Wrong item delivered,In Progress
+17,Coupon not working,In Progress
+18,Order delayed,Closed
+19,Unable to login,Closed
+20,Refund not received,Open
+21,Payment failed,Closed
+22,Coupon not working,Open
+23,Wrong item delivered,In Progress
+24,Wrong item delivered,Closed
+25,Restaurant closed after accepting order,Closed
+26,Coupon not working,In Progress
+27,Wrong item delivered,Closed
+28,Refund not received,Closed
+29,Refund not received,Closed
+30,Unable to login,Closed
+31,Refund not received,In Progress
+32,Payment failed,Open
+33,Wrong item delivered,In Progress
+34,Payment failed,Closed
+35,Unable to login,Open
+36,Order delayed,Open
+37,Restaurant closed after accepting order,In Progress
+38,Wrong item delivered,Open
+39,Wrong item delivered,Open
+40,Payment failed,In Progress
+41,Wrong item delivered,Open
+42,Unable to login,In Progress
+43,Order delayed,Closed
+44,Unable to login,In Progress
+45,Coupon not working,Open
+46,Order delayed,Closed
+47,Order delayed,In Progress
+48,Refund not received,In Progress
+49,Unable to login,Open
+50,Restaurant closed after accepting order,Closed
+51,Coupon not working,In Progress
+52,Wrong item delivered,Closed
+53,Coupon not working,Closed
+54,Order delayed,In Progress
+55,Payment failed,Closed
+56,Restaurant closed after accepting order,In Progress
+57,Payment failed,In Progress
+58,Coupon not working,In Progress
+59,Wrong item delivered,Open
+60,Unable to login,In Progress
+61,Coupon not working,Closed
+62,Coupon not working,Open
+63,Order delayed,In Progress
+64,Wrong item delivered,Open
+65,Wrong item delivered,In Progress
+66,Refund not received,Closed
+67,Payment failed,Open
+68,Unable to login,Closed
+69,Coupon not working,Open
+70,Restaurant closed after accepting order,Closed
+71,Coupon not working,Open
+72,Wrong item delivered,Open
+73,Order delayed,Closed
+74,Refund not received,Closed
+75,Refund not received,Open
+76,Payment failed,In Progress
+77,Restaurant closed after accepting order,Open
+78,Wrong item delivered,In Progress
+79,Wrong item delivered,Closed
+80,Unable to login,In Progress
+81,Restaurant closed after accepting order,In Progress
+82,Order delayed,In Progress
+83,Coupon not working,Closed
+84,Wrong item delivered,Closed
+85,Restaurant closed after accepting order,In Progress
+86,Wrong item delivered,Open
+87,Order delayed,Closed
+88,Refund not received,Open
+89,Order delayed,Closed
+90,Restaurant closed after accepting order,Closed
+91,Refund not received,Closed
+92,Order delayed,Open
+93,Order delayed,Open
+94,Refund not received,Open
+95,Coupon not working,Open
+96,Order delayed,In Progress
+97,Restaurant closed after accepting order,Open
+98,Coupon not working,Open
+99,Coupon not working,Closed
+100,Order delayed,In Progress
+101,Unable to login,Open
+102,Wrong item delivered,Open
+103,Refund not received,Closed
+104,Wrong item delivered,Open
+105,Refund not received,In Progress
+106,Refund not received,Closed
+107,Coupon not working,In Progress
+108,Coupon not working,In Progress
+109,Unable to login,Closed
+110,Payment failed,Open
+111,Payment failed,Open
+112,Order delayed,In Progress
+113,Coupon not working,Open
+114,Wrong item delivered,In Progress
+115,Payment failed,In Progress
+116,Coupon not working,Open
+117,Coupon not working,Closed
+118,Coupon not working,In Progress
+119,Refund not received,In Progress
+120,Order delayed,In Progress
+121,Payment failed,In Progress
+122,Wrong item delivered,In Progress
+123,Unable to login,Closed
+124,Payment failed,Open
+125,Refund not received,In Progress
+126,Refund not received,Closed
+127,Coupon not working,Open
+128,Unable to login,Closed
+129,Order delayed,Open
+130,Unable to login,In Progress
+131,Unable to login,Open
+132,Order delayed,In Progress
+133,Order delayed,Closed
+134,Coupon not working,In Progress
+135,Wrong item delivered,Closed
+136,Refund not received,In Progress
+137,Order delayed,Open
+138,Coupon not working,Closed
+139,Refund not received,Open
+140,Payment failed,Open
+141,Coupon not working,In Progress
+142,Unable to login,In Progress
+143,Wrong item delivered,Closed
+144,Unable to login,Open
+145,Order delayed,Open
+146,Coupon not working,Closed
+147,Order delayed,In Progress
+148,Payment failed,In Progress
+149,Order delayed,Open
+150,Payment failed,Closed
+151,Wrong item delivered,Open
+152,Order delayed,In Progress
+153,Unable to login,Open
+154,Unable to login,In Progress
+155,Wrong item delivered,Closed
+156,Order delayed,Closed
+157,Restaurant closed after accepting order,Open
+158,Wrong item delivered,In Progress
+159,Refund not received,Open
+160,Unable to login,Closed
+161,Unable to login,Closed
+162,Restaurant closed after accepting order,In Progress
+163,Unable to login,In Progress
+164,Unable to login,In Progress
+165,Order delayed,Open
+166,Refund not received,Open
+167,Restaurant closed after accepting order,Closed
+168,Unable to login,Open
+169,Unable to login,Open
+170,Restaurant closed after accepting order,In Progress
+171,Order delayed,Closed
+172,Restaurant closed after accepting order,Open
+173,Payment failed,In Progress
+174,Wrong item delivered,Open
+175,Order delayed,In Progress
+176,Payment failed,In Progress
+177,Payment failed,Closed
+178,Wrong item delivered,Open
+179,Wrong item delivered,Closed
+180,Refund not received,Closed
+181,Payment failed,Open
+182,Refund not received,In Progress
+183,Order delayed,Closed
+184,Restaurant closed after accepting order,In Progress
+185,Refund not received,In Progress
+186,Restaurant closed after accepting order,In Progress
+187,Restaurant closed after accepting order,In Progress
+188,Refund not received,Open
+189,Refund not received,In Progress
+190,Unable to login,In Progress
+191,Refund not received,Open
+192,Restaurant closed after accepting order,In Progress
+193,Order delayed,Closed
+194,Restaurant closed after accepting order,Closed
+195,Order delayed,Closed
+196,Unable to login,In Progress
+197,Refund not received,In Progress
+198,Coupon not working,In Progress
+199,Payment failed,In Progress
+200,Coupon not working,Closed
+201,Unable to login,In Progress
+202,Coupon not working,Open
+203,Coupon not working,In Progress
+204,Refund not received,Closed
+205,Unable to login,In Progress
+206,Order delayed,In Progress
+207,Wrong item delivered,In Progress
+208,Payment failed,Open
+209,Refund not received,In Progress
+210,Payment failed,Open
+211,Unable to login,Open
+212,Refund not received,In Progress
+213,Refund not received,Open
+214,Payment failed,Closed
+215,Coupon not working,Closed
+216,Payment failed,In Progress
+217,Payment failed,In Progress
+218,Refund not received,Closed
+219,Order delayed,In Progress
+220,Order delayed,Closed
+221,Wrong item delivered,In Progress
+222,Payment failed,Open
+223,Wrong item delivered,Closed
+224,Refund not received,Open
+225,Coupon not working,In Progress
+226,Unable to login,In Progress
+227,Restaurant closed after accepting order,Open
+228,Payment failed,In Progress
+229,Order delayed,In Progress
+230,Wrong item delivered,Open
+231,Order delayed,Open
+232,Wrong item delivered,Open
+233,Restaurant closed after accepting order,Open
+234,Wrong item delivered,Open
+235,Coupon not working,Open
+236,Restaurant closed after accepting order,Closed
+237,Restaurant closed after accepting order,In Progress
+238,Refund not received,Closed
+239,Order delayed,Open
+240,Order delayed,Open
+241,Wrong item delivered,In Progress
+242,Payment failed,Open
+243,Order delayed,Closed
+244,Wrong item delivered,In Progress
+245,Order delayed,Closed
+246,Restaurant closed after accepting order,Closed
+247,Coupon not working,In Progress
+248,Coupon not working,Closed
+249,Refund not received,In Progress
+250,Payment failed,Closed
+251,Coupon not working,Closed
+252,Order delayed,Open
+253,Order delayed,Open
+254,Order delayed,Closed
+255,Restaurant closed after accepting order,Open
+256,Unable to login,In Progress
+257,Restaurant closed after accepting order,In Progress
+258,Unable to login,In Progress
+259,Restaurant closed after accepting order,In Progress
+260,Refund not received,Closed
+261,Order delayed,Closed
+262,Unable to login,Open
+263,Unable to login,Closed
+264,Unable to login,Closed
+265,Wrong item delivered,Closed
+266,Order delayed,Open
+267,Refund not received,Open
+268,Restaurant closed after accepting order,Open
+269,Refund not received,In Progress
+270,Unable to login,Open
+271,Wrong item delivered,In Progress
+272,Coupon not working,Closed
+273,Refund not received,Closed
+274,Order delayed,In Progress
+275,Payment failed,In Progress
+276,Unable to login,Closed
+277,Coupon not working,Closed
+278,Payment failed,Closed
+279,Wrong item delivered,In Progress
+280,Unable to login,Closed
+281,Payment failed,In Progress
+282,Coupon not working,Closed
+283,Restaurant closed after accepting order,Closed
+284,Coupon not working,In Progress
+285,Restaurant closed after accepting order,Open
+286,Wrong item delivered,In Progress
+287,Coupon not working,Closed
+288,Wrong item delivered,Open
+289,Coupon not working,In Progress
+290,Coupon not working,Closed
+291,Coupon not working,Open
+292,Coupon not working,Open
+293,Unable to login,In Progress
+294,Restaurant closed after accepting order,Open
+295,Unable to login,Open
+296,Payment failed,Open
+297,Wrong item delivered,In Progress
+298,Refund not received,In Progress
+299,Payment failed,In Progress
+300,Payment failed,Closed

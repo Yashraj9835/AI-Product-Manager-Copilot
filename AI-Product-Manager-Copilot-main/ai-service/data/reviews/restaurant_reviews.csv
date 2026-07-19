@@ -1,0 +1,1001 @@
+review_id,restaurant,menu_item,rating,review,date
+1,Burger Barn,Pizza,5,Great customer service. Ordered Pizza.,2026-03-04
+2,Cafe Aroma,Pasta,2,Delivery was late. Ordered Pasta.,2026-06-23
+3,Burger Barn,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-01-08
+4,Burger Barn,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-05-10
+5,Pizza Hub,Biryani,3,Too expensive for the portion. Ordered Biryani.,2026-04-18
+6,Cafe Aroma,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-03-13
+7,Pizza Hub,Pasta,1,App payment failed. Ordered Pasta.,2026-03-29
+8,Taco Town,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-03-28
+9,Burger Barn,Burger,1,App payment failed. Ordered Burger.,2026-01-25
+10,Sushi Spot,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-03-09
+11,Pizza Hub,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-02-01
+12,Biryani House,Burger,3,Too expensive for the portion. Ordered Burger.,2026-03-17
+13,Sushi Spot,Biryani,2,Delivery was late. Ordered Biryani.,2026-01-12
+14,Cafe Aroma,Taco,2,Delivery was late. Ordered Taco.,2026-03-01
+15,Burger Barn,Sandwich,5,Great customer service. Ordered Sandwich.,2026-04-27
+16,Sushi Spot,Pasta,1,Order was incorrect. Ordered Pasta.,2026-04-01
+17,Cafe Aroma,Taco,2,Delivery was late. Ordered Taco.,2026-06-05
+18,Spice Villa,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-04-29
+19,Biryani House,Taco,3,Too expensive for the portion. Ordered Taco.,2026-02-26
+20,Sushi Spot,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-01-09
+21,Sushi Spot,Sandwich,5,Great customer service. Ordered Sandwich.,2026-01-17
+22,Cafe Aroma,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-06-17
+23,Pasta Point,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-02-06
+24,Taco Town,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-05-24
+25,Taco Town,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-04-13
+26,Sushi Spot,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-05-11
+27,Pasta Point,Burger,2,Food arrived cold. Ordered Burger.,2026-01-29
+28,Spice Villa,Pasta,1,App payment failed. Ordered Pasta.,2026-06-02
+29,Burger Barn,Sandwich,1,App payment failed. Ordered Sandwich.,2026-06-02
+30,Pasta Point,Taco,3,Too expensive for the portion. Ordered Taco.,2026-01-03
+31,Burger Barn,Taco,1,Order was incorrect. Ordered Taco.,2026-01-29
+32,Taco Town,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-04-27
+33,Pizza Hub,Taco,3,Too expensive for the portion. Ordered Taco.,2026-02-15
+34,Burger Barn,Taco,3,Too expensive for the portion. Ordered Taco.,2026-06-05
+35,Cafe Aroma,Pasta,1,Order was incorrect. Ordered Pasta.,2026-02-11
+36,Pizza Hub,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-01-05
+37,Burger Barn,Sushi,5,Great customer service. Ordered Sushi.,2026-03-03
+38,Pizza Hub,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-01-21
+39,Burger Barn,Coffee,2,Delivery was late. Ordered Coffee.,2026-05-17
+40,Spice Villa,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-05-21
+41,Spice Villa,Taco,3,Too expensive for the portion. Ordered Taco.,2026-06-05
+42,Biryani House,Biryani,3,Too expensive for the portion. Ordered Biryani.,2026-06-26
+43,Cafe Aroma,Taco,1,App payment failed. Ordered Taco.,2026-06-21
+44,Sushi Spot,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-04-26
+45,Burger Barn,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-01-17
+46,Sushi Spot,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-05-22
+47,Cafe Aroma,Biryani,2,Food arrived cold. Ordered Biryani.,2026-01-19
+48,Pizza Hub,Biryani,2,Delivery was late. Ordered Biryani.,2026-01-09
+49,Sushi Spot,Burger,3,Too expensive for the portion. Ordered Burger.,2026-03-02
+50,Taco Town,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-05-19
+51,Spice Villa,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-05-02
+52,Biryani House,Biryani,2,Delivery was late. Ordered Biryani.,2026-01-25
+53,Biryani House,Sushi,1,App payment failed. Ordered Sushi.,2026-04-16
+54,Pasta Point,Pizza,2,Delivery was late. Ordered Pizza.,2026-01-16
+55,Biryani House,Sushi,2,Delivery was late. Ordered Sushi.,2026-03-05
+56,Cafe Aroma,Biryani,3,Too expensive for the portion. Ordered Biryani.,2026-04-25
+57,Spice Villa,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-03-13
+58,Pasta Point,Biryani,2,Delivery was late. Ordered Biryani.,2026-04-24
+59,Burger Barn,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-01-04
+60,Burger Barn,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-04-15
+61,Pasta Point,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-04-13
+62,Pizza Hub,Pasta,1,App payment failed. Ordered Pasta.,2026-01-01
+63,Biryani House,Taco,5,Loved the quick delivery. Ordered Taco.,2026-03-15
+64,Biryani House,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-02-18
+65,Taco Town,Biryani,2,Food arrived cold. Ordered Biryani.,2026-05-29
+66,Pizza Hub,Sushi,2,Food arrived cold. Ordered Sushi.,2026-01-13
+67,Pasta Point,Pasta,2,Food arrived cold. Ordered Pasta.,2026-05-11
+68,Burger Barn,Pasta,2,Delivery was late. Ordered Pasta.,2026-06-02
+69,Burger Barn,Biryani,1,App payment failed. Ordered Biryani.,2026-01-31
+70,Cafe Aroma,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-01-21
+71,Biryani House,Sushi,5,Great customer service. Ordered Sushi.,2026-02-22
+72,Sushi Spot,Biryani,5,Great customer service. Ordered Biryani.,2026-04-12
+73,Spice Villa,Taco,5,Loved the quick delivery. Ordered Taco.,2026-03-22
+74,Burger Barn,Pizza,5,Loved the quick delivery. Ordered Pizza.,2026-06-09
+75,Burger Barn,Burger,3,Too expensive for the portion. Ordered Burger.,2026-02-24
+76,Taco Town,Pasta,1,Order was incorrect. Ordered Pasta.,2026-01-18
+77,Cafe Aroma,Sushi,5,Great customer service. Ordered Sushi.,2026-02-10
+78,Pasta Point,Taco,5,Easy ordering experience. Ordered Taco.,2026-06-17
+79,Pizza Hub,Taco,2,Delivery was late. Ordered Taco.,2026-02-04
+80,Taco Town,Burger,2,Delivery was late. Ordered Burger.,2026-05-22
+81,Spice Villa,Taco,5,Great customer service. Ordered Taco.,2026-06-04
+82,Cafe Aroma,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-06-25
+83,Taco Town,Coffee,5,Great customer service. Ordered Coffee.,2026-01-14
+84,Burger Barn,Sandwich,5,Great customer service. Ordered Sandwich.,2026-01-12
+85,Pizza Hub,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-06-13
+86,Taco Town,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-05-22
+87,Biryani House,Pizza,2,Delivery was late. Ordered Pizza.,2026-01-20
+88,Spice Villa,Pizza,1,Order was incorrect. Ordered Pizza.,2026-05-30
+89,Spice Villa,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-01-11
+90,Taco Town,Sushi,2,Food arrived cold. Ordered Sushi.,2026-04-02
+91,Cafe Aroma,Biryani,2,Delivery was late. Ordered Biryani.,2026-04-01
+92,Biryani House,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-02-11
+93,Spice Villa,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-02-15
+94,Sushi Spot,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-03-10
+95,Spice Villa,Burger,1,App payment failed. Ordered Burger.,2026-01-10
+96,Pasta Point,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-04-28
+97,Sushi Spot,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-02-27
+98,Pizza Hub,Biryani,1,App payment failed. Ordered Biryani.,2026-03-26
+99,Taco Town,Burger,5,Great customer service. Ordered Burger.,2026-03-31
+100,Biryani House,Sushi,2,Food arrived cold. Ordered Sushi.,2026-01-30
+101,Taco Town,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-03-09
+102,Pizza Hub,Burger,5,Easy ordering experience. Ordered Burger.,2026-04-22
+103,Sushi Spot,Sushi,1,App payment failed. Ordered Sushi.,2026-06-05
+104,Burger Barn,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-02-18
+105,Taco Town,Pizza,1,App payment failed. Ordered Pizza.,2026-01-01
+106,Cafe Aroma,Sushi,1,App payment failed. Ordered Sushi.,2026-01-18
+107,Sushi Spot,Sushi,2,Delivery was late. Ordered Sushi.,2026-03-18
+108,Taco Town,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-04-14
+109,Taco Town,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-04-18
+110,Biryani House,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-05-26
+111,Taco Town,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-01-01
+112,Taco Town,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-04-21
+113,Sushi Spot,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-04-24
+114,Cafe Aroma,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-06-18
+115,Burger Barn,Taco,3,Too expensive for the portion. Ordered Taco.,2026-06-19
+116,Sushi Spot,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-06-22
+117,Taco Town,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-02-07
+118,Pizza Hub,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-05-02
+119,Burger Barn,Coffee,1,App payment failed. Ordered Coffee.,2026-06-11
+120,Cafe Aroma,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-04-13
+121,Cafe Aroma,Pasta,2,Food arrived cold. Ordered Pasta.,2026-01-28
+122,Biryani House,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-06-28
+123,Pasta Point,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-03-05
+124,Burger Barn,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-04-29
+125,Sushi Spot,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-05-10
+126,Biryani House,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-05-02
+127,Pasta Point,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-06-13
+128,Taco Town,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-03-12
+129,Pasta Point,Burger,5,Great customer service. Ordered Burger.,2026-03-02
+130,Taco Town,Sushi,1,Order was incorrect. Ordered Sushi.,2026-05-19
+131,Burger Barn,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-03-01
+132,Biryani House,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-01-17
+133,Biryani House,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-05-19
+134,Pasta Point,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-02-22
+135,Biryani House,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-06-28
+136,Pizza Hub,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-01-02
+137,Sushi Spot,Taco,1,App payment failed. Ordered Taco.,2026-04-18
+138,Cafe Aroma,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-03-11
+139,Biryani House,Coffee,2,Food arrived cold. Ordered Coffee.,2026-04-10
+140,Sushi Spot,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-04-30
+141,Spice Villa,Pizza,1,App payment failed. Ordered Pizza.,2026-06-01
+142,Pizza Hub,Burger,1,App payment failed. Ordered Burger.,2026-02-04
+143,Pasta Point,Pasta,2,Food arrived cold. Ordered Pasta.,2026-03-08
+144,Biryani House,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-04-27
+145,Sushi Spot,Sushi,1,App payment failed. Ordered Sushi.,2026-03-13
+146,Biryani House,Taco,2,Delivery was late. Ordered Taco.,2026-05-01
+147,Pizza Hub,Pizza,1,Order was incorrect. Ordered Pizza.,2026-02-27
+148,Burger Barn,Pizza,2,Food arrived cold. Ordered Pizza.,2026-03-05
+149,Cafe Aroma,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-02-09
+150,Cafe Aroma,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-06-21
+151,Burger Barn,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-06-29
+152,Taco Town,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-06-05
+153,Burger Barn,Pasta,5,Great customer service. Ordered Pasta.,2026-01-28
+154,Pizza Hub,Taco,5,Easy ordering experience. Ordered Taco.,2026-06-23
+155,Biryani House,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-01-20
+156,Cafe Aroma,Burger,5,Great customer service. Ordered Burger.,2026-06-25
+157,Burger Barn,Pizza,1,Order was incorrect. Ordered Pizza.,2026-05-17
+158,Biryani House,Sushi,2,Delivery was late. Ordered Sushi.,2026-05-10
+159,Sushi Spot,Pizza,1,App payment failed. Ordered Pizza.,2026-05-06
+160,Burger Barn,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-06-12
+161,Pasta Point,Pasta,1,App payment failed. Ordered Pasta.,2026-02-15
+162,Taco Town,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-04-22
+163,Taco Town,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-01-23
+164,Taco Town,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-04-29
+165,Biryani House,Sushi,2,Food arrived cold. Ordered Sushi.,2026-05-07
+166,Sushi Spot,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-02-24
+167,Sushi Spot,Taco,1,Order was incorrect. Ordered Taco.,2026-03-13
+168,Taco Town,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-02-18
+169,Burger Barn,Biryani,1,App payment failed. Ordered Biryani.,2026-05-06
+170,Cafe Aroma,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-04-25
+171,Pizza Hub,Burger,5,Great customer service. Ordered Burger.,2026-02-26
+172,Biryani House,Biryani,5,Great customer service. Ordered Biryani.,2026-06-19
+173,Sushi Spot,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-05-16
+174,Sushi Spot,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-03-26
+175,Sushi Spot,Coffee,5,Great customer service. Ordered Coffee.,2026-03-20
+176,Taco Town,Biryani,2,Delivery was late. Ordered Biryani.,2026-02-19
+177,Sushi Spot,Burger,3,Too expensive for the portion. Ordered Burger.,2026-06-26
+178,Spice Villa,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-05-04
+179,Taco Town,Taco,2,Delivery was late. Ordered Taco.,2026-02-19
+180,Taco Town,Biryani,1,Order was incorrect. Ordered Biryani.,2026-02-15
+181,Taco Town,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-02-02
+182,Taco Town,Pizza,2,Food arrived cold. Ordered Pizza.,2026-05-22
+183,Taco Town,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-01-27
+184,Pizza Hub,Taco,5,Loved the quick delivery. Ordered Taco.,2026-05-03
+185,Pasta Point,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-01-14
+186,Taco Town,Coffee,2,Delivery was late. Ordered Coffee.,2026-01-17
+187,Biryani House,Coffee,2,Delivery was late. Ordered Coffee.,2026-05-28
+188,Pizza Hub,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-05-25
+189,Taco Town,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-01-31
+190,Biryani House,Biryani,3,Too expensive for the portion. Ordered Biryani.,2026-04-08
+191,Pasta Point,Coffee,5,Great customer service. Ordered Coffee.,2026-05-31
+192,Biryani House,Taco,5,Easy ordering experience. Ordered Taco.,2026-06-08
+193,Pizza Hub,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-06-10
+194,Cafe Aroma,Taco,2,Delivery was late. Ordered Taco.,2026-02-10
+195,Cafe Aroma,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-01-20
+196,Spice Villa,Pizza,1,App payment failed. Ordered Pizza.,2026-04-26
+197,Pasta Point,Taco,2,Food arrived cold. Ordered Taco.,2026-03-01
+198,Taco Town,Taco,5,Loved the quick delivery. Ordered Taco.,2026-01-19
+199,Cafe Aroma,Taco,5,Easy ordering experience. Ordered Taco.,2026-06-19
+200,Cafe Aroma,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-05-20
+201,Cafe Aroma,Pasta,5,Great customer service. Ordered Pasta.,2026-02-06
+202,Burger Barn,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-03-20
+203,Taco Town,Coffee,2,Delivery was late. Ordered Coffee.,2026-04-30
+204,Taco Town,Sandwich,5,Great customer service. Ordered Sandwich.,2026-05-09
+205,Pasta Point,Coffee,2,Delivery was late. Ordered Coffee.,2026-06-03
+206,Pizza Hub,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-06-04
+207,Taco Town,Pizza,2,Delivery was late. Ordered Pizza.,2026-02-28
+208,Pizza Hub,Taco,5,Easy ordering experience. Ordered Taco.,2026-01-11
+209,Spice Villa,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-06-16
+210,Pasta Point,Taco,2,Packaging was damaged. Ordered Taco.,2026-05-30
+211,Biryani House,Coffee,2,Delivery was late. Ordered Coffee.,2026-05-01
+212,Sushi Spot,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-03-24
+213,Burger Barn,Pasta,1,Order was incorrect. Ordered Pasta.,2026-04-16
+214,Pasta Point,Taco,1,App payment failed. Ordered Taco.,2026-05-21
+215,Pizza Hub,Coffee,2,Delivery was late. Ordered Coffee.,2026-03-22
+216,Taco Town,Sushi,2,Delivery was late. Ordered Sushi.,2026-04-14
+217,Pizza Hub,Coffee,1,App payment failed. Ordered Coffee.,2026-01-14
+218,Cafe Aroma,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-05-08
+219,Pasta Point,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-03-10
+220,Spice Villa,Taco,5,Loved the quick delivery. Ordered Taco.,2026-06-28
+221,Pasta Point,Burger,2,Food arrived cold. Ordered Burger.,2026-06-11
+222,Cafe Aroma,Pasta,5,Great customer service. Ordered Pasta.,2026-05-22
+223,Pizza Hub,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-02-27
+224,Burger Barn,Coffee,2,Delivery was late. Ordered Coffee.,2026-06-15
+225,Spice Villa,Coffee,5,Great customer service. Ordered Coffee.,2026-05-11
+226,Taco Town,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-05-01
+227,Cafe Aroma,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-02-07
+228,Biryani House,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-05-11
+229,Spice Villa,Burger,5,Great customer service. Ordered Burger.,2026-04-17
+230,Sushi Spot,Taco,2,Food arrived cold. Ordered Taco.,2026-03-14
+231,Taco Town,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-04-25
+232,Pasta Point,Sushi,1,Order was incorrect. Ordered Sushi.,2026-05-22
+233,Biryani House,Coffee,1,Order was incorrect. Ordered Coffee.,2026-02-18
+234,Cafe Aroma,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-04-16
+235,Pizza Hub,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-06-30
+236,Biryani House,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-05-07
+237,Pizza Hub,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-06-01
+238,Sushi Spot,Burger,5,Loved the quick delivery. Ordered Burger.,2026-01-26
+239,Pasta Point,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-04-15
+240,Spice Villa,Burger,5,Loved the quick delivery. Ordered Burger.,2026-03-09
+241,Sushi Spot,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-03-26
+242,Biryani House,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-05-19
+243,Pizza Hub,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-06-11
+244,Taco Town,Biryani,2,Delivery was late. Ordered Biryani.,2026-04-22
+245,Burger Barn,Burger,5,Loved the quick delivery. Ordered Burger.,2026-02-12
+246,Taco Town,Pizza,2,Food arrived cold. Ordered Pizza.,2026-03-25
+247,Pizza Hub,Taco,1,Order was incorrect. Ordered Taco.,2026-04-06
+248,Biryani House,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-05-16
+249,Biryani House,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-02-14
+250,Burger Barn,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-06-24
+251,Cafe Aroma,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-02-06
+252,Cafe Aroma,Coffee,5,Great customer service. Ordered Coffee.,2026-04-28
+253,Taco Town,Pizza,5,Loved the quick delivery. Ordered Pizza.,2026-03-15
+254,Spice Villa,Burger,5,Loved the quick delivery. Ordered Burger.,2026-03-30
+255,Taco Town,Sandwich,5,Great customer service. Ordered Sandwich.,2026-04-27
+256,Taco Town,Biryani,1,App payment failed. Ordered Biryani.,2026-05-04
+257,Burger Barn,Biryani,1,App payment failed. Ordered Biryani.,2026-05-27
+258,Sushi Spot,Taco,5,Great customer service. Ordered Taco.,2026-01-06
+259,Biryani House,Taco,2,Food arrived cold. Ordered Taco.,2026-05-25
+260,Pizza Hub,Coffee,5,Great customer service. Ordered Coffee.,2026-02-28
+261,Sushi Spot,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-06-08
+262,Taco Town,Pasta,2,Delivery was late. Ordered Pasta.,2026-06-10
+263,Pizza Hub,Taco,5,Loved the quick delivery. Ordered Taco.,2026-01-09
+264,Sushi Spot,Pasta,2,Delivery was late. Ordered Pasta.,2026-03-17
+265,Sushi Spot,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-02-21
+266,Spice Villa,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-05-09
+267,Taco Town,Pasta,5,Great customer service. Ordered Pasta.,2026-05-04
+268,Taco Town,Sushi,2,Delivery was late. Ordered Sushi.,2026-04-30
+269,Burger Barn,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-06-23
+270,Biryani House,Sushi,2,Delivery was late. Ordered Sushi.,2026-04-12
+271,Pizza Hub,Taco,3,Too expensive for the portion. Ordered Taco.,2026-02-01
+272,Pasta Point,Sushi,5,Great customer service. Ordered Sushi.,2026-05-30
+273,Biryani House,Sushi,2,Delivery was late. Ordered Sushi.,2026-06-22
+274,Cafe Aroma,Coffee,2,Food arrived cold. Ordered Coffee.,2026-06-08
+275,Sushi Spot,Biryani,2,Delivery was late. Ordered Biryani.,2026-06-12
+276,Pasta Point,Taco,1,App payment failed. Ordered Taco.,2026-01-30
+277,Spice Villa,Pizza,2,Food arrived cold. Ordered Pizza.,2026-03-19
+278,Pasta Point,Burger,2,Delivery was late. Ordered Burger.,2026-03-02
+279,Spice Villa,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-04-05
+280,Biryani House,Pasta,1,App payment failed. Ordered Pasta.,2026-06-17
+281,Burger Barn,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-04-15
+282,Taco Town,Pizza,1,Order was incorrect. Ordered Pizza.,2026-02-25
+283,Pasta Point,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-04-03
+284,Burger Barn,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-06-15
+285,Sushi Spot,Pizza,1,App payment failed. Ordered Pizza.,2026-03-12
+286,Cafe Aroma,Burger,5,Loved the quick delivery. Ordered Burger.,2026-01-24
+287,Cafe Aroma,Pizza,2,Food arrived cold. Ordered Pizza.,2026-03-27
+288,Cafe Aroma,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-02-22
+289,Burger Barn,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-02-25
+290,Cafe Aroma,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-06-02
+291,Pizza Hub,Taco,2,Packaging was damaged. Ordered Taco.,2026-02-03
+292,Taco Town,Pasta,2,Delivery was late. Ordered Pasta.,2026-06-19
+293,Pizza Hub,Pasta,2,Food arrived cold. Ordered Pasta.,2026-04-02
+294,Cafe Aroma,Sushi,2,Food arrived cold. Ordered Sushi.,2026-02-14
+295,Taco Town,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-04-18
+296,Burger Barn,Burger,5,Loved the quick delivery. Ordered Burger.,2026-04-25
+297,Sushi Spot,Burger,5,Loved the quick delivery. Ordered Burger.,2026-05-09
+298,Cafe Aroma,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-03-19
+299,Pasta Point,Pizza,2,Food arrived cold. Ordered Pizza.,2026-05-03
+300,Biryani House,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-05-06
+301,Pasta Point,Burger,2,Delivery was late. Ordered Burger.,2026-03-24
+302,Spice Villa,Burger,2,Packaging was damaged. Ordered Burger.,2026-03-12
+303,Sushi Spot,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-05-16
+304,Taco Town,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-06-04
+305,Biryani House,Burger,2,Delivery was late. Ordered Burger.,2026-06-17
+306,Cafe Aroma,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-02-28
+307,Biryani House,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-04-13
+308,Biryani House,Burger,1,Order was incorrect. Ordered Burger.,2026-04-20
+309,Sushi Spot,Taco,1,Order was incorrect. Ordered Taco.,2026-02-09
+310,Pasta Point,Burger,2,Delivery was late. Ordered Burger.,2026-01-22
+311,Burger Barn,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-04-06
+312,Spice Villa,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-05-24
+313,Sushi Spot,Burger,1,App payment failed. Ordered Burger.,2026-04-01
+314,Biryani House,Pizza,5,Great customer service. Ordered Pizza.,2026-06-03
+315,Taco Town,Sushi,2,Delivery was late. Ordered Sushi.,2026-05-28
+316,Cafe Aroma,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-02-27
+317,Burger Barn,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-04-05
+318,Burger Barn,Taco,5,Easy ordering experience. Ordered Taco.,2026-02-27
+319,Biryani House,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-06-18
+320,Taco Town,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-03-11
+321,Taco Town,Sushi,1,Order was incorrect. Ordered Sushi.,2026-01-02
+322,Spice Villa,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-06-18
+323,Biryani House,Burger,2,Packaging was damaged. Ordered Burger.,2026-06-12
+324,Pizza Hub,Burger,3,Too expensive for the portion. Ordered Burger.,2026-02-25
+325,Biryani House,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-03-29
+326,Spice Villa,Sushi,5,Great customer service. Ordered Sushi.,2026-03-25
+327,Burger Barn,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-02-10
+328,Pizza Hub,Burger,5,Great customer service. Ordered Burger.,2026-04-24
+329,Biryani House,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-04-24
+330,Biryani House,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-05-12
+331,Burger Barn,Sushi,1,App payment failed. Ordered Sushi.,2026-01-29
+332,Taco Town,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-06-20
+333,Taco Town,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-04-12
+334,Pizza Hub,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-03-19
+335,Cafe Aroma,Pasta,5,Great customer service. Ordered Pasta.,2026-03-16
+336,Sushi Spot,Burger,2,Food arrived cold. Ordered Burger.,2026-05-08
+337,Biryani House,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-04-08
+338,Cafe Aroma,Sushi,2,Delivery was late. Ordered Sushi.,2026-04-12
+339,Pizza Hub,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-04-28
+340,Burger Barn,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-04-20
+341,Biryani House,Sandwich,5,Great customer service. Ordered Sandwich.,2026-01-30
+342,Biryani House,Pizza,1,Order was incorrect. Ordered Pizza.,2026-02-13
+343,Pasta Point,Sushi,2,Delivery was late. Ordered Sushi.,2026-04-22
+344,Burger Barn,Biryani,1,App payment failed. Ordered Biryani.,2026-05-31
+345,Biryani House,Burger,1,App payment failed. Ordered Burger.,2026-03-21
+346,Sushi Spot,Biryani,1,Order was incorrect. Ordered Biryani.,2026-02-13
+347,Burger Barn,Burger,3,Too expensive for the portion. Ordered Burger.,2026-05-11
+348,Cafe Aroma,Sushi,1,Order was incorrect. Ordered Sushi.,2026-06-15
+349,Spice Villa,Biryani,2,Delivery was late. Ordered Biryani.,2026-02-07
+350,Taco Town,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-06-04
+351,Spice Villa,Burger,2,Packaging was damaged. Ordered Burger.,2026-06-10
+352,Pasta Point,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-05-29
+353,Pasta Point,Sushi,1,Order was incorrect. Ordered Sushi.,2026-02-08
+354,Pasta Point,Burger,5,Loved the quick delivery. Ordered Burger.,2026-04-24
+355,Taco Town,Taco,5,Easy ordering experience. Ordered Taco.,2026-01-15
+356,Sushi Spot,Burger,5,Great customer service. Ordered Burger.,2026-04-29
+357,Pasta Point,Pizza,2,Food arrived cold. Ordered Pizza.,2026-04-05
+358,Taco Town,Burger,2,Delivery was late. Ordered Burger.,2026-06-07
+359,Biryani House,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-05-22
+360,Pizza Hub,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-06-16
+361,Cafe Aroma,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-05-02
+362,Spice Villa,Pizza,5,Loved the quick delivery. Ordered Pizza.,2026-01-27
+363,Sushi Spot,Burger,3,Too expensive for the portion. Ordered Burger.,2026-06-15
+364,Spice Villa,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-04-23
+365,Pasta Point,Pasta,1,Order was incorrect. Ordered Pasta.,2026-04-06
+366,Taco Town,Sandwich,1,App payment failed. Ordered Sandwich.,2026-03-28
+367,Pizza Hub,Sushi,2,Delivery was late. Ordered Sushi.,2026-03-26
+368,Burger Barn,Sandwich,5,Great customer service. Ordered Sandwich.,2026-03-06
+369,Spice Villa,Sushi,2,Delivery was late. Ordered Sushi.,2026-05-30
+370,Spice Villa,Sushi,5,Great customer service. Ordered Sushi.,2026-06-17
+371,Biryani House,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-01-22
+372,Taco Town,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-02-02
+373,Burger Barn,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-04-03
+374,Pizza Hub,Sushi,5,Great customer service. Ordered Sushi.,2026-02-16
+375,Cafe Aroma,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-02-19
+376,Cafe Aroma,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-01-20
+377,Taco Town,Burger,3,Too expensive for the portion. Ordered Burger.,2026-05-19
+378,Pizza Hub,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-02-03
+379,Biryani House,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-02-16
+380,Spice Villa,Coffee,2,Food arrived cold. Ordered Coffee.,2026-04-16
+381,Sushi Spot,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-06-06
+382,Taco Town,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-05-17
+383,Cafe Aroma,Taco,5,Loved the quick delivery. Ordered Taco.,2026-02-19
+384,Sushi Spot,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-03-14
+385,Biryani House,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-02-21
+386,Spice Villa,Taco,2,Food arrived cold. Ordered Taco.,2026-06-14
+387,Pasta Point,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-01-27
+388,Burger Barn,Taco,2,Delivery was late. Ordered Taco.,2026-02-11
+389,Taco Town,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-02-07
+390,Biryani House,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-04-26
+391,Sushi Spot,Pizza,1,App payment failed. Ordered Pizza.,2026-01-14
+392,Biryani House,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-04-09
+393,Burger Barn,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-01-08
+394,Sushi Spot,Burger,1,Order was incorrect. Ordered Burger.,2026-02-07
+395,Spice Villa,Pizza,5,Great customer service. Ordered Pizza.,2026-05-01
+396,Spice Villa,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-06-07
+397,Pizza Hub,Burger,2,Food arrived cold. Ordered Burger.,2026-03-07
+398,Cafe Aroma,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-06-05
+399,Biryani House,Burger,5,Great customer service. Ordered Burger.,2026-03-02
+400,Taco Town,Burger,2,Food arrived cold. Ordered Burger.,2026-03-03
+401,Biryani House,Coffee,2,Delivery was late. Ordered Coffee.,2026-01-29
+402,Pasta Point,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-05-28
+403,Cafe Aroma,Pasta,5,Great customer service. Ordered Pasta.,2026-04-20
+404,Pizza Hub,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-05-27
+405,Biryani House,Pasta,2,Delivery was late. Ordered Pasta.,2026-05-15
+406,Sushi Spot,Burger,3,Too expensive for the portion. Ordered Burger.,2026-05-20
+407,Pizza Hub,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-01-12
+408,Biryani House,Sushi,5,Great customer service. Ordered Sushi.,2026-01-05
+409,Sushi Spot,Burger,1,Order was incorrect. Ordered Burger.,2026-03-03
+410,Burger Barn,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-01-12
+411,Sushi Spot,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-06-25
+412,Pasta Point,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-02-04
+413,Burger Barn,Coffee,2,Food arrived cold. Ordered Coffee.,2026-03-17
+414,Cafe Aroma,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-01-11
+415,Sushi Spot,Taco,3,Too expensive for the portion. Ordered Taco.,2026-04-12
+416,Pasta Point,Taco,2,Food arrived cold. Ordered Taco.,2026-06-15
+417,Cafe Aroma,Taco,1,Order was incorrect. Ordered Taco.,2026-01-13
+418,Sushi Spot,Taco,2,Delivery was late. Ordered Taco.,2026-04-05
+419,Biryani House,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-04-09
+420,Sushi Spot,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-06-27
+421,Pasta Point,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-03-10
+422,Burger Barn,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-04-21
+423,Spice Villa,Taco,1,Order was incorrect. Ordered Taco.,2026-01-27
+424,Burger Barn,Sushi,5,Great customer service. Ordered Sushi.,2026-03-20
+425,Pasta Point,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-06-26
+426,Pasta Point,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-01-11
+427,Sushi Spot,Sandwich,5,Great customer service. Ordered Sandwich.,2026-06-13
+428,Pizza Hub,Burger,1,App payment failed. Ordered Burger.,2026-04-04
+429,Spice Villa,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-06-05
+430,Pasta Point,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-01-18
+431,Cafe Aroma,Sushi,1,Order was incorrect. Ordered Sushi.,2026-04-09
+432,Pizza Hub,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-04-05
+433,Sushi Spot,Coffee,2,Delivery was late. Ordered Coffee.,2026-05-27
+434,Spice Villa,Sushi,1,App payment failed. Ordered Sushi.,2026-03-22
+435,Taco Town,Biryani,2,Delivery was late. Ordered Biryani.,2026-01-07
+436,Spice Villa,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-04-10
+437,Burger Barn,Taco,5,Great customer service. Ordered Taco.,2026-06-30
+438,Pasta Point,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-03-15
+439,Pasta Point,Biryani,2,Delivery was late. Ordered Biryani.,2026-02-04
+440,Burger Barn,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-04-24
+441,Burger Barn,Sushi,1,Order was incorrect. Ordered Sushi.,2026-01-17
+442,Taco Town,Taco,2,Packaging was damaged. Ordered Taco.,2026-06-29
+443,Spice Villa,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-02-27
+444,Burger Barn,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-03-02
+445,Pasta Point,Pizza,1,Order was incorrect. Ordered Pizza.,2026-05-22
+446,Sushi Spot,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-02-03
+447,Burger Barn,Burger,5,Great customer service. Ordered Burger.,2026-04-12
+448,Pasta Point,Sandwich,1,App payment failed. Ordered Sandwich.,2026-05-28
+449,Burger Barn,Pasta,1,Order was incorrect. Ordered Pasta.,2026-06-14
+450,Burger Barn,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-06-24
+451,Sushi Spot,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-06-13
+452,Spice Villa,Pasta,1,App payment failed. Ordered Pasta.,2026-05-09
+453,Pizza Hub,Burger,3,Too expensive for the portion. Ordered Burger.,2026-02-09
+454,Taco Town,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-03-24
+455,Cafe Aroma,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-03-14
+456,Burger Barn,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-06-12
+457,Taco Town,Pasta,5,Great customer service. Ordered Pasta.,2026-06-07
+458,Burger Barn,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-05-29
+459,Spice Villa,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-06-04
+460,Sushi Spot,Pizza,2,Food arrived cold. Ordered Pizza.,2026-01-21
+461,Pizza Hub,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-05-27
+462,Biryani House,Pizza,5,Loved the quick delivery. Ordered Pizza.,2026-06-10
+463,Taco Town,Taco,5,Loved the quick delivery. Ordered Taco.,2026-03-04
+464,Biryani House,Taco,5,Loved the quick delivery. Ordered Taco.,2026-01-19
+465,Pizza Hub,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-04-17
+466,Pasta Point,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-03-29
+467,Spice Villa,Sushi,1,Order was incorrect. Ordered Sushi.,2026-03-30
+468,Biryani House,Pasta,1,Order was incorrect. Ordered Pasta.,2026-05-12
+469,Burger Barn,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-04-30
+470,Burger Barn,Taco,5,Loved the quick delivery. Ordered Taco.,2026-03-05
+471,Spice Villa,Burger,2,Food arrived cold. Ordered Burger.,2026-03-16
+472,Biryani House,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-02-10
+473,Sushi Spot,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-02-10
+474,Pasta Point,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-03-20
+475,Pasta Point,Pizza,2,Delivery was late. Ordered Pizza.,2026-04-11
+476,Pasta Point,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-05-30
+477,Sushi Spot,Pizza,2,Food arrived cold. Ordered Pizza.,2026-03-14
+478,Pasta Point,Coffee,5,Great customer service. Ordered Coffee.,2026-05-18
+479,Pizza Hub,Burger,1,App payment failed. Ordered Burger.,2026-02-04
+480,Taco Town,Sushi,1,App payment failed. Ordered Sushi.,2026-04-04
+481,Pizza Hub,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-05-26
+482,Cafe Aroma,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-03-15
+483,Burger Barn,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-04-26
+484,Taco Town,Burger,2,Packaging was damaged. Ordered Burger.,2026-01-25
+485,Biryani House,Sushi,1,Order was incorrect. Ordered Sushi.,2026-05-23
+486,Sushi Spot,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-06-04
+487,Biryani House,Pizza,2,Food arrived cold. Ordered Pizza.,2026-01-10
+488,Spice Villa,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-05-13
+489,Pasta Point,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-05-12
+490,Spice Villa,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-03-23
+491,Spice Villa,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-03-18
+492,Sushi Spot,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-03-18
+493,Pasta Point,Pizza,1,Order was incorrect. Ordered Pizza.,2026-03-26
+494,Burger Barn,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-03-20
+495,Pizza Hub,Coffee,5,Great customer service. Ordered Coffee.,2026-06-17
+496,Cafe Aroma,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-05-03
+497,Spice Villa,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-06-24
+498,Cafe Aroma,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-06-29
+499,Burger Barn,Biryani,2,Food arrived cold. Ordered Biryani.,2026-04-23
+500,Sushi Spot,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-04-16
+501,Cafe Aroma,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-06-06
+502,Pasta Point,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-05-13
+503,Cafe Aroma,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-05-15
+504,Biryani House,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-04-28
+505,Sushi Spot,Sushi,5,Great customer service. Ordered Sushi.,2026-06-06
+506,Pasta Point,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-03-13
+507,Taco Town,Biryani,5,Great customer service. Ordered Biryani.,2026-03-15
+508,Cafe Aroma,Coffee,1,Order was incorrect. Ordered Coffee.,2026-05-03
+509,Sushi Spot,Taco,5,Great customer service. Ordered Taco.,2026-02-01
+510,Biryani House,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-02-07
+511,Taco Town,Pizza,5,Great customer service. Ordered Pizza.,2026-01-21
+512,Sushi Spot,Coffee,5,Great customer service. Ordered Coffee.,2026-05-03
+513,Cafe Aroma,Biryani,3,Too expensive for the portion. Ordered Biryani.,2026-03-11
+514,Taco Town,Pasta,2,Delivery was late. Ordered Pasta.,2026-06-07
+515,Cafe Aroma,Biryani,2,Food arrived cold. Ordered Biryani.,2026-06-21
+516,Cafe Aroma,Biryani,2,Food arrived cold. Ordered Biryani.,2026-01-26
+517,Biryani House,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-01-26
+518,Spice Villa,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-02-10
+519,Biryani House,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-06-16
+520,Cafe Aroma,Taco,1,Order was incorrect. Ordered Taco.,2026-03-15
+521,Pizza Hub,Burger,5,Easy ordering experience. Ordered Burger.,2026-03-01
+522,Pizza Hub,Pasta,1,App payment failed. Ordered Pasta.,2026-02-15
+523,Pizza Hub,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-02-17
+524,Taco Town,Pizza,2,Food arrived cold. Ordered Pizza.,2026-03-18
+525,Burger Barn,Sushi,5,Great customer service. Ordered Sushi.,2026-04-27
+526,Pasta Point,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-04-30
+527,Taco Town,Biryani,2,Delivery was late. Ordered Biryani.,2026-03-26
+528,Spice Villa,Coffee,5,Great customer service. Ordered Coffee.,2026-02-17
+529,Pizza Hub,Sushi,5,Great customer service. Ordered Sushi.,2026-05-26
+530,Cafe Aroma,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-06-13
+531,Biryani House,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-03-25
+532,Burger Barn,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-02-17
+533,Spice Villa,Coffee,1,Order was incorrect. Ordered Coffee.,2026-03-05
+534,Pizza Hub,Taco,1,App payment failed. Ordered Taco.,2026-03-02
+535,Pasta Point,Taco,1,Order was incorrect. Ordered Taco.,2026-03-19
+536,Pizza Hub,Taco,1,Order was incorrect. Ordered Taco.,2026-06-27
+537,Cafe Aroma,Pizza,2,Delivery was late. Ordered Pizza.,2026-04-30
+538,Taco Town,Pasta,1,App payment failed. Ordered Pasta.,2026-06-25
+539,Taco Town,Burger,5,Great customer service. Ordered Burger.,2026-04-05
+540,Cafe Aroma,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-05-03
+541,Spice Villa,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-04-06
+542,Biryani House,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-06-20
+543,Cafe Aroma,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-01-21
+544,Pasta Point,Sushi,2,Delivery was late. Ordered Sushi.,2026-05-25
+545,Burger Barn,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-05-10
+546,Cafe Aroma,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-03-25
+547,Pasta Point,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-05-30
+548,Pasta Point,Burger,3,Too expensive for the portion. Ordered Burger.,2026-04-25
+549,Pizza Hub,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-05-12
+550,Biryani House,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-01-15
+551,Pasta Point,Taco,2,Food arrived cold. Ordered Taco.,2026-04-12
+552,Taco Town,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-05-29
+553,Burger Barn,Pizza,1,App payment failed. Ordered Pizza.,2026-03-30
+554,Burger Barn,Pizza,2,Delivery was late. Ordered Pizza.,2026-05-01
+555,Pizza Hub,Taco,1,App payment failed. Ordered Taco.,2026-02-16
+556,Spice Villa,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-04-08
+557,Pasta Point,Sandwich,1,App payment failed. Ordered Sandwich.,2026-01-21
+558,Spice Villa,Sushi,2,Delivery was late. Ordered Sushi.,2026-02-15
+559,Biryani House,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-01-01
+560,Pizza Hub,Taco,5,Loved the quick delivery. Ordered Taco.,2026-06-22
+561,Biryani House,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-03-05
+562,Pasta Point,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-03-12
+563,Cafe Aroma,Burger,2,Food arrived cold. Ordered Burger.,2026-06-19
+564,Biryani House,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-02-22
+565,Burger Barn,Burger,5,Easy ordering experience. Ordered Burger.,2026-01-09
+566,Pasta Point,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-01-12
+567,Biryani House,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-05-19
+568,Cafe Aroma,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-05-09
+569,Taco Town,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-03-23
+570,Sushi Spot,Biryani,5,Great customer service. Ordered Biryani.,2026-02-06
+571,Cafe Aroma,Sandwich,5,Great customer service. Ordered Sandwich.,2026-03-12
+572,Pizza Hub,Pasta,1,App payment failed. Ordered Pasta.,2026-05-23
+573,Pasta Point,Pizza,1,Order was incorrect. Ordered Pizza.,2026-06-14
+574,Biryani House,Sushi,1,App payment failed. Ordered Sushi.,2026-04-15
+575,Spice Villa,Taco,1,App payment failed. Ordered Taco.,2026-02-17
+576,Pasta Point,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-03-18
+577,Spice Villa,Coffee,2,Food arrived cold. Ordered Coffee.,2026-05-24
+578,Biryani House,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-05-16
+579,Spice Villa,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-03-07
+580,Cafe Aroma,Sushi,2,Delivery was late. Ordered Sushi.,2026-04-26
+581,Sushi Spot,Burger,3,Too expensive for the portion. Ordered Burger.,2026-02-18
+582,Pizza Hub,Taco,1,App payment failed. Ordered Taco.,2026-06-22
+583,Pizza Hub,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-05-31
+584,Cafe Aroma,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-03-27
+585,Taco Town,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-02-18
+586,Burger Barn,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-06-28
+587,Cafe Aroma,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-05-22
+588,Sushi Spot,Taco,1,App payment failed. Ordered Taco.,2026-04-30
+589,Sushi Spot,Taco,5,Great customer service. Ordered Taco.,2026-04-03
+590,Pasta Point,Coffee,2,Delivery was late. Ordered Coffee.,2026-05-01
+591,Sushi Spot,Biryani,1,Order was incorrect. Ordered Biryani.,2026-03-22
+592,Biryani House,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-02-26
+593,Spice Villa,Pizza,5,Great customer service. Ordered Pizza.,2026-05-22
+594,Biryani House,Taco,2,Packaging was damaged. Ordered Taco.,2026-02-20
+595,Sushi Spot,Biryani,1,App payment failed. Ordered Biryani.,2026-05-26
+596,Cafe Aroma,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-06-17
+597,Sushi Spot,Taco,5,Loved the quick delivery. Ordered Taco.,2026-06-14
+598,Pasta Point,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-04-01
+599,Spice Villa,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-05-06
+600,Spice Villa,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-01-09
+601,Burger Barn,Pizza,2,Food arrived cold. Ordered Pizza.,2026-04-16
+602,Spice Villa,Biryani,2,Delivery was late. Ordered Biryani.,2026-02-08
+603,Pizza Hub,Biryani,3,Too expensive for the portion. Ordered Biryani.,2026-04-27
+604,Sushi Spot,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-06-13
+605,Pasta Point,Coffee,2,Food arrived cold. Ordered Coffee.,2026-01-02
+606,Biryani House,Pizza,2,Food arrived cold. Ordered Pizza.,2026-05-16
+607,Taco Town,Taco,2,Food arrived cold. Ordered Taco.,2026-05-09
+608,Biryani House,Pasta,2,Delivery was late. Ordered Pasta.,2026-01-25
+609,Spice Villa,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-06-08
+610,Taco Town,Sushi,5,Great customer service. Ordered Sushi.,2026-04-12
+611,Burger Barn,Sushi,1,App payment failed. Ordered Sushi.,2026-04-28
+612,Cafe Aroma,Biryani,5,Great customer service. Ordered Biryani.,2026-06-25
+613,Burger Barn,Pizza,2,Delivery was late. Ordered Pizza.,2026-04-14
+614,Biryani House,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-05-02
+615,Pizza Hub,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-01-22
+616,Pasta Point,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-05-25
+617,Burger Barn,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-02-24
+618,Pasta Point,Taco,2,Food arrived cold. Ordered Taco.,2026-01-20
+619,Taco Town,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-03-22
+620,Pizza Hub,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-02-06
+621,Biryani House,Burger,5,Great customer service. Ordered Burger.,2026-02-11
+622,Cafe Aroma,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-03-26
+623,Biryani House,Pasta,2,Delivery was late. Ordered Pasta.,2026-05-09
+624,Sushi Spot,Pizza,2,Delivery was late. Ordered Pizza.,2026-04-22
+625,Cafe Aroma,Burger,1,Order was incorrect. Ordered Burger.,2026-06-04
+626,Biryani House,Sushi,2,Food arrived cold. Ordered Sushi.,2026-06-12
+627,Taco Town,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-02-28
+628,Sushi Spot,Sandwich,1,App payment failed. Ordered Sandwich.,2026-02-17
+629,Biryani House,Burger,5,Easy ordering experience. Ordered Burger.,2026-03-17
+630,Cafe Aroma,Burger,2,Delivery was late. Ordered Burger.,2026-03-10
+631,Spice Villa,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-04-10
+632,Sushi Spot,Sushi,2,Delivery was late. Ordered Sushi.,2026-01-24
+633,Pizza Hub,Taco,5,Loved the quick delivery. Ordered Taco.,2026-04-03
+634,Taco Town,Burger,2,Packaging was damaged. Ordered Burger.,2026-01-23
+635,Spice Villa,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-05-23
+636,Biryani House,Burger,2,Food arrived cold. Ordered Burger.,2026-01-23
+637,Sushi Spot,Burger,5,Easy ordering experience. Ordered Burger.,2026-06-03
+638,Sushi Spot,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-03-16
+639,Biryani House,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-05-24
+640,Cafe Aroma,Pasta,1,App payment failed. Ordered Pasta.,2026-02-13
+641,Spice Villa,Taco,5,Great customer service. Ordered Taco.,2026-03-10
+642,Pasta Point,Pasta,2,Delivery was late. Ordered Pasta.,2026-02-12
+643,Biryani House,Taco,1,App payment failed. Ordered Taco.,2026-03-18
+644,Pasta Point,Burger,1,Order was incorrect. Ordered Burger.,2026-03-06
+645,Cafe Aroma,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-06-07
+646,Cafe Aroma,Coffee,2,Delivery was late. Ordered Coffee.,2026-02-04
+647,Taco Town,Pizza,1,App payment failed. Ordered Pizza.,2026-03-27
+648,Biryani House,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-03-27
+649,Biryani House,Pasta,5,Great customer service. Ordered Pasta.,2026-03-24
+650,Cafe Aroma,Coffee,1,Order was incorrect. Ordered Coffee.,2026-02-15
+651,Biryani House,Sushi,5,Great customer service. Ordered Sushi.,2026-06-27
+652,Pasta Point,Biryani,1,Order was incorrect. Ordered Biryani.,2026-04-07
+653,Taco Town,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-01-30
+654,Cafe Aroma,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-01-07
+655,Pasta Point,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-03-16
+656,Burger Barn,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-02-05
+657,Taco Town,Biryani,5,Great customer service. Ordered Biryani.,2026-06-18
+658,Spice Villa,Sandwich,1,App payment failed. Ordered Sandwich.,2026-01-19
+659,Pasta Point,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-04-13
+660,Biryani House,Pizza,1,Order was incorrect. Ordered Pizza.,2026-06-29
+661,Burger Barn,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-06-18
+662,Sushi Spot,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-01-12
+663,Biryani House,Sushi,1,App payment failed. Ordered Sushi.,2026-01-28
+664,Pizza Hub,Burger,5,Great customer service. Ordered Burger.,2026-02-26
+665,Cafe Aroma,Coffee,1,Order was incorrect. Ordered Coffee.,2026-04-11
+666,Pasta Point,Pasta,1,Order was incorrect. Ordered Pasta.,2026-01-07
+667,Pasta Point,Burger,5,Great customer service. Ordered Burger.,2026-04-17
+668,Burger Barn,Burger,2,Packaging was damaged. Ordered Burger.,2026-03-31
+669,Taco Town,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-02-22
+670,Pasta Point,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-01-25
+671,Pasta Point,Coffee,1,Order was incorrect. Ordered Coffee.,2026-01-18
+672,Taco Town,Pizza,2,Delivery was late. Ordered Pizza.,2026-01-06
+673,Sushi Spot,Burger,2,Packaging was damaged. Ordered Burger.,2026-03-04
+674,Spice Villa,Pasta,1,Order was incorrect. Ordered Pasta.,2026-05-24
+675,Biryani House,Coffee,5,Excellent taste and fresh food. Ordered Coffee.,2026-04-14
+676,Spice Villa,Pasta,1,App payment failed. Ordered Pasta.,2026-04-12
+677,Pizza Hub,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-06-01
+678,Biryani House,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-06-30
+679,Cafe Aroma,Biryani,5,Great customer service. Ordered Biryani.,2026-06-30
+680,Burger Barn,Burger,3,Too expensive for the portion. Ordered Burger.,2026-02-17
+681,Sushi Spot,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-04-28
+682,Burger Barn,Taco,5,Loved the quick delivery. Ordered Taco.,2026-05-16
+683,Sushi Spot,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-04-11
+684,Burger Barn,Sushi,1,Order was incorrect. Ordered Sushi.,2026-04-28
+685,Spice Villa,Taco,5,Easy ordering experience. Ordered Taco.,2026-06-01
+686,Burger Barn,Pasta,1,Order was incorrect. Ordered Pasta.,2026-01-31
+687,Cafe Aroma,Taco,2,Delivery was late. Ordered Taco.,2026-02-16
+688,Sushi Spot,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-04-10
+689,Biryani House,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-04-09
+690,Biryani House,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-06-12
+691,Spice Villa,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-03-15
+692,Spice Villa,Pasta,1,Order was incorrect. Ordered Pasta.,2026-04-26
+693,Pizza Hub,Sushi,2,Food arrived cold. Ordered Sushi.,2026-05-05
+694,Spice Villa,Biryani,1,App payment failed. Ordered Biryani.,2026-05-24
+695,Pasta Point,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-04-17
+696,Pasta Point,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-01-22
+697,Pizza Hub,Biryani,5,Great customer service. Ordered Biryani.,2026-01-09
+698,Taco Town,Biryani,3,Too expensive for the portion. Ordered Biryani.,2026-03-15
+699,Spice Villa,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-05-07
+700,Burger Barn,Burger,5,Great customer service. Ordered Burger.,2026-05-20
+701,Sushi Spot,Pizza,5,Loved the quick delivery. Ordered Pizza.,2026-05-20
+702,Cafe Aroma,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-06-17
+703,Cafe Aroma,Taco,2,Food arrived cold. Ordered Taco.,2026-04-26
+704,Taco Town,Sushi,2,Delivery was late. Ordered Sushi.,2026-04-23
+705,Burger Barn,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-05-31
+706,Sushi Spot,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-06-07
+707,Spice Villa,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-01-16
+708,Sushi Spot,Taco,5,Easy ordering experience. Ordered Taco.,2026-05-18
+709,Spice Villa,Sushi,5,Great customer service. Ordered Sushi.,2026-03-16
+710,Taco Town,Burger,2,Packaging was damaged. Ordered Burger.,2026-04-16
+711,Pizza Hub,Taco,2,Packaging was damaged. Ordered Taco.,2026-06-29
+712,Spice Villa,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-03-24
+713,Cafe Aroma,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-02-06
+714,Taco Town,Sandwich,1,App payment failed. Ordered Sandwich.,2026-04-26
+715,Burger Barn,Burger,1,App payment failed. Ordered Burger.,2026-05-12
+716,Taco Town,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-05-05
+717,Sushi Spot,Pizza,2,Delivery was late. Ordered Pizza.,2026-04-28
+718,Sushi Spot,Burger,3,Too expensive for the portion. Ordered Burger.,2026-04-12
+719,Cafe Aroma,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-05-07
+720,Taco Town,Sushi,5,Great customer service. Ordered Sushi.,2026-03-28
+721,Spice Villa,Coffee,1,Order was incorrect. Ordered Coffee.,2026-06-24
+722,Pizza Hub,Pizza,2,Delivery was late. Ordered Pizza.,2026-06-10
+723,Pasta Point,Pizza,2,Delivery was late. Ordered Pizza.,2026-02-10
+724,Pasta Point,Coffee,2,Food arrived cold. Ordered Coffee.,2026-04-20
+725,Cafe Aroma,Pasta,5,Great customer service. Ordered Pasta.,2026-02-10
+726,Taco Town,Burger,1,Order was incorrect. Ordered Burger.,2026-03-06
+727,Burger Barn,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-01-14
+728,Biryani House,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-04-20
+729,Burger Barn,Burger,2,Food arrived cold. Ordered Burger.,2026-02-24
+730,Pasta Point,Burger,2,Packaging was damaged. Ordered Burger.,2026-06-01
+731,Cafe Aroma,Coffee,2,Food arrived cold. Ordered Coffee.,2026-01-03
+732,Sushi Spot,Burger,1,App payment failed. Ordered Burger.,2026-06-27
+733,Spice Villa,Coffee,2,Delivery was late. Ordered Coffee.,2026-02-28
+734,Biryani House,Burger,2,Delivery was late. Ordered Burger.,2026-01-27
+735,Sushi Spot,Sushi,5,Great customer service. Ordered Sushi.,2026-02-05
+736,Biryani House,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-01-18
+737,Pizza Hub,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-03-31
+738,Cafe Aroma,Pasta,1,App payment failed. Ordered Pasta.,2026-06-07
+739,Pasta Point,Biryani,2,Delivery was late. Ordered Biryani.,2026-01-26
+740,Spice Villa,Burger,5,Easy ordering experience. Ordered Burger.,2026-04-09
+741,Sushi Spot,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-02-05
+742,Cafe Aroma,Taco,2,Delivery was late. Ordered Taco.,2026-03-05
+743,Taco Town,Pizza,5,Great customer service. Ordered Pizza.,2026-02-22
+744,Cafe Aroma,Sandwich,5,Great customer service. Ordered Sandwich.,2026-06-15
+745,Pizza Hub,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-04-09
+746,Burger Barn,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-06-13
+747,Burger Barn,Pizza,1,Order was incorrect. Ordered Pizza.,2026-03-23
+748,Spice Villa,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-04-18
+749,Sushi Spot,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-01-19
+750,Pizza Hub,Burger,2,Food arrived cold. Ordered Burger.,2026-03-09
+751,Cafe Aroma,Pizza,2,Food arrived cold. Ordered Pizza.,2026-04-12
+752,Taco Town,Sandwich,1,App payment failed. Ordered Sandwich.,2026-06-29
+753,Biryani House,Burger,3,Too expensive for the portion. Ordered Burger.,2026-05-18
+754,Spice Villa,Taco,2,Delivery was late. Ordered Taco.,2026-03-21
+755,Burger Barn,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-05-18
+756,Sushi Spot,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-06-12
+757,Burger Barn,Taco,1,App payment failed. Ordered Taco.,2026-03-03
+758,Pizza Hub,Biryani,2,Delivery was late. Ordered Biryani.,2026-04-22
+759,Burger Barn,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-06-05
+760,Pizza Hub,Taco,2,Packaging was damaged. Ordered Taco.,2026-01-31
+761,Pizza Hub,Pasta,2,Food arrived cold. Ordered Pasta.,2026-02-11
+762,Pasta Point,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-05-13
+763,Taco Town,Pasta,1,Order was incorrect. Ordered Pasta.,2026-02-02
+764,Taco Town,Burger,2,Food arrived cold. Ordered Burger.,2026-03-27
+765,Biryani House,Taco,3,Too expensive for the portion. Ordered Taco.,2026-01-17
+766,Taco Town,Burger,5,Loved the quick delivery. Ordered Burger.,2026-04-27
+767,Sushi Spot,Pizza,5,Loved the quick delivery. Ordered Pizza.,2026-05-26
+768,Spice Villa,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-03-07
+769,Burger Barn,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-05-11
+770,Pizza Hub,Pizza,2,Food arrived cold. Ordered Pizza.,2026-03-04
+771,Pizza Hub,Coffee,1,Order was incorrect. Ordered Coffee.,2026-04-09
+772,Spice Villa,Pasta,2,Food arrived cold. Ordered Pasta.,2026-05-22
+773,Biryani House,Biryani,1,Order was incorrect. Ordered Biryani.,2026-03-05
+774,Biryani House,Sushi,5,Great customer service. Ordered Sushi.,2026-01-20
+775,Sushi Spot,Burger,3,Too expensive for the portion. Ordered Burger.,2026-06-22
+776,Pizza Hub,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-05-13
+777,Pizza Hub,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-04-30
+778,Taco Town,Taco,1,Order was incorrect. Ordered Taco.,2026-01-23
+779,Pasta Point,Pizza,1,Order was incorrect. Ordered Pizza.,2026-02-21
+780,Taco Town,Taco,5,Easy ordering experience. Ordered Taco.,2026-03-04
+781,Pasta Point,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-05-07
+782,Cafe Aroma,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-01-02
+783,Biryani House,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-05-19
+784,Sushi Spot,Pizza,1,Order was incorrect. Ordered Pizza.,2026-01-01
+785,Biryani House,Taco,2,Delivery was late. Ordered Taco.,2026-02-22
+786,Cafe Aroma,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-01-16
+787,Spice Villa,Taco,2,Delivery was late. Ordered Taco.,2026-01-12
+788,Cafe Aroma,Sandwich,1,Order was incorrect. Ordered Sandwich.,2026-04-28
+789,Burger Barn,Burger,3,Too expensive for the portion. Ordered Burger.,2026-02-04
+790,Biryani House,Burger,5,Easy ordering experience. Ordered Burger.,2026-05-26
+791,Pizza Hub,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-03-02
+792,Taco Town,Taco,1,Order was incorrect. Ordered Taco.,2026-04-11
+793,Sushi Spot,Sushi,5,Loved the quick delivery. Ordered Sushi.,2026-03-11
+794,Cafe Aroma,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-02-04
+795,Burger Barn,Pasta,2,Delivery was late. Ordered Pasta.,2026-02-12
+796,Pasta Point,Coffee,1,Order was incorrect. Ordered Coffee.,2026-04-15
+797,Burger Barn,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-04-26
+798,Taco Town,Coffee,5,Great customer service. Ordered Coffee.,2026-01-31
+799,Burger Barn,Pasta,5,Great customer service. Ordered Pasta.,2026-06-30
+800,Pizza Hub,Biryani,1,Order was incorrect. Ordered Biryani.,2026-02-07
+801,Burger Barn,Biryani,1,Order was incorrect. Ordered Biryani.,2026-04-12
+802,Pizza Hub,Taco,5,Great customer service. Ordered Taco.,2026-02-14
+803,Pizza Hub,Sandwich,5,Loved the quick delivery. Ordered Sandwich.,2026-05-23
+804,Cafe Aroma,Burger,5,Loved the quick delivery. Ordered Burger.,2026-01-27
+805,Spice Villa,Burger,2,Food arrived cold. Ordered Burger.,2026-01-16
+806,Cafe Aroma,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-04-13
+807,Sushi Spot,Burger,5,Easy ordering experience. Ordered Burger.,2026-05-31
+808,Taco Town,Burger,2,Food arrived cold. Ordered Burger.,2026-01-17
+809,Cafe Aroma,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-01-24
+810,Sushi Spot,Burger,2,Food arrived cold. Ordered Burger.,2026-04-29
+811,Pizza Hub,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-04-21
+812,Biryani House,Coffee,2,Food arrived cold. Ordered Coffee.,2026-04-08
+813,Biryani House,Pasta,1,Order was incorrect. Ordered Pasta.,2026-02-24
+814,Spice Villa,Taco,5,Great customer service. Ordered Taco.,2026-04-25
+815,Spice Villa,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-06-08
+816,Cafe Aroma,Taco,5,Loved the quick delivery. Ordered Taco.,2026-04-16
+817,Pasta Point,Pizza,2,Delivery was late. Ordered Pizza.,2026-03-13
+818,Biryani House,Pasta,1,App payment failed. Ordered Pasta.,2026-02-21
+819,Cafe Aroma,Pizza,1,App payment failed. Ordered Pizza.,2026-04-02
+820,Pasta Point,Coffee,1,Order was incorrect. Ordered Coffee.,2026-05-25
+821,Sushi Spot,Sandwich,5,Great customer service. Ordered Sandwich.,2026-02-16
+822,Pizza Hub,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-02-26
+823,Pizza Hub,Taco,2,Food arrived cold. Ordered Taco.,2026-05-01
+824,Sushi Spot,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-01-26
+825,Cafe Aroma,Biryani,5,Great customer service. Ordered Biryani.,2026-05-17
+826,Pizza Hub,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-04-10
+827,Sushi Spot,Pasta,2,Packaging was damaged. Ordered Pasta.,2026-03-02
+828,Sushi Spot,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-01-08
+829,Sushi Spot,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-02-18
+830,Pasta Point,Taco,2,Packaging was damaged. Ordered Taco.,2026-05-06
+831,Pizza Hub,Burger,2,Food arrived cold. Ordered Burger.,2026-03-01
+832,Cafe Aroma,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-05-03
+833,Pizza Hub,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-02-21
+834,Spice Villa,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-03-24
+835,Pizza Hub,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-05-31
+836,Spice Villa,Burger,3,Too expensive for the portion. Ordered Burger.,2026-04-04
+837,Burger Barn,Sushi,1,App payment failed. Ordered Sushi.,2026-05-31
+838,Burger Barn,Sushi,5,Great customer service. Ordered Sushi.,2026-03-24
+839,Spice Villa,Pasta,1,App payment failed. Ordered Pasta.,2026-06-13
+840,Pasta Point,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-05-24
+841,Sushi Spot,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-02-14
+842,Biryani House,Taco,5,Great customer service. Ordered Taco.,2026-02-02
+843,Spice Villa,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-04-11
+844,Pizza Hub,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-03-23
+845,Cafe Aroma,Burger,5,Loved the quick delivery. Ordered Burger.,2026-02-06
+846,Sushi Spot,Burger,5,Excellent taste and fresh food. Ordered Burger.,2026-03-30
+847,Sushi Spot,Pasta,2,Delivery was late. Ordered Pasta.,2026-06-21
+848,Sushi Spot,Coffee,2,Food arrived cold. Ordered Coffee.,2026-03-09
+849,Cafe Aroma,Biryani,2,Delivery was late. Ordered Biryani.,2026-03-31
+850,Taco Town,Burger,2,Food arrived cold. Ordered Burger.,2026-01-13
+851,Biryani House,Coffee,1,App payment failed. Ordered Coffee.,2026-02-12
+852,Biryani House,Coffee,1,App payment failed. Ordered Coffee.,2026-03-31
+853,Biryani House,Burger,5,Loved the quick delivery. Ordered Burger.,2026-05-28
+854,Cafe Aroma,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-01-19
+855,Pizza Hub,Taco,2,Food arrived cold. Ordered Taco.,2026-03-23
+856,Taco Town,Burger,2,Delivery was late. Ordered Burger.,2026-03-29
+857,Spice Villa,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-01-20
+858,Burger Barn,Sushi,5,Easy ordering experience. Ordered Sushi.,2026-06-07
+859,Pasta Point,Pizza,1,App payment failed. Ordered Pizza.,2026-06-17
+860,Spice Villa,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-01-14
+861,Burger Barn,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-02-18
+862,Biryani House,Taco,5,Great customer service. Ordered Taco.,2026-03-18
+863,Cafe Aroma,Burger,2,Food arrived cold. Ordered Burger.,2026-04-11
+864,Pasta Point,Pasta,2,Food arrived cold. Ordered Pasta.,2026-04-03
+865,Pizza Hub,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-03-17
+866,Pasta Point,Biryani,2,Delivery was late. Ordered Biryani.,2026-01-07
+867,Cafe Aroma,Pasta,5,Great customer service. Ordered Pasta.,2026-01-21
+868,Pasta Point,Burger,5,Great customer service. Ordered Burger.,2026-04-12
+869,Pasta Point,Coffee,5,Great customer service. Ordered Coffee.,2026-01-24
+870,Biryani House,Pasta,1,Order was incorrect. Ordered Pasta.,2026-04-08
+871,Sushi Spot,Pasta,5,Loved the quick delivery. Ordered Pasta.,2026-01-12
+872,Taco Town,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-03-09
+873,Cafe Aroma,Taco,5,Easy ordering experience. Ordered Taco.,2026-01-16
+874,Spice Villa,Burger,2,Delivery was late. Ordered Burger.,2026-06-21
+875,Sushi Spot,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-02-28
+876,Pizza Hub,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-04-18
+877,Pasta Point,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-03-18
+878,Burger Barn,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-05-09
+879,Spice Villa,Burger,5,Loved the quick delivery. Ordered Burger.,2026-02-14
+880,Spice Villa,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-02-02
+881,Pizza Hub,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-06-24
+882,Biryani House,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-06-02
+883,Taco Town,Sushi,2,Delivery was late. Ordered Sushi.,2026-01-23
+884,Biryani House,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-03-25
+885,Taco Town,Coffee,2,Food arrived cold. Ordered Coffee.,2026-06-29
+886,Biryani House,Burger,1,App payment failed. Ordered Burger.,2026-02-08
+887,Spice Villa,Burger,2,Delivery was late. Ordered Burger.,2026-05-25
+888,Burger Barn,Taco,3,Too expensive for the portion. Ordered Taco.,2026-03-30
+889,Biryani House,Taco,1,App payment failed. Ordered Taco.,2026-06-17
+890,Pasta Point,Coffee,2,Food arrived cold. Ordered Coffee.,2026-02-14
+891,Taco Town,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-06-08
+892,Biryani House,Pizza,1,App payment failed. Ordered Pizza.,2026-03-26
+893,Cafe Aroma,Pizza,5,Loved the quick delivery. Ordered Pizza.,2026-03-10
+894,Sushi Spot,Pizza,1,Order was incorrect. Ordered Pizza.,2026-03-19
+895,Taco Town,Taco,5,Loved the quick delivery. Ordered Taco.,2026-06-28
+896,Burger Barn,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-03-18
+897,Pasta Point,Sushi,5,Great customer service. Ordered Sushi.,2026-04-17
+898,Burger Barn,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-02-24
+899,Biryani House,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-04-06
+900,Pizza Hub,Pasta,2,Delivery was late. Ordered Pasta.,2026-03-21
+901,Biryani House,Pasta,3,Too expensive for the portion. Ordered Pasta.,2026-05-26
+902,Pizza Hub,Pasta,5,Excellent taste and fresh food. Ordered Pasta.,2026-02-21
+903,Pizza Hub,Biryani,2,Food arrived cold. Ordered Biryani.,2026-04-27
+904,Pizza Hub,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-03-12
+905,Sushi Spot,Coffee,3,Too expensive for the portion. Ordered Coffee.,2026-04-12
+906,Burger Barn,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-04-06
+907,Pasta Point,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-05-02
+908,Sushi Spot,Sushi,2,Packaging was damaged. Ordered Sushi.,2026-03-08
+909,Burger Barn,Taco,2,Food arrived cold. Ordered Taco.,2026-04-09
+910,Pizza Hub,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-02-24
+911,Cafe Aroma,Biryani,5,Excellent taste and fresh food. Ordered Biryani.,2026-03-10
+912,Biryani House,Pizza,2,Food arrived cold. Ordered Pizza.,2026-05-02
+913,Spice Villa,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-01-03
+914,Cafe Aroma,Taco,5,Easy ordering experience. Ordered Taco.,2026-03-20
+915,Taco Town,Sandwich,1,App payment failed. Ordered Sandwich.,2026-03-31
+916,Pasta Point,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-04-30
+917,Taco Town,Sandwich,5,Easy ordering experience. Ordered Sandwich.,2026-01-27
+918,Pizza Hub,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-06-15
+919,Taco Town,Taco,2,Delivery was late. Ordered Taco.,2026-05-04
+920,Burger Barn,Sushi,5,Great customer service. Ordered Sushi.,2026-06-13
+921,Sushi Spot,Taco,5,Great customer service. Ordered Taco.,2026-06-17
+922,Taco Town,Biryani,2,Packaging was damaged. Ordered Biryani.,2026-05-13
+923,Cafe Aroma,Pizza,5,Easy ordering experience. Ordered Pizza.,2026-04-14
+924,Sushi Spot,Pasta,2,Food arrived cold. Ordered Pasta.,2026-06-17
+925,Pasta Point,Taco,5,Great customer service. Ordered Taco.,2026-04-18
+926,Biryani House,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-05-30
+927,Cafe Aroma,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-06-25
+928,Pasta Point,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-03-18
+929,Spice Villa,Pasta,5,Great customer service. Ordered Pasta.,2026-01-25
+930,Pasta Point,Pasta,5,Great customer service. Ordered Pasta.,2026-05-24
+931,Spice Villa,Sushi,2,Delivery was late. Ordered Sushi.,2026-02-26
+932,Sushi Spot,Biryani,5,Great customer service. Ordered Biryani.,2026-04-18
+933,Sushi Spot,Sushi,5,Great customer service. Ordered Sushi.,2026-05-30
+934,Taco Town,Coffee,2,Delivery was late. Ordered Coffee.,2026-05-01
+935,Pizza Hub,Burger,5,Loved the quick delivery. Ordered Burger.,2026-02-19
+936,Burger Barn,Sandwich,3,Too expensive for the portion. Ordered Sandwich.,2026-03-18
+937,Biryani House,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-02-05
+938,Cafe Aroma,Sushi,1,App payment failed. Ordered Sushi.,2026-05-26
+939,Pasta Point,Pasta,1,Order was incorrect. Ordered Pasta.,2026-02-16
+940,Burger Barn,Coffee,1,Order was incorrect. Ordered Coffee.,2026-06-11
+941,Spice Villa,Sushi,2,Food arrived cold. Ordered Sushi.,2026-01-02
+942,Pasta Point,Taco,5,Excellent taste and fresh food. Ordered Taco.,2026-02-13
+943,Spice Villa,Coffee,2,Delivery was late. Ordered Coffee.,2026-02-03
+944,Biryani House,Sandwich,1,App payment failed. Ordered Sandwich.,2026-04-20
+945,Pasta Point,Sandwich,2,Food arrived cold. Ordered Sandwich.,2026-01-10
+946,Cafe Aroma,Sushi,2,Food arrived cold. Ordered Sushi.,2026-03-24
+947,Cafe Aroma,Pizza,2,Food arrived cold. Ordered Pizza.,2026-06-10
+948,Cafe Aroma,Biryani,1,Order was incorrect. Ordered Biryani.,2026-03-21
+949,Spice Villa,Burger,1,App payment failed. Ordered Burger.,2026-05-09
+950,Taco Town,Pasta,2,Delivery was late. Ordered Pasta.,2026-01-12
+951,Taco Town,Taco,5,Loved the quick delivery. Ordered Taco.,2026-05-14
+952,Sushi Spot,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-03-29
+953,Pasta Point,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-02-12
+954,Biryani House,Pizza,5,Excellent taste and fresh food. Ordered Pizza.,2026-02-27
+955,Spice Villa,Biryani,2,Food arrived cold. Ordered Biryani.,2026-05-31
+956,Spice Villa,Burger,1,Order was incorrect. Ordered Burger.,2026-06-16
+957,Pizza Hub,Sandwich,5,Great customer service. Ordered Sandwich.,2026-05-17
+958,Pizza Hub,Pizza,2,Delivery was late. Ordered Pizza.,2026-06-17
+959,Pizza Hub,Pizza,2,Delivery was late. Ordered Pizza.,2026-04-17
+960,Pasta Point,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-05-21
+961,Taco Town,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-02-22
+962,Pizza Hub,Taco,1,App payment failed. Ordered Taco.,2026-06-19
+963,Burger Barn,Taco,5,Easy ordering experience. Ordered Taco.,2026-06-05
+964,Spice Villa,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-05-11
+965,Burger Barn,Taco,2,Delivery was late. Ordered Taco.,2026-01-28
+966,Pasta Point,Biryani,5,Easy ordering experience. Ordered Biryani.,2026-02-21
+967,Taco Town,Biryani,1,Order was incorrect. Ordered Biryani.,2026-06-30
+968,Biryani House,Taco,2,Packaging was damaged. Ordered Taco.,2026-01-11
+969,Pasta Point,Biryani,5,Loved the quick delivery. Ordered Biryani.,2026-03-26
+970,Cafe Aroma,Pizza,2,Food arrived cold. Ordered Pizza.,2026-06-21
+971,Burger Barn,Burger,5,Easy ordering experience. Ordered Burger.,2026-06-21
+972,Pasta Point,Pasta,2,Delivery was late. Ordered Pasta.,2026-05-11
+973,Burger Barn,Burger,5,Great customer service. Ordered Burger.,2026-06-14
+974,Cafe Aroma,Coffee,5,Great customer service. Ordered Coffee.,2026-03-09
+975,Pasta Point,Pizza,2,Delivery was late. Ordered Pizza.,2026-02-14
+976,Pizza Hub,Taco,1,Order was incorrect. Ordered Taco.,2026-06-23
+977,Sushi Spot,Sandwich,2,Delivery was late. Ordered Sandwich.,2026-01-25
+978,Pizza Hub,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-06-19
+979,Spice Villa,Sushi,1,Order was incorrect. Ordered Sushi.,2026-04-23
+980,Taco Town,Burger,1,Order was incorrect. Ordered Burger.,2026-03-29
+981,Spice Villa,Burger,1,App payment failed. Ordered Burger.,2026-04-13
+982,Pasta Point,Taco,1,App payment failed. Ordered Taco.,2026-06-26
+983,Pasta Point,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-01-29
+984,Spice Villa,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-01-27
+985,Biryani House,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-06-23
+986,Pasta Point,Pasta,5,Easy ordering experience. Ordered Pasta.,2026-04-08
+987,Sushi Spot,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-05-04
+988,Pasta Point,Burger,1,App payment failed. Ordered Burger.,2026-04-23
+989,Pizza Hub,Burger,5,Great customer service. Ordered Burger.,2026-06-17
+990,Sushi Spot,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-05-28
+991,Cafe Aroma,Sushi,3,Too expensive for the portion. Ordered Sushi.,2026-05-14
+992,Burger Barn,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-05-04
+993,Sushi Spot,Sandwich,2,Packaging was damaged. Ordered Sandwich.,2026-05-23
+994,Pizza Hub,Pizza,2,Packaging was damaged. Ordered Pizza.,2026-05-10
+995,Pasta Point,Coffee,2,Packaging was damaged. Ordered Coffee.,2026-01-20
+996,Pasta Point,Sushi,5,Excellent taste and fresh food. Ordered Sushi.,2026-03-26
+997,Taco Town,Pizza,3,Too expensive for the portion. Ordered Pizza.,2026-02-27
+998,Biryani House,Sandwich,5,Excellent taste and fresh food. Ordered Sandwich.,2026-01-21
+999,Pasta Point,Coffee,5,Easy ordering experience. Ordered Coffee.,2026-04-25
+1000,Burger Barn,Coffee,5,Loved the quick delivery. Ordered Coffee.,2026-03-22
