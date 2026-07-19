@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, Copy, Zap } from 'lucide-react';
+import { handleGeneratePRD, handleCopyPRD, handleExportPRD } from '@/lib/interactions';
 
 const features = [
   { id: 1, title: 'Improve transaction speed', status: 'ready' },
@@ -90,7 +91,10 @@ export default function PRD() {
                   </button>
                 ))}
                 <Button
-                  onClick={() => setShowPRD(true)}
+                  onClick={() => {
+                    handleGeneratePRD();
+                    setShowPRD(true);
+                  }}
                   className="w-full bg-primary hover:bg-primary/90 mt-4 gap-2"
                 >
                   <Zap className="w-4 h-4" />
@@ -120,11 +124,11 @@ export default function PRD() {
                     <CardDescription className="mt-2">{samplePRD.overview}</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-2 border-border hover:bg-secondary">
+                    <Button onClick={handleCopyPRD} variant="outline" size="sm" className="gap-2 border-border hover:bg-secondary">
                       <Copy className="w-4 h-4" />
                       Copy
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-2 border-border hover:bg-secondary">
+                    <Button onClick={handleExportPRD} variant="outline" size="sm" className="gap-2 border-border hover:bg-secondary">
                       <Download className="w-4 h-4" />
                       Export
                     </Button>

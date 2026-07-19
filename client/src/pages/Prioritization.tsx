@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { showInfoToast } from '@/lib/interactions';
 
 const prioritizationData = [
   { name: 'Transaction Speed', rice: 9.2, reach: 450, impact: 95, confidence: 95 },
@@ -167,7 +168,7 @@ export default function Prioritization() {
                 <p className="text-muted-foreground mb-4">
                   The RICE framework balances multiple factors to provide a comprehensive prioritization score. Use this alongside your team's strategic goals and capacity planning.
                 </p>
-                <Button className="bg-primary hover:bg-primary/90">View Methodology</Button>
+                <Button onClick={() => showInfoToast('RICE Framework', 'The RICE framework helps prioritize features based on Reach, Impact, Confidence, and Effort.')} className="bg-primary hover:bg-primary/90">View Methodology</Button>
               </CardContent>
             </Card>
           </TabsContent>

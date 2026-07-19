@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { showFeatureToast } from '@/lib/interactions';
 
 const roadmapData = {
   Q3_2026: [
@@ -29,7 +30,7 @@ export default function Roadmap() {
             <h1 className="text-3xl font-bold text-foreground">Product Roadmap</h1>
             <p className="text-sm text-muted-foreground mt-2">Drag-and-drop roadmap planning with AI assistance</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">Auto-suggest Roadmap</Button>
+          <Button onClick={() => showFeatureToast('Roadmap Auto-suggestion')} className="bg-primary hover:bg-primary/90">Auto-suggest Roadmap</Button>
         </div>
 
         <Tabs defaultValue="timeline" className="space-y-6">

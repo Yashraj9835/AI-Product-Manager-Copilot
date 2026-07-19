@@ -1,44 +1,10 @@
 import { useState } from 'react';
+import { useChat } from '@/hooks/useChat';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Send, MessageCircle, Lightbulb } from 'lucide-react';
-
-const sampleMessages = [
-  {
-    id: 1,
-    role: 'assistant',
-    content: 'Hi! I\'m your AI Product Manager Copilot. I can help you analyze feedback, generate PRDs, prioritize features, and plan your roadmap. What would you like to know?',
-    timestamp: '10:30 AM',
-  },
-  {
-    id: 2,
-    role: 'user',
-    content: 'What are our top pain points this month?',
-    timestamp: '10:31 AM',
-  },
-  {
-    id: 3,
-    role: 'assistant',
-    content: 'Based on the feedback analysis, here are your top pain points:\n\n1. **Slow transaction speed** (847 mentions, -12% trend)\n   - Users experiencing 8+ second delays in payment processing\n   - High impact on cart abandonment\n   - Recommended action: Prioritize backend optimization\n\n2. **PDF export missing** (612 mentions, -18% trend)\n   - Feature request from enterprise customers\n   - Blocking some deals\n   - Recommended action: Plan for Q3 implementation\n\n3. **Mobile UI issues** (423 mentions, -5% trend)\n   - Navigation and form usability problems\n   - Affects 30% of user base\n   - Recommended action: Conduct UX audit',
-    timestamp: '10:31 AM',
-    sources: ['Feedback Analysis', 'Theme Extraction', 'RICE Scoring'],
-  },
-  {
-    id: 4,
-    role: 'user',
-    content: 'Can you generate a PRD for the transaction speed improvement?',
-    timestamp: '10:32 AM',
-  },
-  {
-    id: 5,
-    role: 'assistant',
-    content: 'I\'ve generated a PRD for "Improve Transaction Speed". Here\'s a summary:\n\n**Goals:**\n- Reduce transaction processing time from 8s to <2s\n- Improve user satisfaction scores by 15%\n- Reduce cart abandonment rate by 10%\n\n**Key Metrics:**\n- P95 transaction latency < 2 seconds\n- Transaction success rate > 99.5%\n- User satisfaction score > 4.5/5\n\nWould you like me to:\n1. Generate user stories?\n2. Create acceptance criteria?\n3. Export as a document?',
-    timestamp: '10:33 AM',
-    sources: ['PRD Generator', 'Feature Analysis'],
-  },
-];
 
 const suggestedQuestions = [
   'What are our top pain points this month?',
@@ -48,22 +14,22 @@ const suggestedQuestions = [
 ];
 
 export default function Chat() {
-  const [messages, setMessages] = useState(sampleMessages);
+  const { messages, sendMessage } = useChat();
   const [input, setInput] = useState('');
 
   const handleSend = () => {
     if (input.trim()) {
-      setMessages([
-        ...messages,
-        {
-          id: messages.length + 1,
-          role: 'user',
-          content: input,
-          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      sendMessage(input);
       setInput('');
     }
+  };
+
+  const handleSuggestedQuestion = (question: string) => {
+    setInput(question);
+    setTimeout(() => {
+      sendMessage(question);
+      setInput('');
+    }, 100);
   };
 
   return (
@@ -137,7 +103,7 @@ export default function Chat() {
                 {suggestedQuestions.map((question, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setInput(question)}
+                    onClick={() => handleSuggestedQuestion(question)}
                     className="w-full text-left p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors text-sm text-foreground border border-border"
                   >
                     {question}

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Plus, CheckCircle, AlertCircle } from 'lucide-react';
+import { handleAddDataSource, showInfoToast } from '@/lib/interactions';
 
 const analyticsData = [
   { date: 'Jul 1', dau: 2400, retention: 85, adoption: 42 },
@@ -29,7 +30,7 @@ export default function Analytics() {
             <h1 className="text-3xl font-bold text-foreground">Product Analytics</h1>
             <p className="text-sm text-muted-foreground mt-2">Integrate and analyze product analytics data</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90 gap-2">
+          <Button onClick={handleAddDataSource} className="bg-primary hover:bg-primary/90 gap-2">
             <Plus className="w-4 h-4" />
             Add Source
           </Button>
@@ -141,21 +142,21 @@ export default function Analytics() {
               <div className="p-4 rounded-lg bg-secondary/50 border border-border">
                 <h3 className="font-bold text-foreground mb-2">Google Analytics</h3>
                 <p className="text-sm text-muted-foreground mb-3">Connect your GA4 property to track user behavior and funnel metrics.</p>
-                <Button variant="outline" size="sm" className="border-border hover:bg-secondary">
+                <Button onClick={() => showInfoToast('Connect Google Analytics', 'Redirecting to OAuth...')} variant="outline" size="sm" className="border-border hover:bg-secondary">
                   Connect
                 </Button>
               </div>
               <div className="p-4 rounded-lg bg-secondary/50 border border-border">
                 <h3 className="font-bold text-foreground mb-2">Mixpanel</h3>
                 <p className="text-sm text-muted-foreground mb-3">Import event data and feature adoption metrics from Mixpanel.</p>
-                <Button variant="outline" size="sm" className="border-border hover:bg-secondary">
+                <Button onClick={() => showInfoToast('Connect Mixpanel', 'Redirecting to OAuth...')} variant="outline" size="sm" className="border-border hover:bg-secondary">
                   Connect
                 </Button>
               </div>
               <div className="p-4 rounded-lg bg-secondary/50 border border-border">
                 <h3 className="font-bold text-foreground mb-2">Amplitude</h3>
                 <p className="text-sm text-muted-foreground mb-3">Sync cohort analysis and retention data from Amplitude.</p>
-                <Button variant="outline" size="sm" className="border-border hover:bg-secondary">
+                <Button onClick={() => showInfoToast('Connect Amplitude', 'Redirecting to OAuth...')} variant="outline" size="sm" className="border-border hover:bg-secondary">
                   Connect
                 </Button>
               </div>

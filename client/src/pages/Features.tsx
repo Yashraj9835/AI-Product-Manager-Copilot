@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChevronRight, Star } from 'lucide-react';
+import { handleGeneratePRD, showInfoToast } from '@/lib/interactions';
 
 const featureRequests = [
   {
@@ -76,7 +77,7 @@ export default function Features() {
             <h1 className="text-3xl font-bold text-foreground">Feature Requests</h1>
             <p className="text-sm text-muted-foreground mt-2">Aggregated and prioritized feature requests from customer feedback</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">Generate PRD</Button>
+          <Button onClick={handleGeneratePRD} className="bg-primary hover:bg-primary/90">Generate PRD</Button>
         </div>
 
         <Card className="bg-card border-border">
@@ -155,7 +156,7 @@ export default function Features() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary">
+                        <Button onClick={() => showInfoToast('Feature Details', `Viewing details for: ${feature.title}`)} variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary">
                           <ChevronRight className="w-4 h-4" />
                         </Button>
                       </TableCell>

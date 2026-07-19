@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TrendingUp, TrendingDown, Merge, Split } from 'lucide-react';
+import { handleReclusterThemes, showInfoToast } from '@/lib/interactions';
 
 const themes = [
   {
@@ -71,7 +72,7 @@ export default function Themes() {
             <h1 className="text-3xl font-bold text-foreground">Theme Extraction</h1>
             <p className="text-sm text-muted-foreground mt-2">AI-powered clustering of customer feedback into themes</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">Re-cluster Themes</Button>
+          <Button onClick={handleReclusterThemes} className="bg-primary hover:bg-primary/90">Re-cluster Themes</Button>
         </div>
 
         <Card className="bg-card border-border">
@@ -131,10 +132,10 @@ export default function Themes() {
                       <TableCell className="text-muted-foreground text-sm">{theme.lastSeen}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary">
+                          <Button onClick={() => showInfoToast('Merge Themes', 'Select another theme to merge with')} variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary">
                             <Merge className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary">
+                          <Button onClick={() => showInfoToast('Split Theme', 'Select sub-themes to split')} variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary">
                             <Split className="w-4 h-4" />
                           </Button>
                         </div>

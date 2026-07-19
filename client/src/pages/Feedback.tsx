@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Upload, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { handleSelectFiles, handleAddDataSource } from '@/lib/interactions';
 
 const dataSources = [
   { name: 'Zendesk Tickets', count: 3812, lastSync: '2 hours ago', status: 'active' },
@@ -64,7 +65,7 @@ export default function Feedback() {
                   <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground mb-2">Drag and drop your files here or click to browse</p>
                   <p className="text-xs text-muted-foreground mb-4">CSV, PDF, JSON • Max 50MB per file</p>
-                  <Button className="bg-primary hover:bg-primary/90">Select Files</Button>
+                  <Button onClick={handleSelectFiles} className="bg-primary hover:bg-primary/90">Select Files</Button>
                 </div>
               </CardContent>
             </Card>
@@ -133,7 +134,7 @@ export default function Feedback() {
                     </div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full border-border hover:bg-secondary mt-4">
+                <Button onClick={handleAddDataSource} variant="outline" className="w-full border-border hover:bg-secondary mt-4">
                   + Add Source
                 </Button>
               </CardContent>

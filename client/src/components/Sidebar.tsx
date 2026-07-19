@@ -152,6 +152,19 @@ export default function Sidebar() {
             <p className="font-medium text-foreground mb-1">Nishyanth</p>
             <p>Product Manager</p>
           </div>
+          <Button 
+            onClick={() => {
+              localStorage.removeItem('user');
+              localStorage.removeItem('twoFactorVerified');
+              localStorage.removeItem('pendingUser');
+              localStorage.removeItem('authStep');
+              window.location.href = '/login';
+            }}
+            variant="destructive" 
+            className="w-full mt-2"
+          >
+            Logout
+          </Button>
         </div>
       </aside>
 
