@@ -1,6 +1,7 @@
 from app.rag.retriever import Retriever
 from app.prompts.prompt_builder import PromptBuilder
 from app.llm.gemini import GeminiService
+from app.analysis.analyzer import FeedbackAnalyzer
 
 
 class AIService:
@@ -10,6 +11,11 @@ class AIService:
         self.retriever = Retriever()
 
         self.llm = GeminiService()
+
+        self.analyzer = FeedbackAnalyzer(
+            retriever=self.retriever,
+            llm=self.llm
+        )
 
     def ask(self, question: str, limit: int = 5):
 
@@ -32,6 +38,9 @@ class AIService:
             "answer": answer,
             "sources": documents,
         }
+
+    def analyze(self, question: str):
+        return self.analyzer.analyze(question)
     
     def close(self):
         self.retriever.close()
