@@ -1,0 +1,55 @@
+==================================================
+VALIDATION REPORT
+==================================================
+
+Total Records : 1157
+
+Duplicate Rows : 33
+Duplicate Feedback IDs : 481
+Invalid Ratings : 0
+Invalid Dates : 67
+Empty Feedback : 0
+
+Missing Values
+----------------------------------------
+feedback_id               : 447
+customer_id               : 101
+restaurant_id             : 237
+restaurant_name           : 526
+feedback_text             : 0
+rating                    : 557
+source                    : 0
+created_date              : 0
+city                      : 789
+language                  : 631
+reviewer_name             : 947
+state                     : 947
+review_title              : 953
+visit_type                : 947
+food_rating               : 920
+delivery_rating           : 999
+order_value               : 999
+order_id                  : 894
+delivery_partner          : 1004
+delivery_time             : 902
+survey_id                 : 1052
+satisfaction_score        : 1059
+recommend_score           : 1052
+food_quality              : 1052
+service_quality           : 1052
+cleanliness               : 1052
+ticket_id                 : 1052
+issue_category            : 1052
+priority                  : 894
+status                    : 1052
+email_id                  : 1078
+subject                   : 1078
+request_id                : 1078
+feature_category          : 1078
+feature_title             : 1078
+staff_rating              : 1078
+ambience_rating           : 1078
+post_id                   : 1078
+platform                  : 1078
+username                  : 1078
+engagement                : 1078

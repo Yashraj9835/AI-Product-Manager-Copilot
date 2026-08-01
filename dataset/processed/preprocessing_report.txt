@@ -1,0 +1,22 @@
+======================================
+Preprocessing Report
+======================================
+
+Total Records Read: 1100
+
+Duplicate Records Removed: 34
+
+Missing Ratings Filled: 17
+
+HTML Tags Removed: 29
+
+URLs Removed: 18
+
+Emoji Removed: 22
+
+Dates Normalized: 51
+
+Final Records: 1066
+
+Generated On:
+01-08-2026
