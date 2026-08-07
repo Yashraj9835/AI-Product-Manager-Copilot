@@ -1,0 +1,53 @@
+
+==========================================================
+FEATURE ENGINEERING REPORT
+==========================================================
+
+Input File:
+C:\Users\DELL\Downloads\AI-Product-Manager-Copilot\AI-Product-Manager-Copilot\backend\backend\dataset\processed\normalized_feedback.csv
+
+Output File:
+C:\Users\DELL\Downloads\AI-Product-Manager-Copilot\AI-Product-Manager-Copilot\backend\backend\dataset\processed\final_feedback_dataset.csv
+
+Rows Processed:
+201
+
+Features Added:
+
+✔ review_length
+✔ word_count
+✔ has_rating
+✔ rating_category
+✔ contains_complaint
+✔ contains_praise
+✔ contains_request
+✔ contains_bug
+✔ contains_delivery_issue
+✔ contains_service_issue
+✔ contains_food_issue
+✔ sentiment_hint
+✔ feedback_priority
+
+Summary
+
+Positive Feedback :
+98
+
+Neutral Feedback :
+42
+
+Negative Feedback :
+61
+
+High Priority :
+109
+
+Medium Priority :
+47
+
+Low Priority :
+45
+
+Completed Successfully.
+
+==========================================================
