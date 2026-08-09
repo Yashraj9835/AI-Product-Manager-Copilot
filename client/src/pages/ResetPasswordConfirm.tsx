@@ -45,6 +45,15 @@ export default function ResetPasswordConfirm() {
     return true;
   };
 
+  /**
+   * Password reset is not implemented end-to-end.
+   *
+   * The reset link can only be reached through the Forgot Password flow, which
+   * is disabled for the same reason (no email service, no reset-token
+   * endpoint). This handler previously `setTimeout(1500)` and then claimed
+   * "Password reset successfully!" with no request ever made — the password
+   * was never actually changed. It now says so instead of simulating success.
+   */
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -52,12 +61,12 @@ export default function ResetPasswordConfirm() {
 
     setIsLoading(true);
 
-    // Simulate API call to reset password
-    setTimeout(() => {
-      setIsSuccess(true);
-      toast.success('Password reset successfully!');
-      setIsLoading(false);
-    }, 1500);
+    // No backend reset endpoint exists, so there is nothing to call.
+    toast.error('Password reset is not available yet', {
+      description:
+        'No email service or reset endpoint is connected. Ask an administrator to reset your password.',
+    });
+    setIsLoading(false);
   };
 
   const handleBackToLogin = () => {
@@ -296,12 +305,13 @@ export default function ResetPasswordConfirm() {
           )}
         </Card>
 
-        {/* Footer */}
+        {/* Footer — plain text, not buttons: there is no privacy or terms page
+            to navigate to. */}
         <div className="mt-8 text-center text-xs text-slate-500">
           <div className="flex items-center justify-center gap-4">
-            <button className="hover:text-slate-400 transition-colors">Privacy Policy</button>
+            <span>Privacy Policy</span>
             <span>•</span>
-            <button className="hover:text-slate-400 transition-colors">Terms of Service</button>
+            <span>Terms of Service</span>
           </div>
         </div>
       </div>

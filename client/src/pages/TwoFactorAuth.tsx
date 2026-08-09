@@ -45,58 +45,28 @@ export default function TwoFactorAuth() {
     }
   };
 
-  const handleVerify = async (verifyCode?: string) => {
-    const codeToVerify = verifyCode || code;
-
-    if (!codeToVerify) {
-      toast.error('Please enter the verification code');
-      return;
-    }
-
-    if (codeToVerify.length !== 6) {
-      toast.error('Verification code must be 6 digits');
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Simulate API call to verify 2FA code
-    setTimeout(() => {
-      // Accept any 6-digit code for demo
-      setIsVerified(true);
-      toast.success('Two-factor authentication verified!');
-      setIsLoading(false);
-
-      // Redirect to dashboard after 1 second
-      setTimeout(() => {
-        const pending = localStorage.getItem('pendingUser');
-        const userObj = pending ? JSON.parse(pending) : { email: 'user@example.com' };
-        localStorage.setItem('user', JSON.stringify(userObj));
-        localStorage.setItem('twoFactorVerified', 'true');
-        localStorage.removeItem('pendingUser');
-        localStorage.removeItem('authStep');
-        window.location.href = '/';
-      }, 1000);
-    }, 1500);
+  /**
+   * 2FA is not implemented.
+   *
+   * Previously accepted any 6-digit code, then wrote a fake user object to
+   * localStorage and hard-navigated to "/" — but no backend route issues 2FA
+   * codes, no email service sends them, and no endpoint validates them. A user
+   * entering a code saw "Two-factor authentication verified!" when nothing was
+   * verified.
+   *
+   * The form now says so instead of simulating success.
+   */
+  const handleVerify = (verifyCode?: string) => {
+    toast.error('Two-factor authentication is not configured', {
+      description:
+        'No 2FA service is connected. Log in with your email and password only, or contact support.',
+    });
   };
 
-  const handleResendCode = async () => {
-    if (resendCount >= 3) {
-      toast.error('Maximum resend attempts reached. Please contact support.');
-      return;
-    }
-
-    setIsLoading(true);
-    setResendCount(prev => prev + 1);
-
-    // Simulate API call to resend code
-    setTimeout(() => {
-      setTimeLeft(300);
-      setCanResend(false);
-      setCode('');
-      toast.success('Verification code sent to your email');
-      setIsLoading(false);
-    }, 1000);
+  const handleResendCode = () => {
+    toast.error('Two-factor authentication is not configured', {
+      description: 'No 2FA codes are being sent.',
+    });
   };
 
   const handleBackToLogin = () => {
@@ -115,7 +85,7 @@ export default function TwoFactorAuth() {
       <div className="relative z-10 w-full max-w-md">
         {/* Header */}
         <div className="mb-8">
-          {!isVerified && (
+          {(
             <button
               onClick={handleBackToLogin}
               className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-300 transition-colors mb-6"
@@ -138,8 +108,7 @@ export default function TwoFactorAuth() {
 
         {/* Main Card */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-          {!isVerified ? (
-            <>
+          <>
               <CardHeader className="space-y-2">
                 <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-500/20 border border-blue-500/30 mx-auto mb-4">
                   <Shield className="w-6 h-6 text-blue-400" />
@@ -213,57 +182,19 @@ export default function TwoFactorAuth() {
                   </Button>
                 </div>
 
-                {/* Security Info */}
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 space-y-2">
-                  <h4 className="font-medium text-blue-400 text-sm">Security Notice</h4>
-                  <ul className="text-xs text-blue-300 space-y-1">
-                    <li>• Never share your 2FA code with anyone</li>
-                    <li>• We'll never ask for your code via email or phone</li>
-                    <li>• Your code is only valid for 5 minutes</li>
-                  </ul>
-                </div>
-
-                {/* Alternative Methods */}
-                <div className="text-center">
-                  <p className="text-xs text-slate-500 mb-2">Having trouble?</p>
-                  <button
-                    type="button"
-                    className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors"
-                  >
-                    Use backup code instead
-                  </button>
-                </div>
-              </CardContent>
-            </>
-          ) : (
-            <>
-              <CardHeader className="space-y-4 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center animate-pulse">
-                    <CheckCircle className="w-8 h-8 text-green-400" />
-                  </div>
-                </div>
-                <CardTitle className="text-2xl text-white">Verified Successfully</CardTitle>
-                <CardDescription className="text-slate-400">
-                  Your identity has been verified. Redirecting to dashboard...
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                  <p className="text-sm text-green-400 font-medium">✓ Two-factor authentication verified</p>
-                  <p className="text-xs text-slate-400 mt-2">
-                    Your account is now secured with two-factor authentication.
+                {/* Replaces both the "Security Notice" list and the dead
+                    "Use backup code instead" button — neither described
+                    anything this deployment actually does. */}
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                  <p className="text-xs text-amber-200/90">
+                    <span className="font-medium text-amber-300">Not configured.</span>
+                    <br />
+                    No service issues or validates 2FA codes here, so this step cannot be completed.
+                    Sign in with your email and password instead.
                   </p>
                 </div>
-
-                <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                  Redirecting in a moment...
-                </div>
               </CardContent>
             </>
-          )}
         </Card>
 
         {/* Footer */}
