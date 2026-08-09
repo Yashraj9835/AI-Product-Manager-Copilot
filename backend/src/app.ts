@@ -3,6 +3,7 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/auth.routes';
 import feedbackRoutes from './routes/feedback.routes';
+import workspaceRoutes from './routes/workspace.routes';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -83,6 +84,18 @@ app.get('/', (_req, res) => {
       updateFeedback: 'PUT /api/feedback/:id',
       deleteFeedback: 'DELETE /api/feedback/:id',
       analyze: 'POST /api/analyze',
+      updateUser: 'PATCH /api/user',
+      roadmapList: 'GET /api/roadmap',
+      createRoadmapItem: 'POST /api/roadmap',
+      reorderRoadmap: 'PATCH /api/roadmap/reorder',
+      updateRoadmapItem: 'PATCH /api/roadmap/:id',
+      deleteRoadmapItem: 'DELETE /api/roadmap/:id',
+      prdList: 'GET /api/prd',
+      createPrd: 'POST /api/prd',
+      updatePrd: 'PATCH /api/prd/:id',
+      deletePrd: 'DELETE /api/prd/:id',
+      mergeThemes: 'POST /api/themes/merge',
+      splitTheme: 'POST /api/themes/split',
       docs: 'GET /api-docs',
     },
     documentation: 'Interactive Swagger UI at /api-docs',
@@ -150,6 +163,9 @@ app.use('/api/auth', authRoutes);
 
 // ── API routes (Feedback, Stats, Analyze) ──
 app.use('/api', feedbackRoutes);
+
+// ── API routes (User settings, Roadmap, PRD, Theme maintenance) ──
+app.use('/api', workspaceRoutes);
 
 // ── Global error handler (must be LAST) ──
 app.use(errorHandler);
