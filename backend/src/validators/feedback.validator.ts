@@ -12,18 +12,30 @@ import { z } from 'zod';
  * auto-generates one as `FB_GEN_<timestamp>_<random>`.
  * ──────────────────────────────────────────────────────────────────────── */
 
-const feedbackBody = z.object({
+/**
+ * Per-record schema — the single source of truth for what one feedback item
+ * must look like.
+ *
+ * Used directly for a single-object POST and applied element-by-element for a
+ * bulk array, so both paths validate against exactly this definition.
+ */
+export const feedbackBodySchema = z.object({
   feedbackId:        z.string().optional(),
   customerId:        z.string().optional(),
   restaurantId:      z.string().optional(),
   restaurantName:    z.string().optional(),
 
-  text:              z.string().min(1, 'Feedback text is required'),
+  // required_error is set explicitly so a MISSING field reports the same
+  // sentence as a BLANK one — Zod's default for an absent key is a bare
+  // "Required", which tells a bulk uploader nothing about what to fix.
+  text:              z.string({ required_error: 'Feedback text is required' })
+                       .min(1, 'Feedback text is required'),
   review:            z.string().optional(),
   reviewTitle:       z.string().optional(),
 
   rating:            z.number().min(0).max(5).optional(),
-  source:            z.string().min(1, 'Source is required'),
+  source:            z.string({ required_error: 'Source is required' })
+                       .min(1, 'Source is required'),
   createdAt:         z.string().or(z.date()).optional(),
   city:              z.string().optional(),
   language:          z.string().optional(),
@@ -73,14 +85,41 @@ const feedbackBody = z.object({
   aiRecommendation:  z.string().optional(),
 });
 
-/** POST /api/feedback — accepts a single object OR an array for bulk insert */
+/**
+ * POST /api/feedback — checks the OUTER shape only.
+ *
+ * Element contents are deliberately NOT validated here. The previous
+ * `z.union([feedbackBody, z.array(feedbackBody).min(1)])` collapsed any failure
+ * — in a single object or in one array element — into a flat "Invalid input"
+ * on `body`, because Zod aggregates union branch failures and cannot report
+ * which branch was "meant" or which element broke.
+ *
+ * Records are therefore validated in the controller, one at a time against
+ * `feedbackBodySchema`, which is what lets each issue carry its array index.
+ */
 export const createFeedbackSchema = z.object({
-  body: z.union([feedbackBody, z.array(feedbackBody).min(1)]),
+  body: z.unknown().superRefine((body, ctx) => {
+    if (Array.isArray(body)) {
+      if (body.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Bulk array must contain at least one feedback item',
+        });
+      }
+      return;
+    }
+    if (typeof body !== 'object' || body === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Request body must be a feedback object, or a non-empty array of them',
+      });
+    }
+  }),
 });
 
 /** PUT /api/feedback/:id — all fields optional */
 export const updateFeedbackSchema = z.object({
-  body: feedbackBody.partial(),
+  body: feedbackBodySchema.partial(),
   params: z.object({ id: z.string().min(1) }),
 });
 
@@ -97,6 +136,7 @@ export const queryFeedbackSchema = z.object({
     endDate:   z.string().optional(),
     restaurantId: z.string().optional(),
     city:      z.string().optional(),
+    featureCategory: z.string().optional(),
   }),
 });
 
