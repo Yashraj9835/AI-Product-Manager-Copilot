@@ -78,6 +78,45 @@ npm start
 
 The API server will run on `http://localhost:5000`.
 
+### 4. Start the FastAPI Upload Service
+
+The FastAPI service provides CSV upload and exposes interactive Swagger
+documentation at `/docs`.
+
+Open a second terminal from the repository root:
+
+```bash
+cd fastapi_backend
+pip install -r requirements.txt
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+The FastAPI service will run on `http://127.0.0.1:8000`.
+
+### 5. Start the Frontend
+
+Open a third terminal from the repository root:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Open the application at `http://localhost:3000`.
+
+### Local Service URLs
+
+| Service | URL |
+|---|---|
+| React frontend | http://localhost:3000 |
+| Express API | http://localhost:5000 |
+| FastAPI Swagger UI | http://127.0.0.1:8000/docs |
+| FastAPI OpenAPI JSON | http://127.0.0.1:8000/openapi.json |
+
+Swagger UI is opened by visiting the FastAPI `/docs` URL in a browser. It is
+separate from the React frontend and documents the FastAPI upload endpoint.
+
 ---
 
 ## 🔐 Authentication & Roles

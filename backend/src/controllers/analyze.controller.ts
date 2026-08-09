@@ -3,11 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 /**
  * POST /api/analyze
  *
- * TODO: Proxy to Yash's FastAPI service at ${FASTAPI_URL}/analyze
- *       once the endpoint is available.
- *
- * For now, returns a mock response so the frontend team (Arpita) can
- * integrate against this endpoint without being blocked.
+ * Proxies to Yash's FastAPI service when FASTAPI_URL is configured and
+ * falls back to a clearly marked mock response while that endpoint is unavailable.
  *
  * Expected request body: { text: string }
  * Expected response shape matches Yash's planned output:
@@ -20,23 +17,10 @@ export async function analyzeFeedback(
 ): Promise<void> {
   try {
     const { text } = req.body;
+    let mockAnalysis;
 
-    // ──────────────────────────────────────────────────────────────────
-    // TODO: Replace mock with actual proxy to Yash's FastAPI service.
-    //
-    //   const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
-    //   const response = await fetch(`${fastApiUrl}/analyze`, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ text }),
-    //   });
-    //   const result = await response.json();
-    //   res.json({ success: true, data: result });
-    //
-    // ──────────────────────────────────────────────────────────────────
-
-    // Mock response — matches Yash's planned FastAPI output shape
-    const mockAnalysis = {
+    // Default mock response — matches Yash's planned FastAPI output shape
+    const defaultMockAnalysis = {
       category: 'Food',
       sentiment: 'Positive',
       theme: 'Quality',
@@ -46,10 +30,32 @@ export async function analyzeFeedback(
         'No immediate action required. Continue monitoring for trends.',
     };
 
-    console.log(
-      `⚠️  /api/analyze called with ${text.length} chars — returning MOCK response. ` +
-      `Wire up FASTAPI_URL once Yash's service is live.`
-    );
+    try {
+      const fastApiUrl = process.env.FASTAPI_URL?.trim();
+      if (!fastApiUrl) {
+        throw new Error('FASTAPI_URL is not configured');
+      }
+
+      const response = await fetch(`${fastApiUrl}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`FastAPI responded with status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      res.json({ success: true, data: result, mock: false });
+      return;
+    } catch (fetchError) {
+      console.warn(
+        `/api/analyze called with ${text.length} chars. FastAPI service unreachable or not configured. Falling back to MOCK response.`,
+        fetchError
+      );
+      mockAnalysis = defaultMockAnalysis;
+    }
 
     res.json({
       success: true,

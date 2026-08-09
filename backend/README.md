@@ -18,6 +18,7 @@ npm run seed
 
 # 4. Start the dev server
 npm run dev        # http://localhost:5000
+                   # Interactive API docs: http://localhost:5000/api-docs
 ```
 
 ### Production Build
@@ -36,7 +37,7 @@ npm start          # Runs compiled JS from dist/
 | `MONGO_URI` | `mongodb://localhost:27017/ai_pm_copilot` | MongoDB connection string |
 | `PORT` | `5000` | Server port |
 | `CORS_ORIGIN` | `http://localhost:3000` | Allowed frontend origin (comma-separated for multiple) |
-| `FASTAPI_URL` | `http://localhost:8000` | Yash's FastAPI analysis service (not yet live) |
+| `FASTAPI_URL` | unset | Optional Yash FastAPI analysis service URL. The mock is used when unset or unreachable. |
 | `JWT_SECRET` | `super_secret_jwt_key_ai_pm_copilot_2026` | Secret key for signing JWT tokens |
 | `JWT_EXPIRES_IN` | `7d` | Expiration time for JWT tokens |
 
@@ -167,6 +168,13 @@ Authorization: Bearer <YOUR_JWT_TOKEN>
 
 ## API Reference
 
+Interactive API docs: `http://localhost:<PORT>/api-docs`
+
+Every endpoint below is listed there and runnable in the browser via **Try it
+out** → **Execute**, with generated curl and live responses. For padlocked
+endpoints, get a token from `/api/auth/login`, click **Authorize**, and paste it
+in. The raw OpenAPI 3.0 document is served at `/api-docs.json`.
+
 Base URL: `http://localhost:5000/api`
 
 ### Health Check
@@ -185,6 +193,21 @@ Authorization: Bearer <TOKEN>
 Content-Type: application/json
 ```
 
+Request body is either one feedback object or a non-empty array of objects. Each
+object requires `text` and `source`; `feedbackId` is generated when omitted.
+
+Single response (`201`):
+
+```json
+{ "success": true, "data": { "feedbackId": "FB-1", "text": "...", "source": "Survey" } }
+```
+
+Bulk response (`201`):
+
+```json
+{ "success": true, "message": "2 feedback records created", "count": 2, "data": [] }
+```
+
 ---
 
 ### List Feedback (Requires Auth)
@@ -192,6 +215,19 @@ Content-Type: application/json
 ```http
 GET /api/feedback?page=1&limit=20&category=Food&sentiment=Positive
 Authorization: Bearer <TOKEN>
+```
+
+Supported query parameters are `page`, `limit`, `category`, `sentiment`,
+`priority`, `source`, `startDate`, `endDate`, `restaurantId`, `city`, and
+`featureCategory`. Multiple filters are combined with AND semantics. The
+response is shaped for pagination:
+
+```json
+{
+  "success": true,
+  "data": [],
+  "pagination": { "page": 1, "limit": 20, "total": 0, "totalPages": 0 }
+}
 ```
 
 ---
@@ -203,6 +239,9 @@ GET /api/feedback/:id
 Authorization: Bearer <TOKEN>
 ```
 
+Returns `{ "success": true, "data": <feedback> }`, or `404` with an `error`
+message when `:id` is not found. The identifier is `feedbackId`.
+
 ---
 
 ### Update Feedback (Requires Auth)
@@ -213,6 +252,9 @@ Authorization: Bearer <TOKEN>
 Content-Type: application/json
 ```
 
+Accepts a partial feedback object and returns `{ "success": true, "data":
+<updated feedback> }`.
+
 ---
 
 ### Delete Feedback (Requires Admin Role)
@@ -221,6 +263,8 @@ Content-Type: application/json
 DELETE /api/feedback/:id
 Authorization: Bearer <ADMIN_TOKEN>
 ```
+
+Returns `{ "success": true, "message": "Feedback \"<id>\" deleted" }`.
 
 ---
 
@@ -231,14 +275,36 @@ GET /api/stats
 Authorization: Bearer <TOKEN>
 ```
 
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "total": 0,
+    "byCategory": [{ "name": "Food", "value": 10 }],
+    "bySentiment": [{ "name": "Positive", "value": 8 }],
+    "byPriority": [{ "name": "High", "value": 2 }],
+    "bySource": [{ "name": "Survey", "value": 10 }]
+  }
+}
+```
+
 ---
 
-### Analyze Feedback (Stub — Public)
+### Analyze Feedback (Public, FastAPI proxy with fallback)
 
 ```http
 POST /api/analyze
 Content-Type: application/json
 ```
+
+Request body: `{ "text": "..." }`.
+When FastAPI is available, the response is `{ "success": true, "mock": false,
+"data": <FastAPI response> }`. Otherwise the route returns HTTP 200 with
+`mock: true` and the fallback fields `category`, `sentiment`, `theme`,
+`pain_point`, `priority`, and `recommendation`. A FastAPI outage never produces
+a 500 response from this route.
 
 ---
 
