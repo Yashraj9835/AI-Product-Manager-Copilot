@@ -7,6 +7,7 @@ from app.api.schemas import QuestionRequest, QuestionResponse
 from app.services.ai_service import AIService
 from app.services.prd_service import PRDService
 from app.services.prioritization_service import PrioritizationService
+from app.services.copilot_service import CopilotService
 
 from app.analysis.models import AnalysisResponse
 from app.analysis.prd_models import PRDResponse
@@ -19,13 +20,38 @@ from app.analysis.priority_models import (
 router = APIRouter()
 
 
+# ---------------------------------------------------------
 # Shared Retriever / Qdrant instance
-# Prevents multiple local Qdrant clients from locking the same storage.
+# ---------------------------------------------------------
+
+# Prevents multiple local Qdrant clients from locking
+# the same local storage.
+
 retriever = Retriever()
 
+
+# ---------------------------------------------------------
+# Services
+# ---------------------------------------------------------
+
 ai_service = AIService(retriever)
+
 prd_service = PRDService(retriever)
+
 priority_service = PrioritizationService()
+
+
+# Central conversational AI Product Manager agent
+copilot_service = CopilotService(
+    ai_service=ai_service,
+    prd_service=prd_service,
+    prioritization_service=priority_service,
+)
+
+
+# ---------------------------------------------------------
+# AI / Conversational endpoints
+# ---------------------------------------------------------
 
 
 @router.post("/ask", response_model=QuestionResponse)
@@ -39,20 +65,50 @@ def analyze(request: QuestionRequest):
     return ai_service.analyze(request.question)
 
 
+@router.post("/copilot")
+def copilot(request: QuestionRequest):
+    """
+    Central AI Product Manager conversational endpoint.
+
+    Automatically routes the user's question to:
+
+    - Product analysis / RAG
+    - PRD generation
+    - Feature prioritization
+    """
+
+    return copilot_service.answer(request.question)
+
+
+# ---------------------------------------------------------
+# PRD
+# ---------------------------------------------------------
+
+
 @router.post("/prd", response_model=PRDResponse)
 def generate_prd(request: QuestionRequest):
     return prd_service.generate(request.question)
 
 
+# ---------------------------------------------------------
+# Feature prioritization
+# ---------------------------------------------------------
+
+
 @router.post(
     "/prioritize",
-    response_model=PrioritizationResponse
+    response_model=PrioritizationResponse,
 )
 def prioritize_features(request: PrioritizationRequest):
     return priority_service.prioritize(
         request.framework,
-        request.features
+        request.features,
     )
+
+
+# ---------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------
 
 
 @router.get("/dashboard")
@@ -98,6 +154,11 @@ async def dashboard():
             },
         ],
     }
+
+
+# ---------------------------------------------------------
+# Feedback
+# ---------------------------------------------------------
 
 
 @router.get("/feedback")

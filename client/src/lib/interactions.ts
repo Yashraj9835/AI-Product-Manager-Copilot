@@ -134,3 +134,59 @@ export async function copyToClipboard(text: string, label = 'Copied to clipboard
     return false;
   }
 }
+
+export interface CopilotResult {
+  live: boolean;
+  answer: string | null;
+  data: Record<string, unknown> | null;
+  error?: string;
+}
+
+export async function requestCopilot(
+  question: string,
+  timeoutMs = 15000
+): Promise<CopilotResult> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch('http://127.0.0.1:8001/ask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        question,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `AI service returned ${response.status}: ${errorText}`
+      );
+    }
+
+    const result = await response.json();
+
+    return {
+      live: true,
+      answer: result.answer ?? null,
+      data: result,
+    };
+  } catch (err: any) {
+    const timedOut = err?.name === 'AbortError';
+
+    return {
+      live: false,
+      answer: null,
+      data: null,
+      error: timedOut
+        ? `AI service did not respond within ${Math.round(timeoutMs / 1000)}s.`
+        : err?.message || 'AI request failed',
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
