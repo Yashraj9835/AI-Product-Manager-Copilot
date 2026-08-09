@@ -222,12 +222,14 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
+        {/* Footer — plain text, not buttons. There is no privacy or terms page
+            in this app, so rendering these as clickable controls with hover
+            states advertised an action that could never happen. */}
         <div className="mt-8 text-center text-xs text-slate-500 space-y-2">
           <div className="flex items-center justify-center gap-4">
-            <button className="hover:text-slate-400 transition-colors">Privacy Policy</button>
+            <span>Privacy Policy</span>
             <span>•</span>
-            <button className="hover:text-slate-400 transition-colors">Terms of Service</button>
+            <span>Terms of Service</span>
           </div>
           <p>Use “Try Demo Account” above to sign in without registering.</p>
         </div>
