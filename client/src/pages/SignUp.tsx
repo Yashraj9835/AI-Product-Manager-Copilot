@@ -250,14 +250,7 @@ export default function SignUp() {
                   disabled={isLoading}
                 />
                 <label htmlFor="terms" className="text-xs text-slate-400 cursor-pointer">
-                  I agree to the{' '}
-                  <button type="button" className="text-blue-400 hover:text-blue-300 font-medium">
-                    Terms of Service
-                  </button>{' '}
-                  and{' '}
-                  <button type="button" className="text-blue-400 hover:text-blue-300 font-medium">
-                    Privacy Policy
-                  </button>
+                  I agree to the Terms of Service and Privacy Policy
                 </label>
               </div>
 

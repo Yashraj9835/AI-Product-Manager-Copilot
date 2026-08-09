@@ -17,13 +17,20 @@ import Prioritization from "./pages/Prioritization";
 import PRD from "./pages/PRD";
 import Roadmap from "./pages/Roadmap";
 import Chat from "./pages/Chat";
+import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import SignUp from "./pages/SignUp";
 import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
 
-function Router({ isAuthenticated, onLogout }: { isAuthenticated: boolean; onLogout: () => void }) {
+/**
+ * Logout lives in the Sidebar, which calls redirectToLogin() — that clears the
+ * session and hard-navigates, so App does not need to pass a callback down.
+ * The previous `onLogout` prop was only ever stamped onto a DOM attribute,
+ * where React could not serialize it.
+ */
+function Router({ isAuthenticated }: { isAuthenticated: boolean }) {
   if (!isAuthenticated) {
     return (
       <Switch>
@@ -40,7 +47,7 @@ function Router({ isAuthenticated, onLogout }: { isAuthenticated: boolean; onLog
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 overflow-x-hidden min-h-screen" data-logout={onLogout}>
+      <main className="flex-1 lg:ml-64 overflow-x-hidden min-h-screen">
         <Switch>
           {/* Pages that call protected endpoints re-check the session on entry,
               so an expired token redirects instead of firing a doomed request. */}
@@ -50,11 +57,14 @@ function Router({ isAuthenticated, onLogout }: { isAuthenticated: boolean; onLog
           <Route path="/themes"><ProtectedRoute component={Themes} /></Route>
           <Route path="/features"><ProtectedRoute component={Features} /></Route>
           <Route path="/prioritization"><ProtectedRoute component={Prioritization} /></Route>
+          {/* PRD and Roadmap now read and write owner-scoped records, and
+              Settings reads the account, so all three are guarded too. */}
+          <Route path="/prd"><ProtectedRoute component={PRD} /></Route>
+          <Route path="/roadmap"><ProtectedRoute component={Roadmap} /></Route>
+          <Route path="/settings"><ProtectedRoute component={Settings} /></Route>
 
           {/* Client-side only — no backend call, so no guard needed beyond the
               outer isAuthenticated check. */}
-          <Route path="/prd" component={PRD} />
-          <Route path="/roadmap" component={Roadmap} />
           <Route path="/chat" component={Chat} />
           <Route path="/404" component={NotFound} />
           {/* Final fallback route */}
@@ -86,12 +96,6 @@ function App() {
     setIsLoading(false);
   }, []);
 
-  // Function to logout
-  const handleLogout = () => {
-    clearSession();
-    setIsAuthenticated(false);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -108,7 +112,7 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <Router isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+          <Router isAuthenticated={isAuthenticated} />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

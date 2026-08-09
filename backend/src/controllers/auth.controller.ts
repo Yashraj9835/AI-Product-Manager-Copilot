@@ -17,12 +17,21 @@ function generateToken(user: IUser): string {
   );
 }
 
-function sanitizeUser(user: IUser) {
+/**
+ * The public shape of a user — never includes the password hash.
+ *
+ * Exported because PATCH /api/user must answer with exactly the same shape as
+ * GET /api/auth/me; the Settings page reads both and would otherwise see a
+ * field appear or vanish depending on which call populated it.
+ */
+export function sanitizeUser(user: IUser) {
   return {
     id: user._id,
     email: user.email,
     name: user.name,
     role: user.role,
+    company: user.company ?? '',
+    settings: user.settings,
     createdAt: user.createdAt,
   };
 }

@@ -3,11 +3,28 @@ import bcrypt from 'bcryptjs';
 
 export type UserRole = 'admin' | 'product_manager' | 'viewer';
 
+/**
+ * Per-user preferences edited from the Settings page (PATCH /api/user).
+ *
+ * These live on the user document rather than in localStorage so they survive a
+ * new browser or device — the Settings page is only honest about "saved" if the
+ * value comes back from the database on the next load.
+ */
+export interface IUserSettings {
+  emailNotifications: boolean;
+  weeklyDigest: boolean;
+  highPriorityAlerts: boolean;
+  /** Default rows per page for the feedback table. */
+  defaultPageSize: number;
+}
+
 export interface IUser extends Document {
   email: string;
   password?: string;
   name: string;
   role: UserRole;
+  company?: string;
+  settings: IUserSettings;
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -36,6 +53,18 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ['admin', 'product_manager', 'viewer'],
       default: 'viewer',
+    },
+    company: {
+      type: String,
+      trim: true,
+    },
+    // Defaults are applied here rather than in the controller so users created
+    // before this field existed still read back a complete settings object.
+    settings: {
+      emailNotifications: { type: Boolean, default: true },
+      weeklyDigest: { type: Boolean, default: false },
+      highPriorityAlerts: { type: Boolean, default: true },
+      defaultPageSize: { type: Number, default: 20, min: 1, max: 100 },
     },
     createdAt: {
       type: Date,

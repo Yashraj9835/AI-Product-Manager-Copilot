@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { AlertCircle } from 'lucide-react';
-import { showInfoToast } from '@/lib/interactions';
+import { AlertCircle, X } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 
 export default function Prioritization() {
+  const [showMethodology, setShowMethodology] = useState(false);
   const { data: statsData, isLoading, error, fetchData: fetchStats } = useApi<any>();
   const { data: feedbackData, fetchData: fetchFeedback } = useApi<any>();
 
@@ -200,12 +200,65 @@ export default function Prioritization() {
                 <p className="text-muted-foreground mb-4">
                   The RICE framework balances multiple factors to provide a comprehensive prioritization score. Use this alongside your team's strategic goals and capacity planning.
                 </p>
-                <Button onClick={() => showInfoToast('RICE Framework', 'The RICE framework helps prioritize features based on Reach, Impact, Confidence, and Effort.')} className="bg-primary hover:bg-primary/90">View Methodology</Button>
+                <Button
+                  onClick={() => setShowMethodology(true)}
+                  className="bg-primary hover:bg-primary/90"
+                  data-testid="view-methodology"
+                >
+                  View Methodology
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Methodology dialog — the button previously emitted a one-line info
+          toast that repeated the framework's name; the same four RICE terms
+          are already explained on the Breakdown tab, so the dialog links the
+          two views instead of restating them. */}
+      {showMethodology && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowMethodology(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+            data-testid="methodology-dialog"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">RICE methodology</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  The four inputs behind every score in the chart above.
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowMethodology(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {[
+              { term: 'Reach', def: 'How many users the feature affects per quarter, estimated from the volume of feedback in its category.' },
+              { term: 'Impact', def: 'Effect per user on a 1–3 scale, driven by how much high-priority feedback the category carries.' },
+              { term: 'Confidence', def: 'How sure we are of Reach and Impact — higher when more feedback supports the estimate.' },
+              { term: 'Effort', def: 'Relative build cost in story points; the same value the Feature Requests table shows as S/M/L/XL.' },
+            ].map((row) => (
+              <div key={row.term} className="p-3 rounded-lg bg-secondary/50 border border-border">
+                <p className="font-semibold text-foreground text-sm">{row.term}</p>
+                <p className="text-xs text-muted-foreground mt-1">{row.def}</p>
+              </div>
+            ))}
+
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setShowMethodology(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

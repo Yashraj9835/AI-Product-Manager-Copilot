@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Plus, CheckCircle, AlertCircle } from 'lucide-react';
-import { handleAddDataSource, showInfoToast } from '@/lib/interactions';
+import { Link } from 'wouter';
 import { useApi } from '@/hooks/useApi';
 
 export default function Analytics() {
@@ -62,10 +62,12 @@ export default function Analytics() {
             <h1 className="text-3xl font-bold text-foreground">Product Analytics</h1>
             <p className="text-sm text-muted-foreground mt-2">Integrate and analyze product analytics data</p>
           </div>
-          <Button onClick={handleAddDataSource} className="bg-primary hover:bg-primary/90 gap-2">
-            <Plus className="w-4 h-4" />
-            Add Source
-          </Button>
+          <Link href="/feedback">
+            <Button className="bg-primary hover:bg-primary/90 gap-2" data-testid="analytics-add-source">
+              <Plus className="w-4 h-4" />
+              Add Source
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -170,27 +172,45 @@ export default function Analytics() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-secondary/50 border border-border">
-                <h3 className="font-bold text-foreground mb-2">Google Analytics</h3>
-                <p className="text-sm text-muted-foreground mb-3">Connect your GA4 property to track user behavior and funnel metrics.</p>
-                <Button onClick={() => showInfoToast('Connect Google Analytics', 'Redirecting to OAuth...')} variant="outline" size="sm" className="border-border hover:bg-secondary">
-                  Connect
-                </Button>
-              </div>
-              <div className="p-4 rounded-lg bg-secondary/50 border border-border">
-                <h3 className="font-bold text-foreground mb-2">Mixpanel</h3>
-                <p className="text-sm text-muted-foreground mb-3">Import event data and feature adoption metrics from Mixpanel.</p>
-                <Button onClick={() => showInfoToast('Connect Mixpanel', 'Redirecting to OAuth...')} variant="outline" size="sm" className="border-border hover:bg-secondary">
-                  Connect
-                </Button>
-              </div>
-              <div className="p-4 rounded-lg bg-secondary/50 border border-border">
-                <h3 className="font-bold text-foreground mb-2">Amplitude</h3>
-                <p className="text-sm text-muted-foreground mb-3">Sync cohort analysis and retention data from Amplitude.</p>
-                <Button onClick={() => showInfoToast('Connect Amplitude', 'Redirecting to OAuth...')} variant="outline" size="sm" className="border-border hover:bg-secondary">
-                  Connect
-                </Button>
-              </div>
+              {/* These three require OAuth client credentials this project does
+                  not hold, so there is no honest "connect" to perform. They are
+                  disabled and say why, rather than showing a "Redirecting to
+                  OAuth..." toast that never redirected anywhere. */}
+              {[
+                {
+                  name: 'Google Analytics',
+                  blurb: 'Connect your GA4 property to track user behavior and funnel metrics.',
+                  credential: 'GA4 OAuth client ID and secret',
+                },
+                {
+                  name: 'Mixpanel',
+                  blurb: 'Import event data and feature adoption metrics from Mixpanel.',
+                  credential: 'Mixpanel service account credentials',
+                },
+                {
+                  name: 'Amplitude',
+                  blurb: 'Sync cohort analysis and retention data from Amplitude.',
+                  credential: 'Amplitude API key and secret key',
+                },
+              ].map((integration) => (
+                <div key={integration.name} className="p-4 rounded-lg bg-secondary/50 border border-border">
+                  <h3 className="font-bold text-foreground mb-2">{integration.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-3">{integration.blurb}</p>
+                  <Button
+                    disabled
+                    variant="outline"
+                    size="sm"
+                    className="border-border"
+                    title={`Requires ${integration.credential}, which is not configured`}
+                    data-testid={`connect-${integration.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    Connect
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Not configured — needs {integration.credential}.
+                  </p>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

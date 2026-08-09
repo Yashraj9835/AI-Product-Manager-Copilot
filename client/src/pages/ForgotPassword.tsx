@@ -3,47 +3,35 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, ArrowLeft, CheckCircle, Sparkles } from 'lucide-react';
+import { Mail, ArrowLeft, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ForgotPassword() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /**
+   * Password reset is not implemented.
+   *
+   * This handler used to `setTimeout(1500)` and then show "Password reset email
+   * sent successfully!" plus a full "Check Your Email" screen listing what to
+   * expect in the inbox — but no request was ever made and no email was ever
+   * sent, so the user would wait for a message that did not exist. Sending one
+   * needs an SMTP provider and a token-issuing endpoint, neither of which this
+   * project has credentials for.
+   *
+   * The form now says so instead of simulating success.
+   */
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!email) {
-      toast.error('Please enter your email address');
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Simulate API call to send reset email
-    setTimeout(() => {
-      setIsSubmitted(true);
-      toast.success('Password reset email sent successfully!');
-      setIsLoading(false);
-    }, 1500);
+    toast.error('Password reset is not available yet', {
+      description:
+        'No email service is connected, so no reset link can be sent. Ask an administrator to reset your password.',
+    });
   };
 
   const handleBackToLogin = () => {
     setLocation('/login');
-  };
-
-  const handleTryAnother = () => {
-    setEmail('');
-    setIsSubmitted(false);
   };
 
   return (
@@ -79,12 +67,11 @@ export default function ForgotPassword() {
 
         {/* Main Card */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-          {!isSubmitted ? (
-            <>
+          <>
               <CardHeader className="space-y-2">
                 <CardTitle className="text-2xl text-white">Reset Your Password</CardTitle>
                 <CardDescription className="text-slate-400">
-                  Enter your email address and we'll send you a link to reset your password.
+                  Self-service password reset is not connected yet.
                 </CardDescription>
               </CardHeader>
 
@@ -101,129 +88,51 @@ export default function ForgotPassword() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
-                        disabled={isLoading}
                       />
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">
-                      We'll send a password reset link to this email address.
-                    </p>
                   </div>
 
-                  {/* Submit Button */}
+                  {/* Disabled rather than hidden: the field and button stay
+                      visible so the page still explains what it is for, but
+                      clicking cannot produce a false "email sent". */}
                   <Button
                     type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 gap-2"
+                    disabled
+                    className="w-full bg-blue-600 text-white font-medium py-2 gap-2"
+                    title="Requires an email service, which is not configured"
+                    data-testid="forgot-submit"
                   >
-                    {isLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        Send Reset Link
-                      </>
-                    )}
+                    Send Reset Link
                   </Button>
                 </form>
 
-                {/* Help Text */}
-                <div className="bg-slate-700/30 border border-slate-600/50 rounded-lg p-4">
-                  <p className="text-xs text-slate-400">
-                    <span className="font-medium text-slate-300">Didn't receive an email?</span>
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                  <p className="text-xs text-amber-200/90">
+                    <span className="font-medium text-amber-300">Not available yet.</span>
                     <br />
-                    Check your spam folder or try another email address.
+                    Sending a reset link needs an email service, which this deployment does not have
+                    configured. Ask an administrator to reset your password directly.
                   </p>
                 </div>
+
+                <Button
+                  onClick={handleBackToLogin}
+                  variant="outline"
+                  className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                >
+                  Back to Login
+                </Button>
               </CardContent>
             </>
-          ) : (
-            <>
-              <CardHeader className="space-y-4 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center animate-pulse">
-                    <CheckCircle className="w-8 h-8 text-green-400" />
-                  </div>
-                </div>
-                <CardTitle className="text-2xl text-white">Check Your Email</CardTitle>
-                <CardDescription className="text-slate-400">
-                  We've sent a password reset link to <span className="font-medium text-slate-300">{email}</span>
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                {/* Success Message */}
-                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 space-y-3">
-                  <h3 className="font-medium text-green-400 text-sm">Password reset email sent!</h3>
-                  <ul className="text-xs text-slate-400 space-y-2">
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-400 mt-0.5">✓</span>
-                      <span>Check your email inbox for the reset link</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-400 mt-0.5">✓</span>
-                      <span>The link will expire in 24 hours</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-400 mt-0.5">✓</span>
-                      <span>If you don't see it, check your spam folder</span>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Next Steps */}
-                <div className="bg-slate-700/30 border border-slate-600/50 rounded-lg p-4">
-                  <p className="text-xs text-slate-400 mb-3">
-                    <span className="font-medium text-slate-300">What's next?</span>
-                  </p>
-                  <ol className="text-xs text-slate-400 space-y-2 list-decimal list-inside">
-                    <li>Click the link in your email</li>
-                    <li>Enter your new password</li>
-                    <li>Log in with your new password</li>
-                  </ol>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <Button
-                    onClick={handleBackToLogin}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                  >
-                    Back to Login
-                  </Button>
-                  <Button
-                    onClick={handleTryAnother}
-                    variant="outline"
-                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                  >
-                    Try Another Email
-                  </Button>
-                </div>
-
-                {/* Resend Option */}
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">
-                    Didn't receive the email?{' '}
-                    <button
-                      onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
-                      className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
-                    >
-                      Resend
-                    </button>
-                  </p>
-                </div>
-              </CardContent>
-            </>
-          )}
         </Card>
 
-        {/* Footer */}
+        {/* Footer — plain text, not buttons: there is no privacy or terms page
+            to navigate to. */}
         <div className="mt-8 text-center text-xs text-slate-500">
           <div className="flex items-center justify-center gap-4">
-            <button className="hover:text-slate-400 transition-colors">Privacy Policy</button>
+            <span>Privacy Policy</span>
             <span>•</span>
-            <button className="hover:text-slate-400 transition-colors">Terms of Service</button>
+            <span>Terms of Service</span>
           </div>
         </div>
       </div>

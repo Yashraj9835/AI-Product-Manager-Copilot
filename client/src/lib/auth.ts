@@ -99,6 +99,19 @@ export function clearSession(): void {
   localStorage.removeItem(AUTH_STEP_KEY);
 }
 
+/**
+ * Patch fields on the cached session without touching the token.
+ *
+ * The Settings page can rename the user, and the sidebar reads that name from
+ * this cache — without this the new name would only appear after the next
+ * login. Deliberately a merge, so the JWT and id are never disturbed.
+ */
+export function updateStoredProfile(patch: Partial<Pick<StoredUser, 'name' | 'email' | 'role'>>): void {
+  const current = getStoredUser();
+  if (!current) return;
+  localStorage.setItem(USER_KEY, JSON.stringify({ ...current, ...patch }));
+}
+
 export const LOGIN_PATH = '/login';
 
 /** Clear the session and hard-navigate to the login page (no-op if already there). */
