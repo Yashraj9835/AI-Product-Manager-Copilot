@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'wouter';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,11 +13,17 @@ const COLORS = ['oklch(0.55 0.24 260)', 'oklch(0.60 0.18 140)', 'oklch(0.70 0.20
 export default function Dashboard() {
   const { data: statsData, isLoading: isStatsLoading, error: statsError, fetchData: fetchStats } = useApi<any>();
   const { data: feedbackData, isLoading: isFeedbackLoading, error: feedbackError, fetchData: fetchFeedback } = useApi<any>();
+  // PRD drafts are a separate resource; a failure here must not blank the whole
+  // dashboard, so its error is reported in the card rather than the page shell.
+  const { data: prdData, fetchData: fetchPRDs } = useApi<any>();
 
   useEffect(() => {
     fetchStats({ method: 'GET', url: '/stats' });
     fetchFeedback({ method: 'GET', url: '/feedback', params: { limit: 100 } });
-  }, [fetchStats, fetchFeedback]);
+    fetchPRDs({ method: 'GET', url: '/prd' }).catch(() => {
+      /* card falls back to its empty state */
+    });
+  }, [fetchStats, fetchFeedback, fetchPRDs]);
 
   if (isStatsLoading || isFeedbackLoading) {
     return (
@@ -57,6 +64,17 @@ export default function Dashboard() {
   }));
   
   const feedbackList: any[] = Array.isArray(feedbackData) ? feedbackData : [];
+  // Real saved drafts from GET /api/prd. The count below used to be a
+  // hardcoded 9 with a "↑ 2 this week" caption, and this list was a permanently
+  // empty array literal, so the card always rendered blank.
+  const prdList: any[] = Array.isArray(prdData) ? prdData : [];
+  const recentPRDsData = prdList.slice(0, 4).map((prd: any) => ({
+    id: prd._id,
+    title: prd.title,
+    date: prd.updatedAt ? new Date(prd.updatedAt).toLocaleDateString() : '—',
+    status: prd.status === 'ready' ? 'Ready' : prd.status === 'review' ? 'Review' : 'Draft',
+    sections: Array.isArray(prd.sections) ? prd.sections.length : 0,
+  }));
   const latestFeedbackDate = feedbackList.reduce((latest, feedback) => {
     const date = new Date(feedback.createdAt || 0);
     return date > latest ? date : latest;
@@ -77,8 +95,6 @@ export default function Dashboard() {
     };
   });
 
-  const recentPRDsData: any[] = [];
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
@@ -88,15 +104,23 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-sm text-muted-foreground">BarkApp Pro · Last updated just now</p>
           </div>
+          {/* Both header buttons navigate rather than call a stub handler.
+              Import Data goes to the Feedback page, which already owns the
+              working CSV/JSON upload flow — duplicating that form here would
+              mean two upload paths to keep in step. */}
           <div className="flex gap-3">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Settings className="w-4 h-4" />
-              Settings
-            </Button>
-            <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90">
-              <Upload className="w-4 h-4" />
-              Import Data
-            </Button>
+            <Link href="/settings">
+              <Button variant="outline" size="sm" className="gap-2" data-testid="dashboard-settings">
+                <Settings className="w-4 h-4" />
+                Settings
+              </Button>
+            </Link>
+            <Link href="/feedback">
+              <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90" data-testid="dashboard-import">
+                <Upload className="w-4 h-4" />
+                Import Data
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -162,11 +186,15 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-foreground">9</span>
+                <span className="text-4xl font-bold text-foreground" data-testid="prd-count">
+                  {prdList.length}
+                </span>
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm">
                 <TrendingUp className="w-4 h-4 text-chart-1" />
-                <span className="text-chart-1">↑ 2 this week</span>
+                <span className="text-chart-1">
+                  {prdList.filter((prd: any) => prd.status === 'ready').length} ready
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -247,7 +275,11 @@ export default function Dashboard() {
                   <CardTitle>Top Categories</CardTitle>
                   <CardDescription>Most reported categories by customers</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" className="text-primary">View all →</Button>
+                <Link href="/themes">
+                  <Button variant="ghost" size="sm" className="text-primary" data-testid="view-all-categories">
+                    View all →
+                  </Button>
+                </Link>
               </div>
             </CardHeader>
             <CardContent>
@@ -298,27 +330,46 @@ export default function Dashboard() {
                   <CardTitle>Recent PRDs</CardTitle>
                   <CardDescription>Latest generated documents</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" className="text-primary">View all →</Button>
+                <Link href="/prd">
+                  <Button variant="ghost" size="sm" className="text-primary" data-testid="view-all-prds">
+                    View all →
+                  </Button>
+                </Link>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentPRDsData.map((prd) => (
-                <div key={prd.id} className="p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer border border-border">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground text-sm">{prd.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{prd.date}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{prd.stories} user stories</p>
+              {recentPRDsData.length > 0 ? (
+                recentPRDsData.map((prd) => (
+                  <Link key={prd.id} href="/prd">
+                    <div className="p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer border border-border">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground text-sm">{prd.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{prd.date}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {prd.sections} {prd.sections === 1 ? 'section' : 'sections'}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={prd.status === 'Ready' ? 'default' : prd.status === 'Review' ? 'outline' : 'secondary'}
+                          className={prd.status === 'Ready' ? 'bg-chart-1 text-foreground' : ''}
+                        >
+                          {prd.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <Badge 
-                      variant={prd.status === 'Ready' ? 'default' : prd.status === 'Review' ? 'outline' : 'secondary'}
-                      className={prd.status === 'Ready' ? 'bg-chart-1 text-foreground' : ''}
-                    >
-                      {prd.status}
-                    </Badge>
-                  </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-8 space-y-3">
+                  <p className="text-sm text-muted-foreground">No PRD drafts saved yet</p>
+                  <Link href="/prd">
+                    <Button variant="outline" size="sm" className="border-border hover:bg-secondary">
+                      Create your first PRD
+                    </Button>
+                  </Link>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
         </div>

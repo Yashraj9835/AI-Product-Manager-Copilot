@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, FileText, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
-import { handleAddDataSource } from '@/lib/interactions';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApi } from '@/hooks/useApi';
 import api from '@/lib/trpc';
@@ -26,6 +26,55 @@ export default function Feedback() {
   const [recentUploads, setRecentUploads] = useState<UploadRecord[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // "Add Source" — a source exists once feedback carries its name, so the
+  // dialog creates one real seed record with that source. The old handler was a
+  // stub toast that created nothing, leaving the list unchanged.
+  const [sourceOpen, setSourceOpen] = useState(false);
+  const [sourceName, setSourceName] = useState('');
+  const [sourceText, setSourceText] = useState('');
+  const [isAddingSource, setIsAddingSource] = useState(false);
+
+  const handleAddSource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sourceName.trim()) {
+      toast.error('Name the source');
+      return;
+    }
+    if (!sourceText.trim()) {
+      toast.error('Add an example feedback entry so the source has data');
+      return;
+    }
+
+    setIsAddingSource(true);
+    try {
+      // POST /api/feedback takes a single feedback object directly (or a bare
+      // array for bulk) — there is no wrapper key.
+      await api.post('/feedback', {
+        text: sourceText.trim(),
+        source: sourceName.trim(),
+        // Match the capitalization used by the imported dataset so this row
+        // groups with the rest rather than forming a separate bucket.
+        sentiment: 'Neutral',
+      });
+      toast.success('Source added', {
+        description: `"${sourceName.trim()}" now appears in the source breakdown.`,
+      });
+      setSourceOpen(false);
+      setSourceName('');
+      setSourceText('');
+      fetchStats({ method: 'GET', url: '/stats' });
+    } catch (err: any) {
+      const details = err.response?.data?.details;
+      toast.error('Could not add source', {
+        description: Array.isArray(details) && details.length
+          ? details.map((d: any) => d.message ?? JSON.stringify(d)).join('; ')
+          : err.response?.data?.error || err.message,
+      });
+    } finally {
+      setIsAddingSource(false);
+    }
+  };
 
   const { data: statsData, fetchData: fetchStats } = useApi<any>();
 
@@ -315,14 +364,105 @@ export default function Feedback() {
                 )) : (
                   <p className="text-sm text-muted-foreground text-center py-4">No source data available</p>
                 )}
-                <Button onClick={handleAddDataSource} variant="outline" className="w-full border-border hover:bg-secondary mt-4">
-                  + Add Source
+                <Button
+                  onClick={() => setSourceOpen(true)}
+                  variant="outline"
+                  className="w-full border-border hover:bg-secondary mt-4 gap-2"
+                  data-testid="feedback-add-source"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Source
                 </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Add Source dialog. Writes one real feedback row tagged with the new
+          source name, which is what makes the source appear in /api/stats. */}
+      {sourceOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setSourceOpen(false)}
+        >
+          <form
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleAddSource}
+            data-testid="source-dialog"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Add a feedback source</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Creates the source with a first entry. Bulk rows still come from CSV upload.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setSourceOpen(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="source-name">
+                Source name
+              </label>
+              <Input
+                id="source-name"
+                data-testid="source-name"
+                value={sourceName}
+                onChange={(e) => setSourceName(e.target.value)}
+                placeholder="e.g. Intercom"
+                disabled={isAddingSource}
+                className="bg-secondary/50 border-border"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="source-text">
+                First feedback entry
+              </label>
+              <textarea
+                id="source-text"
+                data-testid="source-text"
+                value={sourceText}
+                onChange={(e) => setSourceText(e.target.value)}
+                placeholder="Paste a representative piece of feedback"
+                disabled={isAddingSource}
+                rows={3}
+                className="w-full px-3 py-2 rounded-md bg-secondary/50 border border-border text-foreground text-sm resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setSourceOpen(false)}
+                disabled={isAddingSource}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isAddingSource}
+                className="bg-primary hover:bg-primary/90 gap-2"
+                data-testid="source-confirm"
+              >
+                {isAddingSource && <Loader2 className="w-4 h-4 animate-spin" />}
+                Add source
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
