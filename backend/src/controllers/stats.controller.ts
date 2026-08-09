@@ -22,7 +22,7 @@ export async function getStats(
   next: NextFunction
 ): Promise<void> {
   try {
-    const [total, byCategory, bySentiment, byPriority] = await Promise.all([
+    const [total, byCategory, bySentiment, byPriority, bySource] = await Promise.all([
       Feedback.countDocuments(),
 
       Feedback.aggregate([
@@ -42,15 +42,25 @@ export async function getStats(
         { $group: { _id: '$priority', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
+
+      Feedback.aggregate([
+        { $match: { source: { $ne: null } } },
+        { $group: { _id: '$source', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
     ]);
+
+    const formatForRecharts = (data: any[]) => 
+      data.map((item) => ({ name: item._id, value: item.count }));
 
     res.json({
       success: true,
       data: {
         total,
-        byCategory,
-        bySentiment,
-        byPriority,
+        byCategory: formatForRecharts(byCategory),
+        bySentiment: formatForRecharts(bySentiment),
+        byPriority: formatForRecharts(byPriority),
+        bySource: formatForRecharts(bySource),
       },
     });
   } catch (error) {

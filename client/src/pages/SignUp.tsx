@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Lock, User, Building2, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import api from '@/lib/trpc';
+import { saveSession } from '@/lib/auth';
 
 export default function SignUp() {
   const [, setLocation] = useLocation();
@@ -14,7 +16,7 @@ export default function SignUp() {
     password: '',
     confirmPassword: '',
     company: '',
-    role: 'product-manager',
+    role: 'product_manager',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -66,19 +68,24 @@ export default function SignUp() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Store user data and mark as needing 2FA
-      localStorage.setItem('pendingUser', JSON.stringify({
-        ...formData,
-        email: formData.email,
-        requiresTwoFactor: true,
-      }));
-      localStorage.setItem('authStep', '2fa');
-      toast.success('Account created! Please verify with 2FA');
-      setLocation('/two-factor-auth');
+    try {
+      const response = await api.post('/auth/register', {
+          name: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+      });
+      const { token, user } = response.data.data;
+      saveSession(user, token);
+      toast.success('Account created successfully!');
+      window.location.href = '/';
+    } catch (error: any) {
+      // Backend returns 409 "User with this email already exists" and 400
+      // "Validation failed" — show whichever it actually sent.
+      toast.error(error.response?.data?.error || error.response?.data?.message || error.message);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -177,12 +184,9 @@ export default function SignUp() {
                   className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 text-white rounded-md focus:border-blue-500 focus:ring-blue-500/20 focus:outline-none disabled:opacity-50"
                   disabled={isLoading}
                 >
-                  <option value="product-manager">Product Manager</option>
-                  <option value="product-lead">Product Lead</option>
-                  <option value="founder">Founder/CEO</option>
-                  <option value="designer">Designer</option>
-                  <option value="developer">Developer</option>
-                  <option value="other">Other</option>
+                  <option value="product_manager">Product Manager</option>
+                  <option value="viewer">Viewer</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
 

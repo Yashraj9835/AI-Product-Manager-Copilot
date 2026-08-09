@@ -4,7 +4,9 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import { useState, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { hasValidSession, clearSession } from "./lib/auth";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Feedback from "./pages/Feedback";
@@ -22,7 +24,6 @@ import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
 
 function Router({ isAuthenticated, onLogout }: { isAuthenticated: boolean; onLogout: () => void }) {
-  // make sure to consider if you need authentication for certain routes
   if (!isAuthenticated) {
     return (
       <Switch>
@@ -37,16 +38,21 @@ function Router({ isAuthenticated, onLogout }: { isAuthenticated: boolean; onLog
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-auto" data-logout={onLogout}>
+      <main className="flex-1 lg:ml-64 overflow-x-hidden min-h-screen" data-logout={onLogout}>
         <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/feedback" component={Feedback} />
-          <Route path="/analytics" component={Analytics} />
-          <Route path="/themes" component={Themes} />
-          <Route path="/features" component={Features} />
-          <Route path="/prioritization" component={Prioritization} />
+          {/* Pages that call protected endpoints re-check the session on entry,
+              so an expired token redirects instead of firing a doomed request. */}
+          <Route path="/"><ProtectedRoute component={Dashboard} /></Route>
+          <Route path="/feedback"><ProtectedRoute component={Feedback} /></Route>
+          <Route path="/analytics"><ProtectedRoute component={Analytics} /></Route>
+          <Route path="/themes"><ProtectedRoute component={Themes} /></Route>
+          <Route path="/features"><ProtectedRoute component={Features} /></Route>
+          <Route path="/prioritization"><ProtectedRoute component={Prioritization} /></Route>
+
+          {/* Client-side only — no backend call, so no guard needed beyond the
+              outer isAuthenticated check. */}
           <Route path="/prd" component={PRD} />
           <Route path="/roadmap" component={Roadmap} />
           <Route path="/chat" component={Chat} />
@@ -69,18 +75,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const user = localStorage.getItem('user');
-    const twoFactorVerified = localStorage.getItem('twoFactorVerified');
-    
-    // Only authenticate if both user exists AND 2FA is verified
-    if (user && twoFactorVerified === 'true') {
+    // Protected API routes require a live JWT. An expired token is treated the
+    // same as no token — clear it rather than letting every request 401.
+    if (hasValidSession()) {
       setIsAuthenticated(true);
     } else {
-      // Clear any incomplete auth data
-      localStorage.removeItem('user');
-      localStorage.removeItem('twoFactorVerified');
-      localStorage.removeItem('pendingUser');
+      clearSession();
       setIsAuthenticated(false);
     }
     setIsLoading(false);
@@ -88,10 +88,7 @@ function App() {
 
   // Function to logout
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('twoFactorVerified');
-    localStorage.removeItem('pendingUser');
-    localStorage.removeItem('authStep');
+    clearSession();
     setIsAuthenticated(false);
   };
 

@@ -1,46 +1,84 @@
+import { useEffect, useState } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Upload, Settings } from 'lucide-react';
-
-// Mock data for charts
-const feedbackVolumeData = [
-  { week: 'W1', feedback: 1200, themes: 8 },
-  { week: 'W2', feedback: 1450, themes: 12 },
-  { week: 'W3', feedback: 1800, themes: 15 },
-  { week: 'W4', feedback: 2100, themes: 18 },
-  { week: 'W5', feedback: 2450, themes: 22 },
-  { week: 'W6', feedback: 2800, themes: 24 },
-  { week: 'W7', feedback: 3200, themes: 28 },
-  { week: 'W8', feedback: 3500, themes: 32 },
-];
-
-const dataSourcesData = [
-  { name: 'Zendesk Tickets', value: 3812 },
-  { name: 'App Store Reviews', value: 2104 },
-  { name: 'Feature Requests', value: 1247 },
-  { name: 'Transcripts', value: 1179 },
-];
-
-const painPointsData = [
-  { theme: 'Slow transaction speed', count: 847, trend: '-12%', severity: 'High', color: 'oklch(0.60 0.25 25)' },
-  { theme: 'PDF export missing', count: 612, trend: '-18%', severity: 'High', color: 'oklch(0.60 0.25 25)' },
-  { theme: 'Login failures', count: 423, trend: '-5%', severity: 'Medium', color: 'oklch(0.70 0.20 60)' },
-  { theme: 'Mobile UI issues', count: 381, trend: '-9%', severity: 'Medium', color: 'oklch(0.70 0.20 60)' },
-  { theme: 'Notification spam', count: 298, trend: '-12%', severity: 'Low', color: 'oklch(0.60 0.18 140)' },
-];
-
-const recentPRDsData = [
-  { id: 1, title: 'PDF Export Feature', date: 'Generated 3 days ago', status: 'Ready', stories: 8 },
-  { id: 2, title: 'Dark Mode Support', date: 'Generated 5 days ago', status: 'Review', stories: 5 },
-  { id: 3, title: 'Bulk Transaction Export', date: 'Generated 8 days ago', status: 'Draft', stories: 3 },
-];
+import { TrendingUp, TrendingDown, Upload, Settings, AlertCircle } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
 
 const COLORS = ['oklch(0.55 0.24 260)', 'oklch(0.60 0.18 140)', 'oklch(0.70 0.20 60)', 'oklch(0.50 0.20 280)'];
 
 export default function Dashboard() {
+  const { data: statsData, isLoading: isStatsLoading, error: statsError, fetchData: fetchStats } = useApi<any>();
+  const { data: feedbackData, isLoading: isFeedbackLoading, error: feedbackError, fetchData: fetchFeedback } = useApi<any>();
+
+  useEffect(() => {
+    fetchStats({ method: 'GET', url: '/stats' });
+    fetchFeedback({ method: 'GET', url: '/feedback', params: { limit: 100 } });
+  }, [fetchStats, fetchFeedback]);
+
+  if (isStatsLoading || isFeedbackLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (statsError || feedbackError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-destructive">
+          <AlertCircle className="w-12 h-12" />
+          <p className="text-lg font-semibold">Failed to load dashboard</p>
+          <p className="text-sm">{statsError || feedbackError}</p>
+          <Button onClick={() => {
+            fetchStats({ method: 'GET', url: '/stats' });
+            fetchFeedback({ method: 'GET', url: '/feedback', params: { limit: 100 } });
+          }} variant="outline">Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallbacks if data doesn't exist
+  const total = statsData?.total || 0;
+  const dataSourcesData = statsData?.bySource || [];
+  const painPointsData = (statsData?.byCategory || []).map((cat: any, i: number) => ({
+    theme: cat.name,
+    count: cat.value,
+    trend: 'N/A', // real trend logic would go here
+    severity: cat.value > 100 ? 'High' : cat.value > 50 ? 'Medium' : 'Low',
+    color: COLORS[i % COLORS.length]
+  }));
+  
+  const feedbackList: any[] = Array.isArray(feedbackData) ? feedbackData : [];
+  const latestFeedbackDate = feedbackList.reduce((latest, feedback) => {
+    const date = new Date(feedback.createdAt || 0);
+    return date > latest ? date : latest;
+  }, feedbackList.length ? new Date(feedbackList[0].createdAt || Date.now()) : new Date());
+  const feedbackVolumeData = Array.from({ length: 8 }, (_, index) => {
+    const end = new Date(latestFeedbackDate);
+    end.setDate(end.getDate() - (7 - index) * 7);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 6);
+    const items = feedbackList.filter((feedback) => {
+      const createdAt = new Date(feedback.createdAt || 0);
+      return createdAt >= start && createdAt <= end;
+    });
+    return {
+      week: `W${index + 1}`,
+      feedback: items.length,
+      themes: new Set(items.map((item) => item.category).filter(Boolean)).size,
+    };
+  });
+
+  const recentPRDsData: any[] = [];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
@@ -48,7 +86,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">BarkApp Pro · Last updated 7 hours ago</p>
+            <p className="text-sm text-muted-foreground">BarkApp Pro · Last updated just now</p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" size="sm" className="gap-2">
@@ -74,11 +112,11 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-foreground">8,342</span>
+                <span className="text-4xl font-bold text-foreground">{total.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm">
                 <TrendingUp className="w-4 h-4 text-chart-1" />
-                <span className="text-chart-1">↑ 15% this month</span>
+                <span className="text-chart-1">↑ Active tracking</span>
               </div>
             </CardContent>
           </Card>
@@ -90,27 +128,29 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-foreground">24</span>
+                <span className="text-4xl font-bold text-foreground">{statsData?.byCategory?.length || 0}</span>
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm">
                 <TrendingUp className="w-4 h-4 text-chart-1" />
-                <span className="text-chart-1">↑ 3 new themes</span>
+                <span className="text-chart-1">Across all data</span>
               </div>
             </CardContent>
           </Card>
 
-          {/* Feature Requests Card */}
+          {/* High Priority Issues Card */}
           <Card className="bg-card border-border hover:shadow-lg transition-shadow">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">FEATURE REQUESTS</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">HIGH PRIORITY</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-foreground">1,247</span>
+                <span className="text-4xl font-bold text-foreground">
+                  {statsData?.byPriority?.find((p: any) => p.name === 'High')?.value || 0}
+                </span>
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm">
                 <TrendingDown className="w-4 h-4 text-chart-3" />
-                <span className="text-chart-3">↓ 8% this month</span>
+                <span className="text-chart-3">Needs attention</span>
               </div>
             </CardContent>
           </Card>
@@ -165,28 +205,34 @@ export default function Dashboard() {
               <CardDescription>Feedback distribution</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={dataSourcesData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name} ${value}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {dataSourcesData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'oklch(0.18 0.01 280)', border: '1px solid oklch(0.25 0.02 280)', borderRadius: '0.65rem' }}
-                    labelStyle={{ color: 'oklch(0.92 0.01 280)' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {dataSourcesData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={dataSourcesData}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={45}
+                      outerRadius={75}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {dataSourcesData.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'oklch(0.18 0.01 280)', border: '1px solid oklch(0.25 0.02 280)', borderRadius: '0.65rem' }}
+                      labelStyle={{ color: 'oklch(0.92 0.01 280)' }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  No source data available
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -198,8 +244,8 @@ export default function Dashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Top Pain Points</CardTitle>
-                  <CardDescription>Most reported issues by customers</CardDescription>
+                  <CardTitle>Top Categories</CardTitle>
+                  <CardDescription>Most reported categories by customers</CardDescription>
                 </div>
                 <Button variant="ghost" size="sm" className="text-primary">View all →</Button>
               </div>
@@ -208,19 +254,19 @@ export default function Dashboard() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border hover:bg-transparent">
-                    <TableHead className="text-muted-foreground">THEME</TableHead>
+                    <TableHead className="text-muted-foreground">CATEGORY</TableHead>
                     <TableHead className="text-muted-foreground">COUNT</TableHead>
                     <TableHead className="text-muted-foreground">TREND</TableHead>
                     <TableHead className="text-muted-foreground">SEVERITY</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {painPointsData.map((item, idx) => (
+                  {painPointsData.length > 0 ? painPointsData.slice(0, 5).map((item: any, idx: number) => (
                     <TableRow key={idx} className="border-border hover:bg-secondary/30 transition-colors">
-                      <TableCell className="font-medium text-foreground">{item.theme}</TableCell>
+                      <TableCell className="font-medium text-foreground">{item.theme || 'Uncategorized'}</TableCell>
                       <TableCell className="text-foreground">{item.count}</TableCell>
                       <TableCell>
-                        <span className="text-chart-3">{item.trend}</span>
+                        <span className="text-muted-foreground">{item.trend}</span>
                       </TableCell>
                       <TableCell>
                         <Badge 
@@ -232,7 +278,13 @@ export default function Dashboard() {
                         </Badge>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        No category data available
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

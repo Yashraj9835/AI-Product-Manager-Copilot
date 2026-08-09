@@ -1,69 +1,72 @@
+import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Merge, Split } from 'lucide-react';
+import { TrendingUp, TrendingDown, Merge, Split, AlertCircle } from 'lucide-react';
 import { handleReclusterThemes, showInfoToast } from '@/lib/interactions';
-
-const themes = [
-  {
-    id: 1,
-    name: 'Slow transaction speed',
-    description: 'Users experiencing delays in payment processing',
-    itemCount: 847,
-    trend: '-12%',
-    trendDirection: 'down',
-    sentiment: 'negative',
-    firstSeen: '2 weeks ago',
-    lastSeen: '2 hours ago',
-  },
-  {
-    id: 2,
-    name: 'PDF export missing',
-    description: 'Export to PDF functionality not working',
-    itemCount: 612,
-    trend: '-18%',
-    trendDirection: 'down',
-    sentiment: 'negative',
-    firstSeen: '3 weeks ago',
-    lastSeen: '1 hour ago',
-  },
-  {
-    id: 3,
-    name: 'Mobile UI improvements',
-    description: 'Requests for better mobile experience',
-    itemCount: 523,
-    trend: '+8%',
-    trendDirection: 'up',
-    sentiment: 'neutral',
-    firstSeen: '1 week ago',
-    lastSeen: '3 hours ago',
-  },
-  {
-    id: 4,
-    name: 'Login failures',
-    description: 'Authentication issues and login problems',
-    itemCount: 423,
-    trend: '-5%',
-    trendDirection: 'down',
-    sentiment: 'negative',
-    firstSeen: '2 weeks ago',
-    lastSeen: '4 hours ago',
-  },
-  {
-    id: 5,
-    name: 'Feature request: Dark mode',
-    description: 'Users requesting dark mode support',
-    itemCount: 389,
-    trend: '+15%',
-    trendDirection: 'up',
-    sentiment: 'positive',
-    firstSeen: '5 days ago',
-    lastSeen: '1 hour ago',
-  },
-];
+import { useApi } from '@/hooks/useApi';
 
 export default function Themes() {
+  const { data: feedbackData, isLoading, error, fetchData } = useApi<any>();
+
+  useEffect(() => {
+    fetchData({ method: 'GET', url: '/feedback', params: { limit: 100 } });
+  }, [fetchData]);
+
+  // Derive themes from feedback categories by aggregating
+  const feedbackList: any[] = Array.isArray(feedbackData) ? feedbackData : [];
+
+  const themesMap = new Map<string, { count: number; sentiments: Record<string, number>; lastSeen: string }>();
+  feedbackList.forEach((fb: any) => {
+    const cat = fb.theme || fb.category || 'Uncategorized';
+    const existing = themesMap.get(cat) || { count: 0, sentiments: {}, lastSeen: '' };
+    existing.count += 1;
+    const sent = fb.sentiment || 'neutral';
+    existing.sentiments[sent] = (existing.sentiments[sent] || 0) + 1;
+    if (fb.createdAt && (!existing.lastSeen || fb.createdAt > existing.lastSeen)) {
+      existing.lastSeen = fb.createdAt;
+    }
+    themesMap.set(cat, existing);
+  });
+
+  const themes = Array.from(themesMap.entries())
+    .map(([name, data], idx) => {
+      const dominantSentiment = Object.entries(data.sentiments).sort((a, b) => b[1] - a[1])[0]?.[0] || 'neutral';
+      return {
+        id: idx + 1,
+        name,
+        description: `Feedback items categorized under ${name}`,
+        itemCount: data.count,
+        trend: 'N/A',
+        trendDirection: data.count > 50 ? 'up' : 'down',
+        sentiment: dominantSentiment.toLowerCase(),
+        firstSeen: 'N/A',
+        lastSeen: data.lastSeen ? new Date(data.lastSeen).toLocaleDateString() : 'N/A',
+      };
+    })
+    .sort((a, b) => b.itemCount - a.itemCount);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center text-destructive">
+          <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+          <p>{error}</p>
+          <Button onClick={() => fetchData({ method: 'GET', url: '/feedback', params: { limit: 100 } })} variant="outline" className="mt-4">Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
@@ -78,7 +81,7 @@ export default function Themes() {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle>Discovered Themes</CardTitle>
-            <CardDescription>Automatically extracted themes from {themes.reduce((sum, t) => sum + t.itemCount, 0).toLocaleString()} feedback items</CardDescription>
+            <CardDescription>Automatically extracted themes from {feedbackList.length.toLocaleString()} feedback items</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -94,7 +97,7 @@ export default function Themes() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {themes.map((theme) => (
+                  {themes.length > 0 ? themes.map((theme) => (
                     <TableRow key={theme.id} className="border-border hover:bg-secondary/30 transition-colors">
                       <TableCell>
                         <div>
@@ -141,7 +144,13 @@ export default function Themes() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No themes found. Upload feedback data first.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

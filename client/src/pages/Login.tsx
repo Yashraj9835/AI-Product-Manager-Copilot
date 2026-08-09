@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import api from '@/lib/trpc';
+import { saveSession } from '@/lib/auth';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -23,25 +25,51 @@ export default function Login() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem('user', JSON.stringify({
-        email,
-        rememberMe,
-      }));
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { token, user } = response.data.data;
+
+      saveSession(user, token, { rememberMe });
       toast.success('Logged in successfully!');
-      setLocation('/');
+      window.location.href = '/';
+    } catch (error: any) {
+      // Surface the backend's own wording ("Invalid email or password") rather
+      // than a generic failure message.
+      toast.error(error.response?.data?.error || error.response?.data?.message || error.message);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
-  const handleDemoLogin = () => {
-    localStorage.setItem('user', JSON.stringify({
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    const demoCredentials = {
       email: 'demo@example.com',
-      name: 'Demo User',
-    }));
-    toast.success('Demo account logged in!');
-    setLocation('/');
+      password: 'DemoAccount123!',
+    };
+
+    try {
+      try {
+        await api.post('/auth/register', {
+          ...demoCredentials,
+          name: 'Demo User',
+          role: 'viewer',
+        });
+      } catch (error: any) {
+        // A 409 means the development demo account already exists.
+        if (error.response?.status !== 409) throw error;
+      }
+
+      const response = await api.post('/auth/login', demoCredentials);
+      const { token, user } = response.data.data;
+      saveSession(user, token);
+      toast.success('Demo account logged in!');
+      window.location.href = '/';
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || error.response?.data?.message || error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -111,6 +139,7 @@ export default function Login() {
                   <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                   <Input
                     type="password"
+                    autoComplete="current-password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -200,7 +229,7 @@ export default function Login() {
             <span>•</span>
             <button className="hover:text-slate-400 transition-colors">Terms of Service</button>
           </div>
-          <p>Demo credentials: nishyanth@barkapp.com / demo123</p>
+          <p>Use “Try Demo Account” above to sign in without registering.</p>
         </div>
       </div>
     </div>

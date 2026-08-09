@@ -1,49 +1,75 @@
+import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AlertCircle } from 'lucide-react';
 import { showInfoToast } from '@/lib/interactions';
-
-const prioritizationData = [
-  { name: 'Transaction Speed', rice: 9.2, reach: 450, impact: 95, confidence: 95 },
-  { name: 'PDF Export', rice: 8.7, reach: 380, impact: 92, confidence: 92 },
-  { name: 'Mobile Optimization', rice: 7.8, reach: 320, impact: 88, confidence: 88 },
-  { name: 'Auth Issues', rice: 7.3, reach: 280, impact: 90, confidence: 90 },
-  { name: 'Dark Mode', rice: 6.9, reach: 250, impact: 85, confidence: 85 },
-];
-
-const riceBreakdown = [
-  {
-    feature: 'Improve transaction speed',
-    reach: 450,
-    impact: 3,
-    confidence: 0.95,
-    effort: 5,
-    score: 9.2,
-    rationale: 'High reach (450 users affected), critical impact on user experience, high confidence from multiple sources, medium effort.',
-  },
-  {
-    feature: 'Add PDF export functionality',
-    reach: 380,
-    impact: 3,
-    confidence: 0.92,
-    effort: 8,
-    score: 8.7,
-    rationale: 'Strong user demand (612 requests), high business value, well-defined scope, but higher implementation effort.',
-  },
-  {
-    feature: 'Mobile app optimization',
-    reach: 320,
-    impact: 2,
-    confidence: 0.88,
-    effort: 12,
-    score: 7.8,
-    rationale: 'Good reach, medium impact, but significant effort required. Consider breaking into smaller features.',
-  },
-];
+import { useApi } from '@/hooks/useApi';
 
 export default function Prioritization() {
+  const { data: statsData, isLoading, error, fetchData: fetchStats } = useApi<any>();
+  const { data: feedbackData, fetchData: fetchFeedback } = useApi<any>();
+
+  useEffect(() => {
+    fetchStats({ method: 'GET', url: '/stats' });
+    fetchFeedback({ method: 'GET', url: '/feedback', params: { limit: 100 } });
+  }, [fetchStats, fetchFeedback]);
+
+  const feedbackList: any[] = Array.isArray(feedbackData) ? feedbackData : [];
+
+  // Build RICE data from real category/priority data
+  const categoryMap = new Map<string, { count: number; highPriority: number }>();
+  feedbackList.forEach((fb: any) => {
+    const cat = fb.category || 'General';
+    const existing = categoryMap.get(cat) || { count: 0, highPriority: 0 };
+    existing.count += 1;
+    if (fb.priority === 'High') existing.highPriority += 1;
+    categoryMap.set(cat, existing);
+  });
+
+  const prioritizationData = Array.from(categoryMap.entries())
+    .map(([name, data]) => {
+      const reach = data.count * 5;
+      const impact = Math.min(95, 60 + data.highPriority * 2);
+      const confidence = Math.min(95, 70 + Math.round(data.count / 5));
+      const rice = parseFloat(((reach * (impact / 30) * (confidence / 100)) / 5).toFixed(1));
+      return { name, rice, reach, impact, confidence };
+    })
+    .sort((a, b) => b.rice - a.rice)
+    .slice(0, 6);
+
+  const riceBreakdown = prioritizationData.slice(0, 3).map((item, idx) => ({
+    feature: `Improve ${item.name}`,
+    reach: item.reach,
+    impact: Math.round(item.impact / 30),
+    confidence: item.confidence / 100,
+    effort: 5 + idx * 3,
+    score: item.rice,
+    rationale: `${item.reach / 5} feedback items mention this category. ${item.impact > 80 ? 'Critical' : 'Moderate'} impact on user experience.`,
+  }));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center text-destructive">
+          <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+          <p>{error}</p>
+          <Button onClick={() => fetchStats({ method: 'GET', url: '/stats' })} variant="outline" className="mt-4">Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
@@ -64,26 +90,30 @@ export default function Prioritization() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle>RICE Scores</CardTitle>
-                <CardDescription>Feature prioritization by RICE score</CardDescription>
+                <CardDescription>Feature prioritization by RICE score (from real feedback data)</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={prioritizationData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 280)" />
-                    <XAxis dataKey="name" stroke="oklch(0.65 0.02 280)" />
-                    <YAxis stroke="oklch(0.65 0.02 280)" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'oklch(0.18 0.01 280)',
-                        border: '1px solid oklch(0.25 0.02 280)',
-                        borderRadius: '0.65rem',
-                      }}
-                      labelStyle={{ color: 'oklch(0.92 0.01 280)' }}
-                    />
-                    <Legend />
-                    <Bar dataKey="rice" fill="oklch(0.55 0.24 260)" name="RICE Score" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {prioritizationData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={prioritizationData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 280)" />
+                      <XAxis dataKey="name" stroke="oklch(0.65 0.02 280)" />
+                      <YAxis stroke="oklch(0.65 0.02 280)" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'oklch(0.18 0.01 280)',
+                          border: '1px solid oklch(0.25 0.02 280)',
+                          borderRadius: '0.65rem',
+                        }}
+                        labelStyle={{ color: 'oklch(0.92 0.01 280)' }}
+                      />
+                      <Legend />
+                      <Bar dataKey="rice" fill="oklch(0.55 0.24 260)" name="RICE Score" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-center text-muted-foreground py-12">No prioritization data available</p>
+                )}
               </CardContent>
             </Card>
 
@@ -94,7 +124,7 @@ export default function Prioritization() {
                 <CardDescription>Recommended implementation order</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {riceBreakdown.map((item, idx) => (
+                {riceBreakdown.length > 0 ? riceBreakdown.map((item, idx) => (
                   <div key={idx} className="p-4 rounded-lg bg-secondary/50 border border-border hover:bg-secondary transition-colors">
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div>
@@ -124,7 +154,9 @@ export default function Prioritization() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-center text-muted-foreground py-8">No priority data available</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -67,16 +67,16 @@ export default function TwoFactorAuth() {
       toast.success('Two-factor authentication verified!');
       setIsLoading(false);
 
-      // Redirect to dashboard after 2 seconds
+      // Redirect to dashboard after 1 second
       setTimeout(() => {
-        localStorage.setItem('user', JSON.stringify({
-          email: localStorage.getItem('pendingUser'),
-          twoFactorVerified: true,
-        }));
+        const pending = localStorage.getItem('pendingUser');
+        const userObj = pending ? JSON.parse(pending) : { email: 'user@example.com' };
+        localStorage.setItem('user', JSON.stringify(userObj));
+        localStorage.setItem('twoFactorVerified', 'true');
         localStorage.removeItem('pendingUser');
         localStorage.removeItem('authStep');
-        setLocation('/');
-      }, 2000);
+        window.location.href = '/';
+      }, 1000);
     }, 1500);
   };
 

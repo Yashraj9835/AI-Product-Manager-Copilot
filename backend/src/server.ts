@@ -11,7 +11,7 @@ async function start(): Promise<void> {
 
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📋 API docs: see backend/README.md`);
+    console.log(`📋 Interactive API docs: http://localhost:${PORT}/api-docs`);
   });
 }
 

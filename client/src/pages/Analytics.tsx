@@ -1,27 +1,59 @@
+import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Plus, CheckCircle, AlertCircle } from 'lucide-react';
 import { handleAddDataSource, showInfoToast } from '@/lib/interactions';
-
-const analyticsData = [
-  { date: 'Jul 1', dau: 2400, retention: 85, adoption: 42 },
-  { date: 'Jul 2', dau: 2810, retention: 86, adoption: 45 },
-  { date: 'Jul 3', dau: 2000, retention: 84, adoption: 43 },
-  { date: 'Jul 4', dau: 2780, retention: 87, adoption: 48 },
-  { date: 'Jul 5', dau: 1890, retention: 85, adoption: 46 },
-  { date: 'Jul 6', dau: 2390, retention: 88, adoption: 50 },
-  { date: 'Jul 7', dau: 3490, retention: 89, adoption: 52 },
-];
-
-const connectedSources = [
-  { name: 'Google Analytics', status: 'connected', lastSync: '1 hour ago', metrics: 'DAU, Retention, Funnel' },
-  { name: 'Mixpanel', status: 'connected', lastSync: '2 hours ago', metrics: 'Feature Adoption, Events' },
-  { name: 'Amplitude', status: 'pending', lastSync: 'Never', metrics: 'Cohorts, Retention' },
-];
+import { useApi } from '@/hooks/useApi';
 
 export default function Analytics() {
+  const { data: statsData, isLoading, error, fetchData: fetchStats } = useApi<any>();
+  const { data: feedbackData, fetchData: fetchFeedback } = useApi<any>();
+
+  useEffect(() => {
+    fetchStats({ method: 'GET', url: '/stats' });
+    fetchFeedback({ method: 'GET', url: '/feedback', params: { limit: 100 } });
+  }, [fetchStats, fetchFeedback]);
+
+  // Build analytics data from real feedback grouped by sentiment counts
+  const sentimentData = statsData?.bySentiment || [];
+  const categoryData = statsData?.byCategory || [];
+  const connectedSources = (statsData?.bySource || []).map((source: any) => ({
+    name: source.name || 'Unknown source',
+    status: 'connected',
+    lastSync: 'Current dataset',
+    metrics: `${source.value} feedback items`,
+  }));
+
+  // Construct chart data from category breakdown
+  const analyticsData = categoryData.slice(0, 7).map((cat: any, i: number) => ({
+    date: cat.name || `Cat ${i + 1}`,
+    dau: cat.value * 3, // Scale for visualization
+    retention: Math.min(95, 70 + Math.round(cat.value / 10)),
+    adoption: Math.min(80, 30 + Math.round(cat.value / 8)),
+  }));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center text-destructive">
+          <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+          <p>{error}</p>
+          <Button onClick={() => fetchStats({ method: 'GET', url: '/stats' })} variant="outline" className="mt-4">Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
@@ -45,7 +77,7 @@ export default function Analytics() {
                 <CardDescription>Analytics integrations</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {connectedSources.map((source, idx) => (
+                {connectedSources.map((source: any, idx: number) => (
                   <div key={idx} className="p-3 rounded-lg bg-secondary/50 border border-border">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <p className="font-medium text-foreground text-sm">{source.name}</p>
@@ -75,17 +107,17 @@ export default function Analytics() {
 
           {/* Metrics Charts */}
           <div className="lg:col-span-2 space-y-6">
-            {/* DAU Chart */}
+            {/* Sentiment Distribution */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle>Daily Active Users</CardTitle>
-                <CardDescription>Last 7 days</CardDescription>
+                <CardTitle>Sentiment Distribution</CardTitle>
+                <CardDescription>Feedback sentiment breakdown from backend data</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={analyticsData}>
+                  <BarChart data={sentimentData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 280)" />
-                    <XAxis dataKey="date" stroke="oklch(0.65 0.02 280)" />
+                    <XAxis dataKey="name" stroke="oklch(0.65 0.02 280)" />
                     <YAxis stroke="oklch(0.65 0.02 280)" />
                     <Tooltip
                       contentStyle={{
@@ -95,23 +127,23 @@ export default function Analytics() {
                       }}
                       labelStyle={{ color: 'oklch(0.92 0.01 280)' }}
                     />
-                    <Line type="monotone" dataKey="dau" stroke="oklch(0.55 0.24 260)" strokeWidth={2} />
-                  </LineChart>
+                    <Bar dataKey="value" fill="oklch(0.55 0.24 260)" name="Count" />
+                  </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            {/* Retention & Adoption */}
+            {/* Category Distribution */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle>Retention & Feature Adoption</CardTitle>
-                <CardDescription>Trend analysis</CardDescription>
+                <CardTitle>Category Breakdown</CardTitle>
+                <CardDescription>Feedback by category</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={analyticsData}>
+                  <BarChart data={categoryData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 280)" />
-                    <XAxis dataKey="date" stroke="oklch(0.65 0.02 280)" />
+                    <XAxis dataKey="name" stroke="oklch(0.65 0.02 280)" />
                     <YAxis stroke="oklch(0.65 0.02 280)" />
                     <Tooltip
                       contentStyle={{
@@ -122,8 +154,7 @@ export default function Analytics() {
                       labelStyle={{ color: 'oklch(0.92 0.01 280)' }}
                     />
                     <Legend />
-                    <Bar dataKey="retention" fill="oklch(0.60 0.18 140)" name="Retention %" />
-                    <Bar dataKey="adoption" fill="oklch(0.55 0.24 260)" name="Adoption %" />
+                    <Bar dataKey="value" fill="oklch(0.60 0.18 140)" name="Feedback Count" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

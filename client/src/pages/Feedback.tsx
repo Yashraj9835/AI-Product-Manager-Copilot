@@ -1,26 +1,148 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { handleSelectFiles, handleAddDataSource } from '@/lib/interactions';
+import { Upload, FileText, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import { handleAddDataSource } from '@/lib/interactions';
+import { toast } from 'sonner';
+import { useApi } from '@/hooks/useApi';
+import api from '@/lib/trpc';
 
-const dataSources = [
-  { name: 'Zendesk Tickets', count: 3812, lastSync: '2 hours ago', status: 'active' },
-  { name: 'App Store Reviews', count: 2104, lastSync: '1 hour ago', status: 'active' },
-  { name: 'Feature Requests', count: 1247, lastSync: '3 hours ago', status: 'active' },
-  { name: 'Transcripts', count: 1179, lastSync: '5 hours ago', status: 'active' },
-];
-
-const recentUploads = [
-  { id: 1, name: 'customer_feedback_q2.csv', date: 'Jul 12, 2026', items: 342, status: 'completed' },
-  { id: 2, name: 'support_tickets_batch.pdf', date: 'Jul 11, 2026', items: 156, status: 'completed' },
-  { id: 3, name: 'app_reviews_export.json', date: 'Jul 10, 2026', items: 89, status: 'completed' },
-];
+interface UploadRecord {
+  id: number;
+  name: string;
+  date: string;
+  items: number;
+  status: 'uploading' | 'completed' | 'partial' | 'failed';
+  /** Rows rejected by the backend, when status is 'partial'. */
+  failed?: number;
+  /** Backend validation message, shown inline when rows were rejected. */
+  error?: string;
+}
 
 export default function Feedback() {
   const [isDragging, setIsDragging] = useState(false);
+  const [recentUploads, setRecentUploads] = useState<UploadRecord[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: statsData, fetchData: fetchStats } = useApi<any>();
+
+  useEffect(() => {
+    fetchStats({ method: 'GET', url: '/stats' });
+  }, [fetchStats]);
+
+  const processFile = async (file: File) => {
+    const uploadId = Date.now();
+    const record: UploadRecord = {
+      id: uploadId,
+      name: file.name,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      items: 0,
+      status: 'uploading',
+    };
+    setRecentUploads(prev => [record, ...prev]);
+    setIsUploading(true);
+
+    try {
+      const text = await file.text();
+      let feedbackItems: any[] = [];
+
+      if (file.name.endsWith('.json')) {
+        const parsed = JSON.parse(text);
+        feedbackItems = Array.isArray(parsed) ? parsed : [parsed];
+      } else if (file.name.endsWith('.csv')) {
+        const lines = text.split('\n').filter(l => l.trim());
+        if (lines.length < 2) throw new Error('CSV file is empty or has no data rows');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const textIdx = headers.findIndex(h => h.includes('text') || h.includes('feedback') || h.includes('review') || h.includes('comment'));
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',');
+          const feedbackText = textIdx >= 0 ? values[textIdx]?.trim() : values[0]?.trim();
+          if (feedbackText) {
+            feedbackItems.push({ text: feedbackText, source: 'CSV Upload' });
+          }
+        }
+      } else {
+        // Treat as plain text — each line is a feedback item
+        feedbackItems = text.split('\n')
+          .filter(l => l.trim())
+          .map(line => ({ text: line.trim(), source: 'File Upload' }));
+      }
+
+      if (feedbackItems.length === 0) throw new Error('No feedback items found in file');
+
+      // Ensure all items have a text field
+      feedbackItems = feedbackItems.map(item => ({
+        text: item.text || item.feedback_text || item.review || item.comment || JSON.stringify(item),
+        source: item.source || 'File Upload',
+        category: item.category,
+        sentiment: item.sentiment,
+        priority: item.priority,
+      }));
+
+      const response = await api.post('/feedback', feedbackItems);
+      const body = response.data ?? {};
+      const count = body.count ?? body.inserted ?? feedbackItems.length;
+
+      // 207 = partial success: some rows were written, some rejected. Show both
+      // numbers and why the rejected rows failed, rather than a bare "completed".
+      if (response.status === 207 && Array.isArray(body.errors) && body.errors.length) {
+        const summary = body.errors
+          .slice(0, 3)
+          .map((e: any) => `row ${e.index + 1} — ${e.field}: ${e.message}`)
+          .join('; ');
+        const more = body.errors.length > 3 ? ` (+${body.errors.length - 3} more)` : '';
+        const detail = `${summary}${more}`;
+
+        setRecentUploads(prev => prev.map(u =>
+          u.id === uploadId
+            ? { ...u, items: count, status: 'partial', failed: body.failed ?? 0, error: detail }
+            : u
+        ));
+        toast.warning(`${file.name}: ${count} imported, ${body.failed ?? 0} failed`, {
+          description: detail,
+        });
+      } else {
+        setRecentUploads(prev => prev.map(u =>
+          u.id === uploadId ? { ...u, items: count, status: 'completed', error: undefined } : u
+        ));
+        toast.success(`${file.name}: ${count} feedback ${count === 1 ? 'record' : 'records'} imported`);
+      }
+
+      // Refresh stats
+      fetchStats({ method: 'GET', url: '/stats' });
+    } catch (err: any) {
+      // A 400 means nothing was written. Bulk requests answer with
+      // errors: [{ index, field, message }]; single records use details:
+      // [{ path, message }]. Surface whichever the backend actually sent.
+      const res = err.response?.data;
+      const rowErrors = Array.isArray(res?.errors) && res.errors.length
+        ? res.errors
+            .slice(0, 3)
+            .map((e: any) => `row ${e.index + 1} — ${e.field}: ${e.message}`)
+            .join('; ') + (res.errors.length > 3 ? ` (+${res.errors.length - 3} more)` : '')
+        : null;
+      const detail = Array.isArray(res?.details) && res.details.length
+        ? res.details.map((d: any) => `${d.path}: ${d.message}`).join('; ')
+        : null;
+      const message = rowErrors || detail || res?.error || err.message || 'Upload failed';
+
+      setRecentUploads(prev => prev.map(u =>
+        u.id === uploadId ? { ...u, status: 'failed', error: message } : u
+      ));
+      toast.error(`${file.name} failed`, { description: message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach(processFile);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -34,8 +156,15 @@ export default function Feedback() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    // Handle file drop logic here
+    handleFiles(e.dataTransfer.files);
   };
+
+  const handleSelectFiles = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Derive data sources from stats
+  const dataSources = statsData?.bySource || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -51,9 +180,17 @@ export default function Feedback() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle>Upload Feedback</CardTitle>
-                <CardDescription>Support CSV, PDF, and JSON formats</CardDescription>
+                <CardDescription>Support CSV, JSON, and plain text formats</CardDescription>
               </CardHeader>
               <CardContent>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.json,.txt"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleFiles(e.target.files)}
+                />
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -62,10 +199,16 @@ export default function Feedback() {
                     isDragging ? 'border-primary bg-primary/5' : 'border-border'
                   }`}
                 >
-                  <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  {isUploading ? (
+                    <Loader2 className="w-12 h-12 text-primary mx-auto mb-4 animate-spin" />
+                  ) : (
+                    <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  )}
                   <p className="text-muted-foreground mb-2">Drag and drop your files here or click to browse</p>
-                  <p className="text-xs text-muted-foreground mb-4">CSV, PDF, JSON • Max 50MB per file</p>
-                  <Button onClick={handleSelectFiles} className="bg-primary hover:bg-primary/90">Select Files</Button>
+                  <p className="text-xs text-muted-foreground mb-4">CSV, JSON, TXT • Max 50MB per file</p>
+                  <Button onClick={handleSelectFiles} disabled={isUploading} className="bg-primary hover:bg-primary/90">
+                    {isUploading ? 'Uploading...' : 'Select Files'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -74,37 +217,77 @@ export default function Feedback() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle>Recent Uploads</CardTitle>
-                <CardDescription>Your uploaded feedback files</CardDescription>
+                <CardDescription>
+                  {recentUploads.length > 0
+                    ? 'Your uploaded feedback files this session'
+                    : 'No uploads yet this session'}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border hover:bg-transparent">
-                      <TableHead className="text-muted-foreground">FILE NAME</TableHead>
-                      <TableHead className="text-muted-foreground">DATE</TableHead>
-                      <TableHead className="text-muted-foreground">ITEMS</TableHead>
-                      <TableHead className="text-muted-foreground">STATUS</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentUploads.map((upload) => (
-                      <TableRow key={upload.id} className="border-border hover:bg-secondary/30 transition-colors">
-                        <TableCell className="font-medium text-foreground flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-muted-foreground" />
-                          {upload.name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{upload.date}</TableCell>
-                        <TableCell className="text-foreground">{upload.items}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="border-chart-1 text-chart-1">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            {upload.status}
-                          </Badge>
-                        </TableCell>
+                {recentUploads.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border hover:bg-transparent">
+                        <TableHead className="text-muted-foreground">FILE NAME</TableHead>
+                        <TableHead className="text-muted-foreground">DATE</TableHead>
+                        <TableHead className="text-muted-foreground">ITEMS</TableHead>
+                        <TableHead className="text-muted-foreground">STATUS</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {recentUploads.map((upload) => (
+                        <TableRow key={upload.id} className="border-border hover:bg-secondary/30 transition-colors">
+                          <TableCell className="font-medium text-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            {upload.name}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{upload.date}</TableCell>
+                          <TableCell className="text-foreground">{upload.items}</TableCell>
+                          <TableCell>
+                            {upload.status === 'uploading' && (
+                              <Badge variant="outline" className="border-primary text-primary">
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                uploading
+                              </Badge>
+                            )}
+                            {upload.status === 'completed' && (
+                              <Badge variant="outline" className="border-chart-1 text-chart-1">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                completed
+                              </Badge>
+                            )}
+                            {upload.status === 'partial' && (
+                              <div className="space-y-1">
+                                <Badge variant="outline" className="border-chart-3 text-chart-3">
+                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                  {upload.items} imported, {upload.failed} failed
+                                </Badge>
+                                {upload.error && (
+                                  <p className="text-xs text-muted-foreground max-w-xs">{upload.error}</p>
+                                )}
+                              </div>
+                            )}
+                            {upload.status === 'failed' && (
+                              <div className="space-y-1">
+                                <Badge variant="outline" className="border-destructive text-destructive">
+                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                  failed
+                                </Badge>
+                                {upload.error && (
+                                  <p className="text-xs text-destructive max-w-xs">{upload.error}</p>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Upload a file to see it here. Recent uploads are tracked for the current session.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -114,26 +297,24 @@ export default function Feedback() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle>Data Sources</CardTitle>
-                <CardDescription>Connected integrations</CardDescription>
+                <CardDescription>Feedback by source from backend</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {dataSources.map((source, idx) => (
+                {dataSources.length > 0 ? dataSources.map((source: any, idx: number) => (
                   <div key={idx} className="p-3 rounded-lg bg-secondary/50 border border-border hover:bg-secondary transition-colors">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
-                        <p className="font-medium text-foreground text-sm">{source.name}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{source.count.toLocaleString()} items</p>
-                        <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          Synced {source.lastSync}
-                        </div>
+                        <p className="font-medium text-foreground text-sm">{source.name || 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{source.value?.toLocaleString()} items</p>
                       </div>
                       <Badge variant="outline" className="border-chart-1 text-chart-1 text-xs">
                         Active
                       </Badge>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No source data available</p>
+                )}
                 <Button onClick={handleAddDataSource} variant="outline" className="w-full border-border hover:bg-secondary mt-4">
                   + Add Source
                 </Button>

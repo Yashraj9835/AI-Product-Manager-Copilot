@@ -1,74 +1,76 @@
+import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronRight, Star } from 'lucide-react';
+import { ChevronRight, Star, AlertCircle } from 'lucide-react';
 import { handleGeneratePRD, showInfoToast } from '@/lib/interactions';
-
-const featureRequests = [
-  {
-    id: 1,
-    title: 'Improve transaction speed',
-    theme: 'Slow transaction speed',
-    requests: 847,
-    status: 'planned',
-    riceScore: 9.2,
-    reach: 450,
-    impact: 'High',
-    confidence: 0.95,
-    effort: 'M',
-  },
-  {
-    id: 2,
-    title: 'Add PDF export functionality',
-    theme: 'PDF export missing',
-    requests: 612,
-    status: 'in_progress',
-    riceScore: 8.7,
-    reach: 380,
-    impact: 'High',
-    confidence: 0.92,
-    effort: 'L',
-  },
-  {
-    id: 3,
-    title: 'Mobile app optimization',
-    theme: 'Mobile UI improvements',
-    requests: 523,
-    status: 'planned',
-    riceScore: 7.8,
-    reach: 320,
-    impact: 'Medium',
-    confidence: 0.88,
-    effort: 'XL',
-  },
-  {
-    id: 4,
-    title: 'Fix authentication issues',
-    theme: 'Login failures',
-    requests: 423,
-    status: 'in_progress',
-    riceScore: 7.3,
-    reach: 280,
-    impact: 'High',
-    confidence: 0.90,
-    effort: 'S',
-  },
-  {
-    id: 5,
-    title: 'Implement dark mode',
-    theme: 'Feature request: Dark mode',
-    requests: 389,
-    status: 'new',
-    riceScore: 6.9,
-    reach: 250,
-    impact: 'Medium',
-    confidence: 0.85,
-    effort: 'M',
-  },
-];
+import { useApi } from '@/hooks/useApi';
 
 export default function Features() {
+  const { data: feedbackData, isLoading, error, fetchData } = useApi<any>();
+
+  useEffect(() => {
+    fetchData({ method: 'GET', url: '/feedback', params: { limit: 100 } });
+  }, [fetchData]);
+
+  const feedbackList: any[] = Array.isArray(feedbackData) ? feedbackData : [];
+
+  // Aggregate feature requests from feedback by category
+  const featureMap = new Map<string, { count: number; priority: string }>();
+  feedbackList.forEach((fb: any) => {
+    const cat = fb.featureCategory || fb.featureTitle || fb.category || 'General';
+    const existing = featureMap.get(cat) || { count: 0, priority: 'Low' };
+    existing.count += 1;
+    if (fb.priority === 'High') existing.priority = 'High';
+    else if (fb.priority === 'Medium' && existing.priority !== 'High') existing.priority = 'Medium';
+    featureMap.set(cat, existing);
+  });
+
+  const featureRequests = Array.from(featureMap.entries())
+    .map(([cat, data], idx) => {
+      const reach = data.count * 5;
+      const impact = data.priority === 'High' ? 'High' : data.priority === 'Medium' ? 'Medium' : 'Low';
+      const impactVal = impact === 'High' ? 3 : impact === 'Medium' ? 2 : 1;
+      const confidence = Math.min(0.99, 0.7 + data.count / 500);
+      const effortMap: Record<string, string> = { High: 'M', Medium: 'L', Low: 'S' };
+      const effortVal = data.priority === 'High' ? 5 : data.priority === 'Medium' ? 8 : 3;
+      const rice = parseFloat(((reach * impactVal * confidence) / effortVal).toFixed(1));
+      return {
+        id: idx + 1,
+        title: `Improve ${cat}`,
+        theme: cat,
+        requests: data.count,
+        status: data.priority === 'High' ? 'in_progress' : data.count > 20 ? 'planned' : 'new',
+        riceScore: rice,
+        reach,
+        impact,
+        confidence: Math.round(confidence * 100) / 100,
+        effort: effortMap[data.priority] || 'M',
+      };
+    })
+    .sort((a, b) => b.riceScore - a.riceScore);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center text-destructive">
+          <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+          <p>{error}</p>
+          <Button onClick={() => fetchData({ method: 'GET', url: '/feedback', params: { limit: 100 } })} variant="outline" className="mt-4">Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
@@ -101,7 +103,7 @@ export default function Features() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {featureRequests.map((feature) => (
+                  {featureRequests.length > 0 ? featureRequests.map((feature) => (
                     <TableRow key={feature.id} className="border-border hover:bg-secondary/30 transition-colors">
                       <TableCell>
                         <div>
@@ -161,7 +163,13 @@ export default function Features() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        No feature data available. Upload feedback first.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

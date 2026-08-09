@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getStoredUser, redirectToLogin } from '@/lib/auth';
 
 interface NavItem {
   label: string;
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState('/');
+  const currentUser = getStoredUser();
 
   const handleNavClick = (href: string) => {
     setCurrentPath(href);
@@ -149,18 +151,12 @@ export default function Sidebar() {
             <span className="text-sm">Pro Plan</span>
           </Button>
           <div className="text-xs text-muted-foreground px-2">
-            <p className="font-medium text-foreground mb-1">Nishyanth</p>
-            <p>Product Manager</p>
+            <p className="font-medium text-foreground mb-1">{currentUser?.name ?? 'Signed in'}</p>
+            <p>{currentUser?.email ?? '—'}</p>
           </div>
-          <Button 
-            onClick={() => {
-              localStorage.removeItem('user');
-              localStorage.removeItem('twoFactorVerified');
-              localStorage.removeItem('pendingUser');
-              localStorage.removeItem('authStep');
-              window.location.href = '/login';
-            }}
-            variant="destructive" 
+          <Button
+            onClick={redirectToLogin}
+            variant="destructive"
             className="w-full mt-2"
           >
             Logout
