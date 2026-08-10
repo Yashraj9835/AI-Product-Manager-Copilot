@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
+
 import {
   Card,
   CardContent,
@@ -7,9 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+
 import {
   AlertCircle,
   Lightbulb,
@@ -17,9 +20,10 @@ import {
   MessageCircle,
   Send,
 } from 'lucide-react';
+
 import {
   AI_UNAVAILABLE_MESSAGE,
-  requestAnalysis,
+  requestCopilot,
 } from '@/lib/interactions';
 
 interface ChatMessage {
@@ -65,7 +69,6 @@ export default function Chat() {
   const [, navigate] = useLocation();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -97,30 +100,79 @@ export default function Chat() {
     setIsSending(true);
 
     try {
-      const result = await requestAnalysis(question);
+      /*
+       * IMPORTANT:
+       *
+       * Chat must use requestCopilot(), NOT requestAnalysis().
+       *
+       * requestCopilot() calls:
+       *
+       * POST http://127.0.0.1:8001/copilot
+       *
+       * The CopilotService then decides:
+       *
+       * RICE / ICE / MoSCoW -> PrioritizationService
+       * PRD -> PRDService
+       * Normal product question -> AIService / RAG
+       */
+      const result = await requestCopilot(question);
+
+      let content = '';
+
+      if (result.live) {
+        if (typeof result.answer === 'string') {
+          content = result.answer;
+        } else if (result.data) {
+          /*
+           * Copilot may return a structured response such as:
+           *
+           * {
+           *   intent: "prioritize",
+           *   answer: {
+           *     framework: "RICE",
+           *     ranked_features: [...]
+           *   }
+           * }
+           *
+           * Display the complete response when answer is an object.
+           */
+          const copilotAnswer = result.data['answer'];
+
+          if (
+            typeof copilotAnswer === 'string'
+          ) {
+            content = copilotAnswer;
+          } else {
+            content = JSON.stringify(
+              copilotAnswer ?? result.data,
+              null,
+              2,
+            );
+          }
+        } else {
+          content = 'No response received from Copilot.';
+        }
+      } else {
+        content =
+          result.error ??
+          AI_UNAVAILABLE_MESSAGE;
+      }
 
       setMessages((prev) => [
         ...prev,
-        result.live
-          ? {
-              id: Date.now(),
-              role: 'assistant',
-              content:
-                typeof result.data === 'string'
-                  ? result.data
-                  : JSON.stringify(result.data, null, 2),
-              timestamp: now(),
-            }
-          : {
-              id: Date.now(),
-              role: 'assistant',
-              content: result.error ?? AI_UNAVAILABLE_MESSAGE,
-              timestamp: now(),
-              unavailable: true,
-            },
+        {
+          id: Date.now(),
+          role: 'assistant',
+          content,
+          timestamp: now(),
+          unavailable: !result.live,
+        },
       ]);
     } catch (error) {
-      console.error('Copilot request failed:', error);
+      console.error(
+        'Copilot request failed:',
+        error,
+      );
 
       setMessages((prev) => [
         ...prev,
@@ -149,8 +201,8 @@ export default function Chat() {
           </h1>
 
           <p className="text-sm text-muted-foreground mt-2">
-            AI Product Manager Assistant — ask about feedback, pain points,
-            trends, features and product priorities.
+            AI Product Manager Assistant — ask about feedback,
+            pain points, trends, features and product priorities.
           </p>
         </div>
 
@@ -164,8 +216,8 @@ export default function Chat() {
                 <CardTitle>Chat</CardTitle>
 
                 <CardDescription>
-                  Ask product-related questions and get AI-powered insights
-                  from customer feedback.
+                  Ask product-related questions and get AI-powered
+                  insights from customer feedback.
                 </CardDescription>
               </CardHeader>
 
@@ -175,9 +227,11 @@ export default function Chat() {
                   className="h-full overflow-y-auto p-4 space-y-4"
                 >
 
+                  {/* Empty state */}
                   {messages.length === 0 && (
                     <div className="flex justify-start">
                       <div className="max-w-md px-4 py-3 rounded-lg bg-secondary/50 border border-border">
+
                         <div className="flex items-center gap-2 mb-1">
                           <MessageCircle className="w-4 h-4 text-primary" />
 
@@ -199,6 +253,7 @@ export default function Chat() {
                     </div>
                   )}
 
+                  {/* Messages */}
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
@@ -240,10 +295,12 @@ export default function Chat() {
                         <p className="text-xs opacity-70 mt-1">
                           {msg.timestamp}
                         </p>
+
                       </div>
                     </div>
                   ))}
 
+                  {/* Loading */}
                   {isSending && (
                     <div className="flex justify-start">
                       <div className="px-4 py-3 rounded-lg bg-secondary/50 border border-border flex items-center gap-2">
@@ -268,7 +325,9 @@ export default function Chat() {
                   <Input
                     placeholder="Ask your product question..."
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) =>
+                      setInput(e.target.value)
+                    }
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         send(input);
@@ -281,7 +340,10 @@ export default function Chat() {
 
                   <Button
                     onClick={() => send(input)}
-                    disabled={isSending || !input.trim()}
+                    disabled={
+                      isSending ||
+                      !input.trim()
+                    }
                     data-testid="chat-send"
                     className="bg-primary hover:bg-primary/90 gap-2"
                   >
@@ -311,17 +373,19 @@ export default function Chat() {
               </CardHeader>
 
               <CardContent className="space-y-2">
-                {suggestedQuestions.map((question, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => send(question)}
-                    disabled={isSending}
-                    data-testid={`chat-suggested-${idx}`}
-                    className="w-full text-left p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors text-sm text-foreground border border-border disabled:opacity-50"
-                  >
-                    {question}
-                  </button>
-                ))}
+                {suggestedQuestions.map(
+                  (question, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => send(question)}
+                      disabled={isSending}
+                      data-testid={`chat-suggested-${idx}`}
+                      className="w-full text-left p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors text-sm text-foreground border border-border disabled:opacity-50"
+                    >
+                      {question}
+                    </button>
+                  ),
+                )}
               </CardContent>
             </Card>
 
@@ -343,7 +407,9 @@ export default function Chat() {
                   <Button
                     key={action.href}
                     variant="outline"
-                    onClick={() => navigate(action.href)}
+                    onClick={() =>
+                      navigate(action.href)
+                    }
                     title={action.hint}
                     data-testid={`quick-${action.href.slice(1)}`}
                     className="w-full border-border hover:bg-secondary justify-start text-sm"
@@ -366,8 +432,8 @@ export default function Chat() {
                 </Badge>
 
                 <p className="text-xs text-muted-foreground">
-                  Ask Copilot uses the connected AI analysis service to
-                  generate product insights from customer feedback.
+                  Ask Copilot uses the connected AI analysis service
+                  to generate product insights from customer feedback.
                 </p>
 
               </CardContent>

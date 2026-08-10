@@ -1,190 +1,314 @@
 import { toast } from 'sonner';
 import api from './trpc';
 
-/* ────────────────────────────────────────────────────────────────────────────
- * Shared interaction helpers.
- *
- * This file used to export a `showFeatureToast` that answered every click with
- * a green "<Feature> initiated!  Processing your request..." toast and did
- * nothing else. That is where the Roadmap page's permanent "Processing your
- * request..." came from: nothing was ever in flight, so nothing ever finished.
- * Eight such stubs (handleGeneratePRD, handleImportData, handleReclusterThemes,
- * handleAddDataSource, …) were wired to real buttons across six pages.
- *
- * They are gone. A success toast now means a request succeeded, and anything
- * that cannot succeed today says so. What remains:
- *
- *   requestAnalysis()   — the one honest path to /api/analyze, used by every
- *                         feature that genuinely needs Yash's NLP service.
- *   showUnavailable()   — a feature blocked on config or an unmerged service.
- *   showInfoToast()     — genuinely informational; explains, claims nothing.
- *   showErrorToast()    — surfaces a real failure.
- * ──────────────────────────────────────────────────────────────────────── */
+/**
+ * ────────────────────────────────────────────────────────────────────────────
+ * Shared interaction helpers
+ * ────────────────────────────────────────────────────────────────────────────
+ */
 
 export const showErrorToast = (message: string) => {
-  toast.error('Error', { description: message });
+  toast.error('Error', {
+    description: message,
+  });
 };
 
-export const showInfoToast = (title: string, message: string) => {
-  toast.info(title, { description: message });
+export const showInfoToast = (
+  title: string,
+  message: string,
+) => {
+  toast.info(title, {
+    description: message,
+  });
 };
 
 /**
- * Report a feature that cannot work yet, naming what it is waiting on.
- *
- * Deliberately a warning rather than a success, and it states the blocker, so
- * a click can never read as "it worked" when nothing happened.
+ * Report a feature that cannot work yet.
  */
-export const showUnavailable = (feature: string, blockedOn: string) => {
-  toast.warning(`${feature} unavailable`, { description: blockedOn });
+export const showUnavailable = (
+  feature: string,
+  blockedOn: string,
+) => {
+  toast.warning(`${feature} unavailable`, {
+    description: blockedOn,
+  });
 };
 
-/** Message shown wherever the AI analysis service is reachable but not real. */
+/**
+ * Message shown when the AI analysis service is unavailable.
+ */
 export const AI_UNAVAILABLE_MESSAGE =
   'AI suggestions unavailable — the analysis service is not yet connected.';
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Analysis
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
 export interface AnalysisResult {
-  /** True only when a real NLP service answered. */
+  /**
+   * True only when a real NLP service answered.
+   */
   live: boolean;
+
+  /**
+   * Analysis response data.
+   */
   data: Record<string, unknown> | null;
-  /** Present when the call failed outright. */
+
+  /**
+   * Present when the request failed.
+   */
   error?: string;
 }
 
 /**
- * Call POST /api/analyze and report honestly what came back.
- *
- * Three outcomes, and the caller can tell them apart:
- *   { live: true  }            a real service answered
- *   { live: false, error }     the request failed, timed out, or the backend
- *                              returned its `mock: true` fallback
- *
- * The backend answers 200 with `mock: true` when FASTAPI_URL is unset or the
- * service is unreachable, so status alone cannot distinguish real analysis from
- * the placeholder — `mock` has to be read explicitly. Treating a 200 as success
- * is exactly how a mock response ends up displayed as though it were an
- * insight.
- *
- * The abort signal is the other half of the fix. Every AI-dependent button
- * previously had no timeout, so a hung request left the UI spinning forever;
- * the caller here always gets an answer within `timeoutMs`.
+ * Call the backend analysis endpoint.
  */
 export async function requestAnalysis(
   text: string,
-  timeoutMs = 8000
+  timeoutMs = 8000,
 ): Promise<AnalysisResult> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  const timer = setTimeout(
+    () => controller.abort(),
+    timeoutMs,
+  );
 
   try {
-    const response = await api.post('/analyze', { text }, { signal: controller.signal });
+    const response = await api.post(
+      '/analyze',
+      {
+        text,
+      },
+      {
+        signal: controller.signal,
+      },
+    );
+
     const body = response.data ?? {};
 
+    /**
+     * Backend can return mock=true when
+     * the real analysis service is unavailable.
+     */
     if (body.mock === true) {
-      return { live: false, data: body.data ?? null, error: AI_UNAVAILABLE_MESSAGE };
+      return {
+        live: false,
+        data: body.data ?? null,
+        error: AI_UNAVAILABLE_MESSAGE,
+      };
     }
 
-    return { live: true, data: body.data ?? null };
+    return {
+      live: true,
+      data: body.data ?? null,
+    };
   } catch (err: any) {
-    // Axios surfaces an aborted request as ERR_CANCELED / CanceledError.
-    const timedOut = err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError';
-    const message = timedOut
-      ? `Analysis service did not respond within ${Math.round(timeoutMs / 1000)}s.`
-      : err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Analysis request failed';
+    const timedOut =
+      err?.code === 'ERR_CANCELED' ||
+      err?.name === 'CanceledError';
 
-    return { live: false, data: null, error: message };
+    const message = timedOut
+      ? `Analysis service did not respond within ${Math.round(
+          timeoutMs / 1000,
+        )}s.`
+      : err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Analysis request failed';
+
+    return {
+      live: false,
+      data: null,
+      error: message,
+    };
   } finally {
     clearTimeout(timer);
   }
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * File download
+ * ──────────────────────────────────────────────────────────────────────────── */
+
 /**
  * Trigger a browser download of a text file.
- *
- * Used by the PRD export button, which previously only showed a toast claiming
- * an export had happened.
  */
-export function downloadTextFile(filename: string, contents: string, mime = 'text/markdown') {
-  const blob = new Blob([contents], { type: `${mime};charset=utf-8` });
+export function downloadTextFile(
+  filename: string,
+  contents: string,
+  mime = 'text/markdown',
+) {
+  const blob = new Blob(
+    [contents],
+    {
+      type: `${mime};charset=utf-8`,
+    },
+  );
+
   const url = URL.createObjectURL(blob);
+
   const link = document.createElement('a');
+
   link.href = url;
   link.download = filename;
+
   document.body.appendChild(link);
+
   link.click();
+
   document.body.removeChild(link);
+
   URL.revokeObjectURL(url);
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Clipboard
+ * ──────────────────────────────────────────────────────────────────────────── */
+
 /**
- * Copy text to the clipboard, reporting whether it actually landed.
- *
- * navigator.clipboard is unavailable on insecure origins and can be blocked by
- * permissions policy, so the old unconditional "Copied to clipboard!" toast was
- * a claim the code had not checked.
+ * Copy text to the clipboard.
  */
-export async function copyToClipboard(text: string, label = 'Copied to clipboard'): Promise<boolean> {
+export async function copyToClipboard(
+  text: string,
+  label = 'Copied to clipboard',
+): Promise<boolean> {
   try {
-    if (!navigator.clipboard) throw new Error('Clipboard API unavailable in this browser context');
+    if (!navigator.clipboard) {
+      throw new Error(
+        'Clipboard API unavailable in this browser context',
+      );
+    }
+
     await navigator.clipboard.writeText(text);
+
     toast.success(label);
+
     return true;
   } catch (err: any) {
-    showErrorToast(err?.message || 'Could not access the clipboard');
+    showErrorToast(
+      err?.message ||
+        'Could not access the clipboard',
+    );
+
     return false;
   }
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Copilot
+ * ──────────────────────────────────────────────────────────────────────────── */
+
 export interface CopilotResult {
   live: boolean;
+
+  /**
+   * Human-readable answer returned by Copilot.
+   */
   answer: string | null;
+
+  /**
+   * Complete Copilot response.
+   */
   data: Record<string, unknown> | null;
+
+  /**
+   * Error message when the request fails.
+   */
   error?: string;
 }
 
+/**
+ * Central AI Product Manager Copilot request.
+ *
+ * IMPORTANT:
+ *
+ * This MUST call /copilot, not /ask.
+ *
+ * /copilot performs intent routing:
+ *
+ * PRD question
+ *      ↓
+ * PRDService
+ *
+ * RICE / ICE / MoSCoW question
+ *      ↓
+ * PrioritizationService
+ *
+ * Product analysis question
+ *      ↓
+ * AIService / RAG
+ */
 export async function requestCopilot(
   question: string,
-  timeoutMs = 15000
+  timeoutMs = 15000,
 ): Promise<CopilotResult> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  const timer = setTimeout(
+    () => controller.abort(),
+    timeoutMs,
+  );
 
   try {
-    const response = await fetch('http://127.0.0.1:8001/ask', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'http://127.0.0.1:8001/copilot',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+          question,
+        }),
+
+        signal: controller.signal,
       },
-      body: JSON.stringify({
-        question,
-      }),
-      signal: controller.signal,
-    });
+    );
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText =
+        await response.text();
+
       throw new Error(
-        `AI service returned ${response.status}: ${errorText}`
+        `AI service returned ${response.status}: ${errorText}`,
       );
     }
 
-    const result = await response.json();
+    const result =
+      await response.json();
 
     return {
       live: true,
-      answer: result.answer ?? null,
+
+      answer:
+        typeof result.answer === 'string'
+          ? result.answer
+          : null,
+
       data: result,
     };
   } catch (err: any) {
-    const timedOut = err?.name === 'AbortError';
+    const timedOut =
+      err?.name === 'AbortError';
 
     return {
       live: false,
+
       answer: null,
+
       data: null,
+
       error: timedOut
-        ? `AI service did not respond within ${Math.round(timeoutMs / 1000)}s.`
-        : err?.message || 'AI request failed',
+        ? `AI service did not respond within ${Math.round(
+            timeoutMs / 1000,
+          )}s.`
+        : err?.message ||
+          'AI request failed',
     };
   } finally {
     clearTimeout(timer);
