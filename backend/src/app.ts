@@ -4,6 +4,7 @@ import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/auth.routes';
 import feedbackRoutes from './routes/feedback.routes';
 import workspaceRoutes from './routes/workspace.routes';
+import pipelineRoutes from './routes/pipeline.routes';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -166,6 +167,9 @@ app.use('/api', feedbackRoutes);
 
 // ── API routes (User settings, Roadmap, PRD, Theme maintenance) ──
 app.use('/api', workspaceRoutes);
+
+// ── Pipeline microservice routes (CSV ingestion & Groq analysis) ──
+app.use('/api', pipelineRoutes);
 
 // ── Global error handler (must be LAST) ──
 app.use(errorHandler);

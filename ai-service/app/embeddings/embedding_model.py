@@ -1,6 +1,3 @@
-import os
-os.environ["HF_HUB_OFFLINE"] = "1"
-
 from sentence_transformers import SentenceTransformer
 from typing import List
 
@@ -13,10 +10,16 @@ class EmbeddingModel:
     def __init__(self):
         print("Loading embedding model...")
 
-        self.model = SentenceTransformer(
-            "BAAI/bge-base-en-v1.5",
-            local_files_only=True
-        )
+        try:
+            self.model = SentenceTransformer(
+                "BAAI/bge-base-en-v1.5",
+                local_files_only=True
+            )
+        except Exception:
+            print("Model not in local cache; downloading BAAI/bge-base-en-v1.5...")
+            self.model = SentenceTransformer(
+                "BAAI/bge-base-en-v1.5"
+            )
 
         print("Embedding model loaded.")
 
