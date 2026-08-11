@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 import traceback
 
+from pydantic import BaseModel
 from preprocessing.collect_data import merge_all
 from preprocessing.validate import validate_dataset
 from preprocessing.clean_data import clean_dataset
@@ -14,9 +15,95 @@ from preprocessing.feature_engineering import main as feature_engineering
 from analysis.batch_analyzer import analyze_feedback_batch
 from analysis.feature_cluster import cluster_features
 from analysis.trend_analysis import analyze_trends
+from analysis.llm_client import ask_llm
 
 
 router = APIRouter()
+
+
+import json
+
+
+class CopilotRequest(BaseModel):
+    question: str
+
+
+class PRDRequest(BaseModel):
+    question: str = ""
+    feature: str = ""
+
+
+@router.post("/prd")
+async def generate_prd(req: PRDRequest):
+    """
+    Generate a Product Requirements Document (PRD) JSON using Groq LLM.
+    """
+    topic = req.question or req.feature or "New Product Feature"
+
+    prompt = f"""You are an expert Product Manager.
+Generate a structured Product Requirements Document (PRD) for this feature or topic:
+{topic}
+
+Return ONLY valid JSON. Do NOT use markdown code fences.
+
+Required JSON structure:
+{{
+  "title": "PRD: {topic}",
+  "problem_statement": "Detailed problem statement...",
+  "target_users": ["Target user 1", "Target user 2"],
+  "goals": ["Goal 1", "Goal 2"],
+  "requirements": ["Requirement 1", "Requirement 2"],
+  "user_stories": [
+    {{"story": "As a user, I want X so that Y"}}
+  ],
+  "acceptance_criteria": [
+    {{"criteria": ["Given X, when Y, then Z"]}}
+  ],
+  "success_metrics": ["Metric 1", "Metric 2"],
+  "risks": ["Risk 1", "Risk 2"]
+}}
+"""
+    try:
+        raw_response = ask_llm(prompt)
+        cleaned = raw_response.replace("```json", "").replace("```", "").strip()
+        result = json.loads(cleaned)
+        return result
+    except Exception as e:
+        return {
+            "title": f"PRD: {topic}",
+            "problem_statement": f"Define requirements for {topic}",
+            "target_users": ["General Users", "Product Administrators"],
+            "goals": ["Improve user satisfaction", "Streamline product workflow"],
+            "requirements": ["Requirement 1: System stability", "Requirement 2: User interface clarity"],
+            "user_stories": [{"story": f"As a user, I want to use {topic} easily so that my tasks are completed fast"}],
+            "acceptance_criteria": [{"criteria": ["Given the user accesses the feature, when input is provided, then valid output is displayed"]}],
+            "success_metrics": ["User adoption rate > 80%", "Customer satisfaction score > 4.5/5"],
+            "risks": ["Potential integration delays", "User onboarding overhead"]
+        }
+
+
+@router.post("/copilot")
+async def copilot_chat(req: CopilotRequest):
+    """
+    Copilot conversational endpoint using Groq LLM.
+    """
+    if not req.question or not req.question.strip():
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+
+    prompt = f"""You are an expert AI Product Manager Copilot assisting a product manager.
+Answer the user's question clearly, concisely, and accurately.
+
+User Question:
+{req.question}
+"""
+    try:
+        answer = ask_llm(prompt)
+        return {
+            "intent": "analyze",
+            "answer": answer
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================

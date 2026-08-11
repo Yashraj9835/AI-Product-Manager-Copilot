@@ -134,19 +134,18 @@ def merge_all():
 
     total = 0
 
-    for file in FILES:
+    # Collect all CSV files in SOURCE_FOLDER
+    all_csv_files = list(SOURCE_FOLDER.glob("*.csv"))
 
-        path = SOURCE_FOLDER / file
+    if not all_csv_files:
+        logger.error("No CSV files found in source_data.")
+        return
 
-        if not path.exists():
-
-            logger.warning(f"{file} not found")
-
-            continue
+    for path in all_csv_files:
 
         df = load_csv(path)
 
-        if df is None:
+        if df is None or len(df) == 0:
 
             continue
 
@@ -158,7 +157,7 @@ def merge_all():
 
     if len(merged) == 0:
 
-        logger.error("No CSV files found.")
+        logger.error("No valid CSV content loaded.")
 
         return
 
@@ -166,6 +165,13 @@ def merge_all():
         merged,
         ignore_index=True
     )
+
+    # Synthesize feedback_id for any missing/null/empty feedback_id values
+    missing_mask = final_df["feedback_id"].isna() | (final_df["feedback_id"].astype(str).str.strip() == "")
+    if missing_mask.any():
+        final_df.loc[missing_mask, "feedback_id"] = [
+            f"FB_{i+1:05d}" for i in range(missing_mask.sum())
+        ]
 
     final_df.to_csv(
         OUTPUT_FILE,

@@ -2,8 +2,12 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 
-# Load environment variables
-load_dotenv()
+# Load environment variables (.env in feedback-pipeline or parent)
+env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
+if os.path.exists(env_path):
+    load_dotenv(dotenv_path=env_path)
+else:
+    load_dotenv()
 
 # Get Groq API key
 api_key = os.getenv("GROQ_API_KEY")
@@ -31,7 +35,7 @@ def ask_llm(prompt: str) -> str:
             }
         ],
         temperature=0.2,
-        max_tokens=300
+        max_tokens=4096
     )
 
     return response.choices[0].message.content.strip()

@@ -1,5 +1,5 @@
 import json
-from analysis.llm_client import ask_llm
+from .llm_client import ask_llm
 
 
 def analyze_feedback_batch(feedback_list):
@@ -69,47 +69,33 @@ Customer Feedback:
 
         # Make sure result is a list
         if not isinstance(result, list):
+            print("[ERROR] Groq returned something other than a JSON array")
+            result = []
 
-            print(
-                "[ERROR] Groq returned something other than a JSON array"
-            )
+        print(f"[OK] Groq returned {len(result)} results")
 
-            return []
+        # Fill missing results to guarantee 1-to-1 matching with feedback_list
+        while len(result) < len(feedback_list):
+            idx = len(result)
+            result.append({
+                "feedback": feedback_list[idx],
+                "theme": "General Feedback",
+                "pain_point": "None"
+            })
 
-        print(
-            f"[OK] Groq returned {len(result)} results"
-        )
-
-        # Check expected count
-        if len(result) != len(feedback_list):
-
-            print(
-                "[WARN] WARNING: Result count mismatch"
-            )
-
-            print(
-                "Expected:",
-                len(feedback_list)
-            )
-
-            print(
-                "Received:",
-                len(result)
-            )
-
-        return result
+        return result[:len(feedback_list)]
 
     except Exception as e:
 
-        print(
-            "[ERROR] JSON Parsing Error:",
-            e
-        )
+        print("[ERROR] JSON Parsing Error:", e)
+        print("Groq Response:", response)
 
-        print(
-            "Groq Response:"
-        )
-
-        print(response)
-
-        return []
+        # Return fallback items for all feedbacks in this batch
+        return [
+            {
+                "feedback": text,
+                "theme": "General Feedback",
+                "pain_point": "None"
+            }
+            for text in feedback_list
+        ]

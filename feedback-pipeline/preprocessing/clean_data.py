@@ -113,12 +113,16 @@ def clean_dataset():
 
     if "feedback_id" in df.columns:
 
-        duplicate_ids = df["feedback_id"].duplicated().sum()
+        # Only count/drop duplicates among non-null and non-empty feedback_id values
+        valid_ids = df["feedback_id"].dropna().astype(str).str.strip()
+        valid_ids = valid_ids[valid_ids != ""]
 
-        df = df.drop_duplicates(
-            subset="feedback_id",
-            keep="first"
-        )
+        duplicate_mask = df["feedback_id"].isin(valid_ids[valid_ids.duplicated()])
+        # Keep first occurrence of each valid feedback_id, keep all rows with missing feedback_id
+        is_dup = df["feedback_id"].duplicated(keep="first") & df["feedback_id"].notna() & (df["feedback_id"].astype(str).str.strip() != "")
+        duplicate_ids = is_dup.sum()
+
+        df = df[~is_dup]
 
     # -----------------------------------------
     # Clean feedback text

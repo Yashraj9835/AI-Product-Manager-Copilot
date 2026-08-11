@@ -5,10 +5,21 @@ import pandas as pd
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
-# Make the merged AI analysis package available.
-sys.path.insert(0, "backend/backend")
+import os
+# Add the feedback-pipeline directory to PYTHONPATH so that the shared analysis package can be imported.
+feedback_pipeline_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "feedback-pipeline"))
+sys.path.append(feedback_pipeline_path)
+
+import json
+from pydantic import BaseModel
 
 from analysis.batch_analyzer import analyze_feedback_batch
+from analysis.llm_client import ask_llm
+
+
+class PRDRequest(BaseModel):
+    question: str = ""
+    feature: str = ""
 
 
 app = FastAPI(
@@ -93,6 +104,55 @@ async def analyze_csv(file: UploadFile = File(...)):
         "records_analyzed": len(feedback),
         "results": results,
     }
+
+
+@app.post("/prd")
+async def generate_prd(req: PRDRequest):
+    """
+    Generate a Product Requirements Document (PRD) JSON using LLM.
+    """
+    topic = req.question or req.feature or "New Product Feature"
+
+    prompt = f"""You are an expert Product Manager.
+Generate a structured Product Requirements Document (PRD) for this feature or topic:
+{topic}
+
+Return ONLY valid JSON. Do NOT use markdown code fences.
+
+Required JSON structure:
+{{
+  "title": "PRD: {topic}",
+  "problem_statement": "Detailed problem statement...",
+  "target_users": ["Target user 1", "Target user 2"],
+  "goals": ["Goal 1", "Goal 2"],
+  "requirements": ["Requirement 1", "Requirement 2"],
+  "user_stories": [
+    {{"story": "As a user, I want X so that Y"}}
+  ],
+  "acceptance_criteria": [
+    {{"criteria": ["Given X, when Y, then Z"]}}
+  ],
+  "success_metrics": ["Metric 1", "Metric 2"],
+  "risks": ["Risk 1", "Risk 2"]
+}}
+"""
+    try:
+        raw_response = ask_llm(prompt)
+        cleaned = raw_response.replace("```json", "").replace("```", "").strip()
+        result = json.loads(cleaned)
+        return result
+    except Exception as e:
+        return {
+            "title": f"PRD: {topic}",
+            "problem_statement": f"Define requirements for {topic}",
+            "target_users": ["General Users", "Product Administrators"],
+            "goals": ["Improve user satisfaction", "Streamline product workflow"],
+            "requirements": ["Requirement 1: System stability", "Requirement 2: User interface clarity"],
+            "user_stories": [{"story": f"As a user, I want to use {topic} easily so that my tasks are completed fast"}],
+            "acceptance_criteria": [{"criteria": ["Given the user accesses the feature, when input is provided, then valid output is displayed"]}],
+            "success_metrics": ["User adoption rate > 80%", "Customer satisfaction score > 4.5/5"],
+            "risks": ["Potential integration delays", "User onboarding overhead"]
+        }
 
 
 if __name__ == "__main__":

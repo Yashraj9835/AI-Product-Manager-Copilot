@@ -76,6 +76,9 @@ All paths are relative to the project root:
   feedback-pipeline\.env
     GROQ_API_KEY=...
 
+  ai-service\.env (optional)
+    GEMINI_API_KEY=...
+
 --------------------------------------------------------
   RECOMMENDED STARTUP ORDER
 --------------------------------------------------------
