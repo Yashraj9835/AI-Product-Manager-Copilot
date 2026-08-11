@@ -177,7 +177,8 @@ export async function generatePRD(
       return;
     }
 
-    const aiResult =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const aiResult: any =
       await response.json();
 
     /**

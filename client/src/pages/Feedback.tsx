@@ -4,10 +4,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, X, Plus } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, X, Plus, Sparkles, TrendingUp, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApi } from '@/hooks/useApi';
 import api from '@/lib/trpc';
+
+// Types returned by the feedback-pipeline microservice (port 8001)
+interface ThemeItem {
+  feedback: string;
+  theme: string;
+  pain_point: string;
+}
+interface PipelineResult {
+  message: string;
+  filename: string;
+  rows: number;
+  processed_rows: number;
+  columns: string[];
+  theme_extraction: ThemeItem[];
+  trend_analysis: Record<string, number>;
+  feature_clusters: Record<string, string[]>;
+}
 
 interface UploadRecord {
   id: number;
@@ -26,6 +43,52 @@ export default function Feedback() {
   const [recentUploads, setRecentUploads] = useState<UploadRecord[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Deep Analysis via pipeline microservice (port 8001)
+  const [isPipelineRunning, setIsPipelineRunning] = useState(false);
+  const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(null);
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
+  const pipelineInputRef = useRef<HTMLInputElement>(null);
+
+  const runPipelineAnalysis = async (file: File) => {
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Deep Analysis only accepts CSV files');
+      return;
+    }
+    setIsPipelineRunning(true);
+    setPipelineResult(null);
+    setPipelineError(null);
+    toast.info(`Running deep analysis on ${file.name}…`, { duration: 4000 });
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/pipeline/upload', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+        },
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(err?.error || `Pipeline responded with ${response.status}`);
+      }
+
+      const body = await response.json();
+      const result: PipelineResult = body.data ?? body;
+      setPipelineResult(result);
+      toast.success(`Deep analysis complete — ${result.processed_rows ?? 0} records processed`);
+    } catch (err: any) {
+      const msg = err.message || 'Pipeline analysis failed';
+      setPipelineError(msg);
+      toast.error('Deep analysis failed', { description: msg });
+    } finally {
+      setIsPipelineRunning(false);
+    }
+  };
 
   // "Add Source" — a source exists once feedback carries its name, so the
   // dialog creates one real seed record with that source. The old handler was a
@@ -336,6 +399,160 @@ export default function Feedback() {
                   <p className="text-sm text-muted-foreground text-center py-8">
                     Upload a file to see it here. Recent uploads are tracked for the current session.
                   </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Deep Analysis Card */}
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <CardTitle>Deep Analysis (Groq + Preprocessing)</CardTitle>
+                </div>
+                <CardDescription>
+                  Upload a CSV to run the full pipeline: validate → clean → normalize → feature-engineer → Groq batch analysis → trend &amp; cluster extraction.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <input
+                  ref={pipelineInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) runPipelineAnalysis(f);
+                    e.target.value = '';
+                  }}
+                />
+                <div
+                  onDragOver={(e) => { e.preventDefault(); }}
+                  onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) runPipelineAnalysis(f); }}
+                  className="border-2 border-dashed border-primary/40 rounded-lg p-8 text-center transition-colors hover:border-primary/70 hover:bg-primary/5"
+                >
+                  {isPipelineRunning ? (
+                    <Loader2 className="w-10 h-10 text-primary mx-auto mb-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-10 h-10 text-primary/60 mx-auto mb-3" />
+                  )}
+                  <p className="text-muted-foreground mb-1 text-sm">Drop a CSV for end-to-end Groq analysis</p>
+                  <p className="text-xs text-muted-foreground mb-4">Returns themes, pain points, trends &amp; feature clusters</p>
+                  <Button
+                    onClick={() => pipelineInputRef.current?.click()}
+                    disabled={isPipelineRunning}
+                    variant="outline"
+                    className="border-primary/40 text-primary hover:bg-primary/10 gap-2"
+                    id="pipeline-upload-btn"
+                  >
+                    {isPipelineRunning ? <><Loader2 className="w-4 h-4 animate-spin" /> Analysing…</> : <><Sparkles className="w-4 h-4" /> Run Deep Analysis</>}
+                  </Button>
+                </div>
+
+                {pipelineError && (
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{pipelineError}</span>
+                  </div>
+                )}
+
+                {pipelineResult && (
+                  <div className="space-y-5 mt-2" id="pipeline-results">
+                    {/* Summary row */}
+                    <div className="flex flex-wrap gap-3">
+                      <Badge variant="outline" className="text-xs border-chart-1 text-chart-1">
+                        {pipelineResult.rows} rows uploaded
+                      </Badge>
+                      <Badge variant="outline" className="text-xs border-chart-2 text-chart-2">
+                        {pipelineResult.processed_rows} records analysed
+                      </Badge>
+                      <Badge variant="outline" className="text-xs border-primary text-primary">
+                        {pipelineResult.filename}
+                      </Badge>
+                    </div>
+
+                    {/* Theme Extraction table */}
+                    {pipelineResult.theme_extraction?.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileText className="w-4 h-4 text-chart-1" />
+                          <h4 className="text-sm font-semibold text-foreground">Theme Extraction</h4>
+                          <span className="text-xs text-muted-foreground">({pipelineResult.theme_extraction.length} records)</span>
+                        </div>
+                        <div className="rounded-lg border border-border overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="border-border bg-secondary/30">
+                                <TableHead className="text-xs text-muted-foreground w-1/2">Feedback</TableHead>
+                                <TableHead className="text-xs text-muted-foreground">Theme</TableHead>
+                                <TableHead className="text-xs text-muted-foreground">Pain Point</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {pipelineResult.theme_extraction.slice(0, 5).map((item, i) => (
+                                <TableRow key={i} className="border-border hover:bg-secondary/30">
+                                  <TableCell className="text-xs text-muted-foreground max-w-xs truncate">{item.feedback}</TableCell>
+                                  <TableCell><Badge variant="outline" className="text-xs border-chart-1 text-chart-1 whitespace-nowrap">{item.theme}</Badge></TableCell>
+                                  <TableCell className="text-xs text-muted-foreground">{item.pain_point}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                          {pipelineResult.theme_extraction.length > 5 && (
+                            <p className="text-xs text-muted-foreground text-center py-2 border-t border-border">
+                              + {pipelineResult.theme_extraction.length - 5} more records
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Trend Analysis */}
+                    {pipelineResult.trend_analysis && Object.keys(pipelineResult.trend_analysis).length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp className="w-4 h-4 text-chart-2" />
+                          <h4 className="text-sm font-semibold text-foreground">Trend Analysis</h4>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(pipelineResult.trend_analysis)
+                            .sort(([, a], [, b]) => (b as number) - (a as number))
+                            .slice(0, 12)
+                            .map(([theme, count]) => (
+                              <div key={theme} className="flex items-center gap-1 px-2 py-1 rounded-full bg-chart-2/10 border border-chart-2/30">
+                                <span className="text-xs text-foreground">{theme}</span>
+                                <span className="text-xs font-bold text-chart-2 ml-1">{String(count)}</span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Feature Clusters */}
+                    {pipelineResult.feature_clusters && Object.keys(pipelineResult.feature_clusters).length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Layers className="w-4 h-4 text-primary" />
+                          <h4 className="text-sm font-semibold text-foreground">Feature Clusters</h4>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {Object.entries(pipelineResult.feature_clusters).map(([cluster, items]) => (
+                            <div key={cluster} className="rounded-lg border border-border bg-secondary/30 p-3">
+                              <p className="text-xs font-semibold text-primary mb-2">{cluster}</p>
+                              <div className="flex flex-wrap gap-1">
+                                {(items as string[]).slice(0, 6).map((item, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs border-border text-muted-foreground">{item}</Badge>
+                                ))}
+                                {(items as string[]).length > 6 && (
+                                  <span className="text-xs text-muted-foreground">+{(items as string[]).length - 6} more</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>

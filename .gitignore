@@ -137,3 +137,6 @@ ai-service/qdrant_data/
 # OS
 .DS_Store
 Thumbs.db
+
+database.txt
+.env

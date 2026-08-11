@@ -1,9 +1,0 @@
-Username = bhataakib022_db_user
-Password = WcIFpkuAkcoTT5RJ
-
-
-url = mongodb+srv://<db_username>:WcIFpkuAkcoTT5RJ@cluster1.6cnwgmg.mongodb.net/?appName=Cluster1
-
-
-
-mongodb+srv://bhataakib022_db_user:WcIFpkuAkcoTT5RJ@cluster1.6cnwgmg.mongodb.net/?appName=Cluster1
