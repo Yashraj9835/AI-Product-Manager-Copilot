@@ -1,53 +1,51 @@
+DELIVERY APP FEATURE ENGINEERING REPORT
+=================================================================
 
-==========================================================
-FEATURE ENGINEERING REPORT
-==========================================================
+Input file: C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\normalized_feedback.csv
+Output file: C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\final_feedback_dataset.csv
 
-Input File:
-C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\normalized_feedback.csv
+Rows before feature engineering: 1080
+Rows after feature engineering: 1080
+Rows removed: 0
 
-Output File:
-C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\final_feedback_dataset.csv
+GENERATED FEATURES
+-----------------------------------------------------------------
+- feedback_length
+- feedback_word_count
+- has_question
+- has_exclamation
+- is_feature_request
+- issue_type
+- primary_issue_type
+- has_rating
+- has_feedback_text
 
-Rows Processed:
-676
+ISSUE TYPE COUNTS
+-----------------------------------------------------------------
+app_crash: 78
+ui_ux: 78
+performance: 77
+login_auth: 77
+payment: 77
+order_tracking: 77
+notifications: 77
+search: 77
+cart_checkout: 276
+feature_request: 216
+customer_support: 216
+account: 144
 
-Features Added:
+OTHER FEATURE COUNTS
+-----------------------------------------------------------------
+Feature requests: 216
+Feedback containing questions: 0
+Feedback containing exclamations: 0
 
-✔ review_length
-✔ word_count
-✔ has_rating
-✔ rating_category
-✔ contains_complaint
-✔ contains_praise
-✔ contains_request
-✔ contains_bug
-✔ contains_delivery_issue
-✔ contains_service_issue
-✔ contains_food_issue
-✔ sentiment_hint
-✔ feedback_priority
+IMPORTANT
+-----------------------------------------------------------------
+This stage creates analytical features only.
+Sentiment, priority, severity, and final AI classification are intentionally NOT generated here because they belong to the downstream AI analysis layer.
 
-Summary
-
-Positive Feedback :
-283
-
-Neutral Feedback :
-123
-
-Negative Feedback :
-270
-
-High Priority :
-408
-
-Medium Priority :
-143
-
-Low Priority :
-125
-
-Completed Successfully.
-
-==========================================================
+STATUS
+-----------------------------------------------------------------
+Feature engineering completed successfully.

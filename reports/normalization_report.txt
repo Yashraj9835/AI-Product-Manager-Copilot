@@ -1,35 +1,32 @@
+DELIVERY APP DATASET NORMALIZATION REPORT
+=================================================================
 
-==========================================================
-NORMALIZATION REPORT
-==========================================================
+Input file: C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\product_feedback.csv
+Output file: C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\normalized_feedback.csv
 
-Input File :
-C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\cleaned_feedback.csv
+Rows before normalization: 1080
+Rows after normalization: 1080
+Rows removed: 0
 
-Output File :
-C:\Users\Sarayu\ai-pm\AI-Product-Manager-Copilot\dataset\processed\normalized_feedback.csv
+NORMALIZATION OPERATIONS
+-----------------------------------------------------------------
+Source values normalized: 0
+App names normalized: 0
+Rating values normalized: 929
+Date values normalized: 814
+Language values normalized: 0
+Platform values normalized: 0
 
-Total Rows Processed :
-676
+FINAL VALUE COUNTS
+-----------------------------------------------------------------
+Missing ratings: 151
+Missing dates: 0
 
-Rows Removed :
-0
+ROW PRESERVATION
+-----------------------------------------------------------------
+No rows were removed during normalization.
+Rows with missing optional values were preserved.
 
-Date Values Normalized :
-251
-
-Source Values Normalized :
-275
-
-Restaurant Names Normalized :
-676
-
-Language Values Normalized :
-176
-
-Ratings Normalized :
-106
-
-Normalization Completed Successfully.
-
-==========================================================
+STATUS
+-----------------------------------------------------------------
+Normalization completed successfully.

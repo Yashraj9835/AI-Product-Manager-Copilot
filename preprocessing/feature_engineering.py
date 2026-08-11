@@ -1,22 +1,3 @@
-"""
-feature_engineering.py
-------------------------------------------
-
-Reads:
-dataset/processed/normalized_feedback.csv
-
-Creates AI-ready engineered features.
-
-Outputs:
-dataset/processed/final_feedback_dataset.csv
-
-Reports:
-reports/feature_engineering_report.txt
-
-Logs:
-logs/feature_engineering.log
-"""
-
 import logging
 import re
 from pathlib import Path
@@ -24,505 +5,650 @@ from pathlib import Path
 import pandas as pd
 
 
-# ==========================================================
+# ============================================================
 # PATHS
-# ==========================================================
+# ============================================================
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-INPUT_FILE = BASE_DIR / "dataset" / "processed" / "normalized_feedback.csv"
+INPUT_FILE = (
+    PROJECT_ROOT
+    / "dataset"
+    / "processed"
+    / "normalized_feedback.csv"
+)
 
-OUTPUT_FILE = BASE_DIR / "dataset" / "processed" / "final_feedback_dataset.csv"
+OUTPUT_FILE = (
+    PROJECT_ROOT
+    / "dataset"
+    / "processed"
+    / "final_feedback_dataset.csv"
+)
 
-REPORT_FILE = BASE_DIR / "reports" / "feature_engineering_report.txt"
+REPORT_FILE = (
+    PROJECT_ROOT
+    / "reports"
+    / "feature_engineering_report.txt"
+)
 
-LOG_FILE = BASE_DIR / "logs" / "feature_engineering.log"
+LOG_DIR = PROJECT_ROOT / "logs"
+LOG_FILE = LOG_DIR / "feature_engineering.log"
 
+
+# ============================================================
+# SETUP
+# ============================================================
+
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 REPORT_FILE.parent.mkdir(parents=True, exist_ok=True)
-LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-
-# ==========================================================
-# LOGGING
-# ==========================================================
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
     handlers=[
-        logging.FileHandler(LOG_FILE, encoding="utf-8"),
-        logging.StreamHandler()
-    ]
+        logging.FileHandler(
+            LOG_FILE,
+            encoding="utf-8",
+        ),
+        logging.StreamHandler(),
+    ],
 )
 
 logger = logging.getLogger(__name__)
 
 
-# ==========================================================
-# KEYWORD DICTIONARIES
-# ==========================================================
+# ============================================================
+# REQUIRED COLUMNS
+# ============================================================
 
-POSITIVE_WORDS = {
+REQUIRED_COLUMNS = [
+    "feedback_id",
+    "source",
+    "app_name",
+    "feedback_text",
+    "rating",
+    "created_date",
+    "language",
+    "platform",
+]
 
-    "good",
-    "great",
-    "excellent",
-    "awesome",
-    "amazing",
-    "perfect",
-    "delicious",
-    "fresh",
-    "clean",
-    "friendly",
-    "love",
-    "liked",
-    "best",
-    "wonderful",
-    "fantastic",
-    "happy",
-    "satisfied",
-    "fast"
+
+# ============================================================
+# FEATURE KEYWORDS
+# ============================================================
+
+FEATURE_PATTERNS = {
+    "app_crash": [
+        r"\bcrash(?:es|ed|ing)?\b",
+        r"\bcrash(?:es|ed|ing)?\b.*\bapp\b",
+        r"\bapp\b.*\bcrash(?:es|ed|ing)?\b",
+        r"\bfreeze(?:s|d|ing)?\b",
+    ],
+
+    "ui_ux": [
+        r"\bui\b",
+        r"\bux\b",
+        r"\binterface\b",
+        r"\bnavigation\b",
+        r"\bnavigate\b",
+        r"\blayout\b",
+        r"\bbutton\b",
+        r"\bscreen\b",
+    ],
+
+    "performance": [
+        r"\bslow\b",
+        r"\blag(?:s|ging)?\b",
+        r"\bperformance\b",
+        r"\bloading\b",
+        r"\btakes too long\b",
+        r"\btimeout\b",
+        r"\btime out\b",
+    ],
+
+    "login_auth": [
+        r"\blog[\s-]?in\b",
+        r"\blogout\b",
+        r"\botp\b",
+        r"\bpassword\b",
+        r"\bauthentication\b",
+        r"\bsign in\b",
+    ],
+
+    "payment": [
+        r"\bpayment\b",
+        r"\bupi\b",
+        r"\bcard\b",
+        r"\bwallet\b",
+        r"\brefund\b",
+        r"\bcharged\b",
+        r"\bcharge\b",
+        r"\bcharged\b",
+        r"\bdeducted\b",
+        r"\bdeduction\b",
+        r"\btransaction\b",
+        r"\bmoney was deducted\b",
+        r"\bmoney was charged\b",
+        r"\bpayment failed\b",
+        r"\bpayment was not\b",
+        r"\bpaid but\b",
+    ],
+
+    "order_tracking": [
+        r"\border tracking\b",
+        r"\btracking map\b",
+        r"\btrack(?:ing)?\b",
+        r"\beta\b",
+        r"\bdelivery status\b",
+        r"\bdriver location\b",
+        r"\bgps\b",
+    ],
+
+    "notifications": [
+        r"\bnotification(?:s)?\b",
+        r"\balert(?:s)?\b",
+    ],
+
+    "search": [
+        r"\bsearch\b",
+        r"\bsearch results\b",
+        r"\bsearch bar\b",
+    ],
+
+    "cart_checkout": [
+        r"\bcart\b",
+        r"\bcheckout\b",
+        r"\bcoupon\b",
+        r"\border total\b",
+    ],
+
+    "feature_request": [
+        r"\bplease add\b",
+        r"\bwould like\b",
+        r"\brequest\b",
+        r"\bfeature\b",
+        r"\bdark mode\b",
+        r"\badd an option\b",
+    ],
+
+    "customer_support": [
+        r"\bsupport\b",
+        r"\bhelp\b",
+        r"\bcustomer service\b",
+        r"\bsupport ticket\b",
+        r"\bagent\b",
+        r"\bchat\b",
+    ],
+
+    "account": [
+        r"\baccount\b",
+        r"\bprofile\b",
+        r"\bsaved address\b",
+        r"\bphone number\b",
+        r"\bsettings\b",
+    ],
 }
 
-NEGATIVE_WORDS = {
 
-    "bad",
-    "worst",
-    "late",
-    "slow",
-    "dirty",
-    "cold",
-    "burnt",
-    "uncooked",
-    "poor",
-    "terrible",
-    "awful",
-    "issue",
-    "problem",
-    "complaint",
-    "delay",
-    "missing",
-    "refund",
-    "cancel",
-    "rude",
-    "disappointed"
-}
+# ============================================================
+# FEATURE DETECTION
+# ============================================================
 
-REQUEST_WORDS = {
-
-    "please",
-    "need",
-    "wish",
-    "could",
-    "can you",
-    "would like",
-    "add",
-    "feature",
-    "suggest",
-    "improve",
-    "option",
-    "request"
-}
-
-BUG_WORDS = {
-
-    "bug",
-    "crash",
-    "error",
-    "failed",
-    "failure",
-    "broken",
-    "issue",
-    "not working",
-    "loading",
-    "freeze"
-}
-
-DELIVERY_WORDS = {
-
-    "delivery",
-    "late",
-    "delay",
-    "driver",
-    "arrived",
-    "pickup",
-    "dispatch"
-}
-
-SERVICE_WORDS = {
-
-    "staff",
-    "waiter",
-    "service",
-    "support",
-    "behavior",
-    "attitude"
-}
-
-FOOD_WORDS = {
-
-    "food",
-    "taste",
-    "pizza",
-    "burger",
-    "biryani",
-    "meal",
-    "rice",
-    "cold",
-    "fresh",
-    "spicy",
-    "quality"
-}
-
-
-# ==========================================================
-# HELPER FUNCTIONS
-# ==========================================================
-
-def clean_text(text):
-
-    if pd.isna(text):
-        return ""
+def detect_issue_types(text):
+    """
+    Detect one or more product issue areas from feedback text.
+    """
 
     text = str(text).lower()
 
-    text = re.sub(r"[^a-z0-9 ]", " ", text)
+    detected = []
 
-    text = re.sub(r"\s+", " ", text)
+    for issue_type, patterns in FEATURE_PATTERNS.items():
 
-    return text.strip()
+        for pattern in patterns:
+
+            if re.search(
+                pattern,
+                text,
+                flags=re.IGNORECASE,
+            ):
+                detected.append(issue_type)
+                break
+
+    if not detected:
+        detected.append("general_product_feedback")
+
+    return detected
 
 
-def count_words(text):
+def calculate_text_length(text):
+    """Return character length of feedback."""
 
-    text = clean_text(text)
-
-    if not text:
-
+    if pd.isna(text):
         return 0
 
-    return len(text.split())
+    return len(str(text))
 
 
-def contains_keywords(text, keywords):
+def calculate_word_count(text):
+    """Return approximate word count."""
 
-    text = clean_text(text)
+    if pd.isna(text):
+        return 0
 
-    return any(word in text for word in keywords)
-
-
-# ==========================================================
-# FEATURE FUNCTIONS
-# ==========================================================
-
-def rating_category(rating):
-
-    try:
-
-        rating = float(rating)
-
-    except:
-
-        return "Unknown"
-
-    if rating >= 4.5:
-
-        return "Excellent"
-
-    elif rating >= 3.5:
-
-        return "Good"
-
-    elif rating >= 2.5:
-
-        return "Average"
-
-    elif rating >= 1.5:
-
-        return "Poor"
-
-    else:
-
-        return "Very Poor"
+    return len(
+        str(text).split()
+    )
 
 
-def sentiment_hint(row):
+def contains_question(text):
+    """Detect whether feedback contains a question."""
 
-    text = clean_text(row.get("feedback_text", ""))
+    if pd.isna(text):
+        return 0
 
-    rating = row.get("rating", "")
-
-    score = 0
-
-    if contains_keywords(text, POSITIVE_WORDS):
-        score += 2
-
-    if contains_keywords(text, NEGATIVE_WORDS):
-        score -= 2
-
-    try:
-
-        rating = float(rating)
-
-        if rating >= 4:
-            score += 2
-
-        elif rating <= 2:
-            score -= 2
-
-    except:
-        pass
-
-    if score >= 2:
-        return "Positive"
-
-    elif score <= -2:
-        return "Negative"
-
-    return "Neutral"
+    return int(
+        "?" in str(text)
+    )
 
 
-def priority(row):
+def contains_exclamation(text):
+    """Detect whether feedback contains an exclamation."""
 
-    text = clean_text(row.get("feedback_text", ""))
+    if pd.isna(text):
+        return 0
 
-    rating = row.get("rating", "")
-
-    try:
-        rating = float(rating)
-    except:
-        rating = 3
-
-    if contains_keywords(text, BUG_WORDS):
-        return "High"
-
-    if contains_keywords(text, DELIVERY_WORDS):
-        return "High"
-
-    if contains_keywords(text, NEGATIVE_WORDS) and rating <= 2:
-        return "High"
-
-    if contains_keywords(text, REQUEST_WORDS):
-        return "Medium"
-
-    if rating >= 4:
-        return "Low"
-
-    return "Medium"
+    return int(
+        "!" in str(text)
+    )
 
 
-# ==========================================================
+def detect_feature_request(text):
+    """Detect whether feedback appears to request a feature."""
+
+    if pd.isna(text):
+        return 0
+
+    text = str(text).lower()
+
+    patterns = [
+        r"\bplease add\b",
+        r"\bwould like\b",
+        r"\bfeature request\b",
+        r"\badd an option\b",
+        r"\bit would be useful\b",
+    ]
+
+    return int(
+        any(
+            re.search(
+                pattern,
+                text,
+            )
+            for pattern in patterns
+        )
+    )
+
+
+# ============================================================
 # MAIN
-# ==========================================================
+# ============================================================
 
-def main():
+def engineer_features():
 
-    logger.info("Starting feature engineering...")
+    logger.info(
+        "Starting feature engineering..."
+    )
 
     if not INPUT_FILE.exists():
-        logger.error(f"Input file not found: {INPUT_FILE}")
-        return
-
-    try:
-
-        df = pd.read_csv(INPUT_FILE)
-
-        logger.info(f"Loaded {len(df)} rows.")
-
-    except Exception as e:
-
-        logger.exception(f"Unable to load dataset: {e}")
-        return
-
-    # ------------------------------------------------------
-    # Ensure required column exists
-    # ------------------------------------------------------
-
-    if "feedback_text" not in df.columns:
-        logger.error("feedback_text column not found.")
-        return
-
-    # ------------------------------------------------------
-    # Basic Features
-    # ------------------------------------------------------
-
-    logger.info("Generating text features...")
-
-    df["review_length"] = df["feedback_text"].fillna("").astype(str).str.len()
-
-    df["word_count"] = df["feedback_text"].fillna("").apply(count_words)
-
-    # ------------------------------------------------------
-    # Rating Features
-    # ------------------------------------------------------
-
-    logger.info("Generating rating features...")
-
-    if "rating" in df.columns:
-
-        df["has_rating"] = (
-            df["rating"]
-            .fillna("")
-            .astype(str)
-            .str.strip()
-            .ne("")
+        raise FileNotFoundError(
+            f"Input file not found: {INPUT_FILE}"
         )
 
-        df["rating_category"] = df["rating"].apply(rating_category)
-
-    else:
-
-        df["has_rating"] = False
-
-        df["rating_category"] = "Unknown"
-
-    # ------------------------------------------------------
-    # Keyword Detection
-    # ------------------------------------------------------
-
-    logger.info("Detecting feedback categories...")
-
-    df["contains_complaint"] = df["feedback_text"].apply(
-        lambda x: contains_keywords(x, NEGATIVE_WORDS)
-    )
-
-    df["contains_praise"] = df["feedback_text"].apply(
-        lambda x: contains_keywords(x, POSITIVE_WORDS)
-    )
-
-    df["contains_request"] = df["feedback_text"].apply(
-        lambda x: contains_keywords(x, REQUEST_WORDS)
-    )
-
-    df["contains_bug"] = df["feedback_text"].apply(
-        lambda x: contains_keywords(x, BUG_WORDS)
-    )
-
-    df["contains_delivery_issue"] = df["feedback_text"].apply(
-        lambda x: contains_keywords(x, DELIVERY_WORDS)
-    )
-
-    df["contains_service_issue"] = df["feedback_text"].apply(
-        lambda x: contains_keywords(x, SERVICE_WORDS)
-    )
-
-    df["contains_food_issue"] = df["feedback_text"].apply(
-        lambda x: contains_keywords(x, FOOD_WORDS)
-    )
-
-    # ------------------------------------------------------
-    # AI Features
-    # ------------------------------------------------------
-
-    logger.info("Generating AI features...")
-
-    df["sentiment_hint"] = df.apply(sentiment_hint, axis=1)
-
-    df["feedback_priority"] = df.apply(priority, axis=1)
-
-    # ------------------------------------------------------
-    # Save Output
-    # ------------------------------------------------------
-
     try:
 
-        df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8")
+        df = pd.read_csv(
+            INPUT_FILE,
+            encoding="utf-8-sig",
+        )
 
-        logger.info(f"Saved final dataset to {OUTPUT_FILE}")
+    except Exception as exc:
 
-    except Exception as e:
+        logger.exception(
+            "Unable to read normalized dataset."
+        )
 
-        logger.exception(f"Unable to save dataset: {e}")
-        return
+        raise RuntimeError(
+            f"Could not read input dataset: {exc}"
+        ) from exc
 
-    # ------------------------------------------------------
-    # REPORT
-    # ------------------------------------------------------
+    original_rows = len(df)
 
-    report = f"""
-==========================================================
-FEATURE ENGINEERING REPORT
-==========================================================
+    logger.info(
+        "Normalized rows loaded: %s",
+        original_rows,
+    )
 
-Input File:
-{INPUT_FILE}
+    # --------------------------------------------------------
+    # Schema validation
+    # --------------------------------------------------------
 
-Output File:
-{OUTPUT_FILE}
+    missing_columns = [
+        column
+        for column in REQUIRED_COLUMNS
+        if column not in df.columns
+    ]
 
-Rows Processed:
-{len(df)}
+    if missing_columns:
 
-Features Added:
+        raise ValueError(
+            "Missing required columns: "
+            + ", ".join(missing_columns)
+        )
 
-✔ review_length
-✔ word_count
-✔ has_rating
-✔ rating_category
-✔ contains_complaint
-✔ contains_praise
-✔ contains_request
-✔ contains_bug
-✔ contains_delivery_issue
-✔ contains_service_issue
-✔ contains_food_issue
-✔ sentiment_hint
-✔ feedback_priority
+    # --------------------------------------------------------
+    # Feature 1: text length
+    # --------------------------------------------------------
 
-Summary
+    df["feedback_length"] = df[
+        "feedback_text"
+    ].apply(
+        calculate_text_length
+    )
 
-Positive Feedback :
-{(df["sentiment_hint"] == "Positive").sum()}
+    # --------------------------------------------------------
+    # Feature 2: word count
+    # --------------------------------------------------------
 
-Neutral Feedback :
-{(df["sentiment_hint"] == "Neutral").sum()}
+    df["feedback_word_count"] = df[
+        "feedback_text"
+    ].apply(
+        calculate_word_count
+    )
 
-Negative Feedback :
-{(df["sentiment_hint"] == "Negative").sum()}
+    # --------------------------------------------------------
+    # Feature 3: question indicator
+    # --------------------------------------------------------
 
-High Priority :
-{(df["feedback_priority"] == "High").sum()}
+    df["has_question"] = df[
+        "feedback_text"
+    ].apply(
+        contains_question
+    )
 
-Medium Priority :
-{(df["feedback_priority"] == "Medium").sum()}
+    # --------------------------------------------------------
+    # Feature 4: exclamation indicator
+    # --------------------------------------------------------
 
-Low Priority :
-{(df["feedback_priority"] == "Low").sum()}
+    df["has_exclamation"] = df[
+        "feedback_text"
+    ].apply(
+        contains_exclamation
+    )
 
-Completed Successfully.
+    # --------------------------------------------------------
+    # Feature 5: feature request indicator
+    # --------------------------------------------------------
 
-==========================================================
-"""
+    df["is_feature_request"] = df[
+        "feedback_text"
+    ].apply(
+        detect_feature_request
+    )
 
-    try:
+    # --------------------------------------------------------
+    # Feature 6: issue types
+    # --------------------------------------------------------
 
-        with open(REPORT_FILE, "w", encoding="utf-8") as file:
-            file.write(report)
+    detected_issue_types = df[
+        "feedback_text"
+    ].apply(
+        detect_issue_types
+    )
 
-        logger.info(f"Report generated: {REPORT_FILE}")
+    df["issue_type"] = detected_issue_types.apply(
+        lambda values: "|".join(values)
+    )
 
-    except Exception as e:
+    # Primary issue type for simpler downstream models.
+    df["primary_issue_type"] = detected_issue_types.apply(
+        lambda values: values[0]
+    )
 
-        logger.exception(f"Unable to write report: {e}")
+    # --------------------------------------------------------
+    # Feature 7: rating availability
+    # --------------------------------------------------------
 
-    logger.info("Feature engineering completed successfully.")
+    df["has_rating"] = df[
+        "rating"
+    ].notna().astype(int)
+
+    # --------------------------------------------------------
+    # Feature 8: text quality
+    # --------------------------------------------------------
+
+    df["has_feedback_text"] = (
+        df["feedback_text"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .ne("")
+        .astype(int)
+    )
+
+    # --------------------------------------------------------
+    # Preserve row count
+    # --------------------------------------------------------
+
+    final_rows = len(df)
+
+    if final_rows != original_rows:
+
+        raise RuntimeError(
+            "Feature engineering changed the row count."
+        )
+
+    # --------------------------------------------------------
+    # Save final dataset
+    # --------------------------------------------------------
+
+    df.to_csv(
+        OUTPUT_FILE,
+        index=False,
+        encoding="utf-8-sig",
+    )
+
+    logger.info(
+        "Final feature-engineered dataset saved to: %s",
+        OUTPUT_FILE,
+    )
+
+    # --------------------------------------------------------
+    # Generate report
+    # --------------------------------------------------------
+
+    issue_counts = {}
+
+    for issue_type in FEATURE_PATTERNS:
+
+        count = df[
+            "issue_type"
+        ].str.contains(
+            issue_type,
+            regex=False,
+            na=False,
+        ).sum()
+
+        issue_counts[
+            issue_type
+        ] = int(count)
+
+    feature_request_count = int(
+        df["is_feature_request"].sum()
+    )
+
+    question_count = int(
+        df["has_question"].sum()
+    )
+
+    exclamation_count = int(
+        df["has_exclamation"].sum()
+    )
+
+    with REPORT_FILE.open(
+        "w",
+        encoding="utf-8",
+    ) as report:
+
+        report.write(
+            "DELIVERY APP FEATURE ENGINEERING REPORT\n"
+        )
+
+        report.write(
+            "=" * 65 + "\n\n"
+        )
+
+        report.write(
+            f"Input file: {INPUT_FILE}\n"
+        )
+
+        report.write(
+            f"Output file: {OUTPUT_FILE}\n\n"
+        )
+
+        report.write(
+            f"Rows before feature engineering: "
+            f"{original_rows}\n"
+        )
+
+        report.write(
+            f"Rows after feature engineering: "
+            f"{final_rows}\n"
+        )
+
+        report.write(
+            "Rows removed: 0\n\n"
+        )
+
+        report.write(
+            "GENERATED FEATURES\n"
+        )
+
+        report.write(
+            "-" * 65 + "\n"
+        )
+
+        generated_features = [
+            "feedback_length",
+            "feedback_word_count",
+            "has_question",
+            "has_exclamation",
+            "is_feature_request",
+            "issue_type",
+            "primary_issue_type",
+            "has_rating",
+            "has_feedback_text",
+        ]
+
+        for feature in generated_features:
+            report.write(
+                f"- {feature}\n"
+            )
+
+        report.write(
+            "\nISSUE TYPE COUNTS\n"
+        )
+
+        report.write(
+            "-" * 65 + "\n"
+        )
+
+        for issue_type, count in issue_counts.items():
+
+            report.write(
+                f"{issue_type}: {count}\n"
+            )
+
+        report.write(
+            "\nOTHER FEATURE COUNTS\n"
+        )
+
+        report.write(
+            "-" * 65 + "\n"
+        )
+
+        report.write(
+            f"Feature requests: "
+            f"{feature_request_count}\n"
+        )
+
+        report.write(
+            f"Feedback containing questions: "
+            f"{question_count}\n"
+        )
+
+        report.write(
+            f"Feedback containing exclamations: "
+            f"{exclamation_count}\n"
+        )
+
+        report.write(
+            "\nIMPORTANT\n"
+        )
+
+        report.write(
+            "-" * 65 + "\n"
+        )
+
+        report.write(
+            "This stage creates analytical features only.\n"
+        )
+
+        report.write(
+            "Sentiment, priority, severity, and final AI "
+            "classification are intentionally NOT generated "
+            "here because they belong to the downstream "
+            "AI analysis layer.\n\n"
+        )
+
+        report.write(
+            "STATUS\n"
+        )
+
+        report.write(
+            "-" * 65 + "\n"
+        )
+
+        report.write(
+            "Feature engineering completed successfully.\n"
+        )
+
+    logger.info(
+        "Feature engineering report generated: %s",
+        REPORT_FILE,
+    )
 
 
-# ==========================================================
+# ============================================================
 # ENTRY POINT
-# ==========================================================
+# ============================================================
 
 if __name__ == "__main__":
 
     try:
 
-        main()
+        engineer_features()
 
-    except KeyboardInterrupt:
+        logger.info(
+            "Feature engineering completed successfully."
+        )
 
-        logger.warning("Process interrupted by user.")
+    except Exception as exc:
 
-    except Exception as e:
+        logger.exception(
+            "Feature engineering failed: %s",
+            exc,
+        )
 
-        logger.exception(f"Unexpected error: {e}")
+        raise
