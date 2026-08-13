@@ -1,69 +1,106 @@
-"""
-priority.py
--------------------------
-Restaurant Feedback Priority Scoring
-"""
-
-from config import (
-    HIGH,
-    MEDIUM,
-    LOW,
-    HIGH_PRIORITY_KEYWORDS,
-    MEDIUM_PRIORITY_KEYWORDS,
-)
-from utils import clean_text
+import re
 
 
 class PriorityClassifier:
     """
-    Assigns a priority level to restaurant reviews.
-
-    Output:
-    - High
-    - Medium
-    - Low
+    Assigns High / Medium / Low priority using:
+    - sentiment
+    - rating
+    - critical issue keywords
     """
 
-    def __init__(self):
-        self.high_keywords = HIGH_PRIORITY_KEYWORDS
-        self.medium_keywords = MEDIUM_PRIORITY_KEYWORDS
+    HIGH_PRIORITY_KEYWORDS = [
+        "crash",
+        "crashes",
+        "crashed",
+        "not working",
+        "cannot login",
+        "can't login",
+        "unable to login",
+        "payment failed",
+        "money deducted",
+        "charged twice",
+        "security",
+        "data loss",
+        "lost my data",
+        "account blocked",
+        "urgent",
+        "critical",
+    ]
 
-    def predict(self, review, sentiment):
+    MEDIUM_PRIORITY_KEYWORDS = [
+        "slow",
+        "lag",
+        "loading",
+        "error",
+        "problem",
+        "issue",
+        "confusing",
+        "difficult",
+        "bug",
+    ]
+
+    def _normalize(self, text):
+        if text is None:
+            return ""
+
+        text = str(text).lower()
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
+
+    def predict(self, text, sentiment="Neutral", rating=None):
         """
-        Predict priority using review text and sentiment.
+        Predict priority for one feedback item.
         """
 
-        review = clean_text(review)
+        text = self._normalize(text)
+        sentiment = str(sentiment).lower().strip()
 
-        # High priority if any critical keyword is found
-        for keyword in self.high_keywords:
-            if keyword in review:
-                return HIGH
+        # Critical keywords
+        for keyword in self.HIGH_PRIORITY_KEYWORDS:
+            if keyword in text:
+                return "High"
 
-        # Negative reviews are High priority
-        if sentiment == "Negative":
-            return HIGH
+        # Rating-based priority
+        try:
+            rating_value = float(rating) if rating is not None else None
+        except (ValueError, TypeError):
+            rating_value = None
 
-        # Medium priority keywords
-        for keyword in self.medium_keywords:
-            if keyword in review:
-                return MEDIUM
+        # Very low rating + negative sentiment
+        if rating_value is not None:
+            if rating_value <= 2 and sentiment == "negative":
+                return "High"
 
-        # Neutral reviews are Medium priority
-        if sentiment == "Neutral":
-            return MEDIUM
+        # Medium priority issues
+        for keyword in self.MEDIUM_PRIORITY_KEYWORDS:
+            if keyword in text:
+                return "Medium"
 
-        # Positive reviews are Low priority
-        return LOW
+        # Negative feedback without a critical issue
+        if sentiment == "negative":
+            return "Medium"
 
-    def predict_batch(self, reviews, sentiments):
+        # Positive feedback
+        if sentiment == "positive":
+            return "Low"
+
+        return "Low"
+
+    def predict_batch(self, texts, sentiments, ratings=None):
         """
-        Predict priorities for multiple reviews.
+        Predict priority for multiple feedback records.
         """
 
-        priorities = []
+        if ratings is None:
+            ratings = [None] * len(texts)
 
-        for review, sentiment in zip(reviews, sentiments):
-            priorities.append(self.predict(review, sentiment))
-
-        return priorities
+        return [
+            self.predict(text, sentiment, rating)
+            for text, sentiment, rating in zip(
+                texts,
+                sentiments,
+                ratings
+            )
+        ]
