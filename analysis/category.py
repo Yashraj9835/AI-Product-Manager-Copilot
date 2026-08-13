@@ -1,55 +1,178 @@
-"""
-category.py
--------------------------
-Restaurant Feedback Category Classification
-"""
-
-from config import CATEGORY_KEYWORDS
-from utils import clean_text
+import re
 
 
 class CategoryClassifier:
     """
-    Classifies restaurant reviews into predefined categories.
+    Rule-based category classifier for product/app feedback.
+
+    The classifier uses keywords from the feedback text.
     """
 
-    def __init__(self):
-        self.categories = CATEGORY_KEYWORDS
+    CATEGORY_KEYWORDS = {
+        "App Crash": [
+            "crash",
+            "crashes",
+            "crashed",
+            "crashing",
+            "force close",
+            "keeps closing",
+            "app closed",
+        ],
 
-    def predict(self, review):
+        "UI/UX": [
+            "interface",
+            "ui",
+            "ux",
+            "design",
+            "layout",
+            "screen",
+            "button",
+            "navigation",
+            "confusing",
+            "difficult to use",
+            "hard to use",
+        ],
+
+        "Performance": [
+            "slow",
+            "lag",
+            "laggy",
+            "loading",
+            "takes too long",
+            "freeze",
+            "freezes",
+            "freezing",
+            "performance",
+            "hang",
+        ],
+
+        "Payment": [
+            "payment",
+            "pay",
+            "paid",
+            "transaction",
+            "card",
+            "upi",
+            "billing",
+            "refund",
+            "money",
+            "charge",
+        ],
+
+        "Login/Auth": [
+            "login",
+            "log in",
+            "logged in",
+            "sign in",
+            "signin",
+            "password",
+            "authentication",
+            "otp",
+            "verification",
+            "account access",
+        ],
+
+        "Cart/Checkout": [
+            "cart",
+            "checkout",
+            "purchase",
+            "buy",
+            "order",
+            "place order",
+        ],
+
+        "Order Tracking": [
+            "tracking",
+            "track order",
+            "order status",
+            "where is my order",
+            "delivery status",
+        ],
+
+        "Notifications": [
+            "notification",
+            "notifications",
+            "alert",
+            "alerts",
+            "notify",
+            "reminder",
+        ],
+
+        "Customer Support": [
+            "customer support",
+            "customer service",
+            "support",
+            "help",
+            "agent",
+            "representative",
+        ],
+
+        "Account": [
+            "account",
+            "profile",
+            "username",
+            "personal details",
+        ],
+
+        "Search": [
+            "search",
+            "find",
+            "search results",
+            "search bar",
+        ],
+
+        "Feature Request": [
+            "feature request",
+            "add a feature",
+            "please add",
+            "would like",
+            "should have",
+            "it would be nice",
+            "new feature",
+            "suggestion",
+        ],
+
+        "General Feedback": []
+    }
+
+    def _normalize(self, text):
+        if text is None:
+            return ""
+
+        text = str(text).lower()
+        text = re.sub(r"\s+", " ", text)
+        return text.strip()
+
+    def predict(self, text):
         """
-        Predict a category for a review.
+        Predict category for one feedback item.
         """
 
-        review = clean_text(review)
+        text = self._normalize(text)
 
-        if not review:
-            return "Other"
+        if not text:
+            return "General Feedback"
 
         scores = {}
 
-        # Count matching keywords for each category
-        for category, keywords in self.categories.items():
+        for category, keywords in self.CATEGORY_KEYWORDS.items():
             score = 0
 
             for keyword in keywords:
-                if keyword in review:
+                if keyword in text:
                     score += 1
 
-            scores[category] = score
+            if score > 0:
+                scores[category] = score
 
-        # Select category with highest score
-        best_category = max(scores, key=scores.get)
+        if not scores:
+            return "General Feedback"
 
-        # If no keywords matched
-        if scores[best_category] == 0:
-            return "Other"
+        # Return category with highest keyword score
+        return max(scores, key=scores.get)
 
-        return best_category
-
-    def predict_batch(self, reviews):
+    def predict_batch(self, texts):
         """
-        Predict categories for multiple reviews.
+        Predict categories for multiple feedback records.
         """
-
-        return [self.predict(review) for review in reviews]
+        return [self.predict(text) for text in texts]
