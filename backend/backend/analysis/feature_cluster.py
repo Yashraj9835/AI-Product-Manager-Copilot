@@ -1,33 +1,33 @@
 def cluster_features(features):
     """
-    Simple keyword-based clustering.
+    Cluster delivery-app feature requests into meaningful product themes.
     """
 
     clusters = {
-        "UI Improvements": [],
-        "Payment": [],
-        "Delivery": [],
-        "Food": [],
-        "Others": []
+        "Dark Mode": [],
+        "Saved Address Management": [],
+        "Delivery Estimate Accuracy": [],
+        "Other Feature Requests": []
     }
 
     for feature in features:
 
-        text = feature.lower()
+        text = str(feature).lower()
 
-        if "dark" in text or "theme" in text or "ui" in text:
-            clusters["UI Improvements"].append(feature)
+        if "dark mode" in text:
+            clusters["Dark Mode"].append(feature)
 
-        elif "payment" in text:
-            clusters["Payment"].append(feature)
+        elif "saved address" in text and (
+            "disappeared" in text
+            or "lost" in text
+            or "delete" in text
+        ):
+            clusters["Saved Address Management"].append(feature)
 
-        elif "delivery" in text:
-            clusters["Delivery"].append(feature)
-
-        elif "food" in text:
-            clusters["Food"].append(feature)
+        elif "delivery estimate" in text:
+            clusters["Delivery Estimate Accuracy"].append(feature)
 
         else:
-            clusters["Others"].append(feature)
+            clusters["Other Feature Requests"].append(feature)
 
     return clusters

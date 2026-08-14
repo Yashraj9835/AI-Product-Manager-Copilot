@@ -153,8 +153,8 @@ function mapRow(row: CsvRow) {
 
     // Derived convenience fields — mostly null for review-source rows.
     // Real values come from Yash's /analyze NLP endpoint.
-    theme:             emptyToNull(row['issue_category']) || emptyToNull(row['feature_category']),
-    painPoint:         emptyToNull(row['subject']) || emptyToNull(row['review_title']),
+    theme:             emptyToNull(row['theme']),
+    painPoint:         emptyToNull(row['pain_point']),
     aiRecommendation:  null,
   };
 }
@@ -165,7 +165,7 @@ async function seed(): Promise<void> {
   // Resolve CSV path relative to this script's location
   const csvPath = path.resolve(
     __dirname,
-    '..', '..', '..', 'dataset', 'processed', 'analyzed_feedback.csv'
+    '..', '..', '..', 'dataset', 'processed', 'theme_painpoint_analysis.csv'
   );
 
   if (!fs.existsSync(csvPath)) {

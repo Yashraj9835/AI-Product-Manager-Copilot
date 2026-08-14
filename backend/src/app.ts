@@ -18,6 +18,7 @@ const corsOrigins = new Set(
     .filter(Boolean)
 );
 corsOrigins.add('http://localhost:3000');
+corsOrigins.add('http://localhost:5000');
 app.use(
   cors({
     origin: (origin, callback) => {

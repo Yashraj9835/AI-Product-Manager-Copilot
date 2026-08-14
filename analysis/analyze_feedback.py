@@ -115,12 +115,18 @@ def main():
 
     sentiment_classifier = SentimentClassifier()
 
+    ratings = (
+        df["rating"].tolist()
+        if "rating" in df.columns
+        else [None] * len(df)
+    )
+
     df["Sentiment"] = sentiment_classifier.predict_batch(
-        df["review"].tolist()
+        df["review"].tolist(),
+        ratings
     )
 
     print("Sentiment analysis completed.")
-
     # ---------------------------------------------------------
     # 6. PRIORITY
     # ---------------------------------------------------------
