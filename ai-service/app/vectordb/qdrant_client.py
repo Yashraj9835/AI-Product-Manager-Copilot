@@ -18,7 +18,7 @@ class VectorStore:
 
     def __init__(
         self,
-        collection_name="restaurant_knowledge_base",
+        collection_name="delivery_app_knowledge_base",
         vector_size=768,
     ):
         self.collection_name = collection_name

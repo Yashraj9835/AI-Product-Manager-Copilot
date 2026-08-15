@@ -86,11 +86,11 @@ class CopilotService:
 
     def _default_features(self):
         """
-        Default features used when the user asks for
-        prioritization without supplying feature metrics.
+        Default delivery-app features used when the user asks
+        for prioritization without supplying feature metrics.
 
-        These can later be replaced with live feature data
-        from the database.
+        These are intentionally limited to features relevant to
+        the delivery-app product.
         """
 
         return [
@@ -109,7 +109,7 @@ class CopilotService:
                 effort=4,
             ),
             FeatureInput(
-                name="Food Temperature Monitoring",
+                name="Delivery Status Notifications",
                 reach=60,
                 impact=4,
                 confidence=0.8,
@@ -163,7 +163,20 @@ class CopilotService:
         # ---------------------------------------------------------
         result = self.ai_service.ask(question)
 
+        # AIService.ask() returns:
+        #
+        # {
+        #     "question": "...",
+        #     "answer": "...",
+        #     "sources": [...]
+        # }
+        #
+        # The Copilot API should NOT put that entire object inside
+        # the "answer" field. The human-readable answer belongs in
+        # "answer", while retrieved documents belong in "sources".
+
         return {
             "intent": "analyze",
-            "answer": result,
+            "answer": result.get("answer", ""),
+            "sources": result.get("sources", []),
         }

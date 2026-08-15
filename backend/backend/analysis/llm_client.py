@@ -29,7 +29,7 @@ client = genai.Client(
 def ask_llm(prompt: str):
 
     response = client.models.generate_content(
-        model="gemini-3.5-flash-lite",
+        model="gemini-3.5-flash",
         contents=prompt,
     )
 

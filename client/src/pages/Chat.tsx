@@ -115,44 +115,97 @@ export default function Chat() {
        * PRD -> PRDService
        * Normal product question -> AIService / RAG
        */
+
       const result = await requestCopilot(question);
 
       let content = '';
 
       if (result.live) {
+        /*
+         * NORMAL AI / RAG RESPONSE
+         *
+         * Most conversational questions return:
+         *
+         * {
+         *   intent: "analyze",
+         *   answer: "human readable answer",
+         *   sources: [...]
+         * }
+         *
+         * We display only the answer.
+         * The raw sources are kept in the backend response
+         * but are NOT dumped into the chat window.
+         */
         if (typeof result.answer === 'string') {
           content = result.answer;
         } else if (result.data) {
+          const copilotAnswer = result.data['answer'];
+          const intent = result.data['intent'];
+
           /*
-           * Copilot may return a structured response such as:
+           * NORMAL STRING ANSWER
+           */
+          if (typeof copilotAnswer === 'string') {
+            content = copilotAnswer;
+          }
+
+          /*
+           * FEATURE PRIORITIZATION
+           *
+           * Instead of displaying:
            *
            * {
-           *   intent: "prioritize",
-           *   answer: {
-           *     framework: "RICE",
-           *     ranked_features: [...]
-           *   }
+           *   "framework": "RICE",
+           *   "ranked_features": [...]
            * }
            *
-           * Display the complete response when answer is an object.
+           * display a clean conversational ranking.
            */
-          const copilotAnswer = result.data['answer'];
-
-          if (
-            typeof copilotAnswer === 'string'
+          else if (
+            intent === 'prioritize' &&
+            copilotAnswer &&
+            Array.isArray(copilotAnswer.ranked_features)
           ) {
-            content = copilotAnswer;
-          } else {
-            content = JSON.stringify(
-              copilotAnswer ?? result.data,
-              null,
-              2,
-            );
+            const framework =
+              copilotAnswer.framework || 'Feature Prioritization';
+
+            const ranked = copilotAnswer.ranked_features
+              .map(
+                (feature: {
+                  rank: number;
+                  name: string;
+                  score: number;
+                }) =>
+                  `${feature.rank}. ${feature.name} — ${feature.score}`,
+              )
+              .join('\n');
+
+            content = `${framework} Prioritization\n\n${ranked}`;
+          }
+
+          /*
+           * PRD / OTHER STRUCTURED RESPONSE
+           *
+           * Keep structured responses readable rather than
+           * exposing the entire outer Copilot object.
+           */
+          else if (copilotAnswer) {
+            content = JSON.stringify(copilotAnswer, null, 2);
+          }
+
+          /*
+           * EMPTY RESPONSE
+           */
+          else {
+            content = 'No response received from Copilot.';
           }
         } else {
           content = 'No response received from Copilot.';
         }
       } else {
+        /*
+         * AI SERVICE UNAVAILABLE
+         */
         content =
           result.error ??
           AI_UNAVAILABLE_MESSAGE;
@@ -249,6 +302,7 @@ export default function Chat() {
                         <p className="text-xs opacity-70 mt-2">
                           {now()}
                         </p>
+
                       </div>
                     </div>
                   )}

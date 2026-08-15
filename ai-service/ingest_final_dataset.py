@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -9,11 +10,11 @@ from app.embeddings.embedding_service import EmbeddingService
 from app.vectordb.qdrant_client import VectorStore
 
 
-CSV_PATH = Path("dataset/processed/cleaned_feedback.csv")
+CSV_PATH = Path(__file__).resolve().parents[1] / "dataset" / "processed" / "final_feedback_dataset.csv"
 
 
 def main():
-    print("Loading final restaurant dataset...")
+    print("Loading final delivery-app product dataset...")
 
     df = pd.read_csv(CSV_PATH)
 
@@ -27,25 +28,29 @@ def main():
     documents = []
 
     for _, row in df.iterrows():
-        documents.append({
-            "text": row["feedback_text"],
-            "metadata": {
-                "feedback_id": str(row.get("feedback_id", "")),
-                "restaurant_name": str(row.get("restaurant_name", "")),
-                "rating": str(row.get("rating", "")),
-                "city": str(row.get("city", "")),
-                "source": str(row.get("source", "")),
-                "created_date": str(row.get("created_date", "")),
-                "category": str(row.get("issue_category", "")),
+        documents.append(
+            {
+                "text": row["feedback_text"],
+                "metadata": {
+                    "feedback_id": str(row.get("feedback_id", "")),
+                    "app_name": str(row.get("app_name", "")),
+                    "issue_type": str(row.get("issue_type", "")),
+                    "primary_issue_type": str(
+                        row.get("primary_issue_type", "")
+                    ),
+                    "rating": str(row.get("rating", "")),
+                    "source": str(row.get("source", "")),
+                    "created_date": str(row.get("created_date", "")),
+                },
             }
-        })
+        )
 
     print(f"Prepared {len(documents)} feedback documents.")
 
     # Chunk
     chunker = Chunker(
         chunk_size=500,
-        chunk_overlap=100
+        chunk_overlap=100,
     )
 
     chunks = chunker.chunk_documents(documents)
@@ -61,13 +66,13 @@ def main():
 
     # Qdrant
     vector_store = VectorStore(
-        collection_name="restaurant_knowledge_base",
-        vector_size=768
+        collection_name="delivery_app_knowledge_base",
+        vector_size=768,
     )
 
     vector_store.insert_documents(embedded_documents)
 
-    print("\n✅ DATA INGESTION COMPLETE")
+    print("\nDATA INGESTION COMPLETE")
     print(f"Inserted {len(embedded_documents)} vectors.")
 
     vector_store.close()
