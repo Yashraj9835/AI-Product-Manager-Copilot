@@ -34,6 +34,18 @@ interface ChatMessage {
   unavailable?: boolean;
 }
 
+interface RankedFeature {
+  rank: number;
+  name: string;
+  score: number;
+}
+
+interface CopilotAnswer {
+  framework?: string;
+  ranked_features?: RankedFeature[];
+  [key: string]: unknown;
+}
+
 const suggestedQuestions = [
   'What are our top pain points this month?',
   'Generate a PRD for the PDF export feature',
@@ -101,16 +113,15 @@ export default function Chat() {
 
     try {
       /*
-       * IMPORTANT:
-       *
-       * Chat must use requestCopilot(), NOT requestAnalysis().
+       * Chat uses requestCopilot().
        *
        * requestCopilot() calls:
        *
-       * POST http://127.0.0.1:8001/copilot
+       * POST http://127.0.0.1:8002/copilot
        *
        * The CopilotService then decides:
        *
+       * Casual conversation -> Gemini conversation
        * RICE / ICE / MoSCoW -> PrioritizationService
        * PRD -> PRDService
        * Normal product question -> AIService / RAG
@@ -122,90 +133,105 @@ export default function Chat() {
 
       if (result.live) {
         /*
-         * NORMAL AI / RAG RESPONSE
+         * NORMAL STRING ANSWER
          *
          * Most conversational questions return:
+         *
+         * {
+         *   intent: "conversation",
+         *   answer: "human readable answer"
+         * }
+         *
+         * Product analysis questions return:
          *
          * {
          *   intent: "analyze",
          *   answer: "human readable answer",
          *   sources: [...]
          * }
-         *
-         * We display only the answer.
-         * The raw sources are kept in the backend response
-         * but are NOT dumped into the chat window.
          */
+
         if (typeof result.answer === 'string') {
           content = result.answer;
         } else if (result.data) {
-          const copilotAnswer = result.data['answer'];
+          const rawCopilotAnswer = result.data['answer'];
           const intent = result.data['intent'];
 
           /*
            * NORMAL STRING ANSWER
            */
-          if (typeof copilotAnswer === 'string') {
-            content = copilotAnswer;
+
+          if (typeof rawCopilotAnswer === 'string') {
+            content = rawCopilotAnswer;
           }
 
           /*
            * FEATURE PRIORITIZATION
            *
-           * Instead of displaying:
+           * Expected structure:
            *
            * {
-           *   "framework": "RICE",
-           *   "ranked_features": [...]
+           *   framework: "RICE",
+           *   ranked_features: [...]
            * }
-           *
-           * display a clean conversational ranking.
            */
+
           else if (
             intent === 'prioritize' &&
-            copilotAnswer &&
-            Array.isArray(copilotAnswer.ranked_features)
+            rawCopilotAnswer &&
+            typeof rawCopilotAnswer === 'object' &&
+            Array.isArray(
+              (rawCopilotAnswer as CopilotAnswer).ranked_features,
+            )
           ) {
+            const copilotAnswer =
+              rawCopilotAnswer as CopilotAnswer;
+
             const framework =
-              copilotAnswer.framework || 'Feature Prioritization';
+              copilotAnswer.framework ||
+              'Feature Prioritization';
 
-            const ranked = copilotAnswer.ranked_features
-              .map(
-                (feature: {
-                  rank: number;
-                  name: string;
-                  score: number;
-                }) =>
-                  `${feature.rank}. ${feature.name} — ${feature.score}`,
-              )
-              .join('\n');
+            const ranked =
+              copilotAnswer.ranked_features
+                ?.map(
+                  (feature: RankedFeature) =>
+                    `${feature.rank}. ${feature.name} — ${feature.score}`,
+                )
+                .join('\n');
 
-            content = `${framework} Prioritization\n\n${ranked}`;
+            content =
+              `${framework} Prioritization\n\n${ranked ?? ''}`;
           }
 
           /*
            * PRD / OTHER STRUCTURED RESPONSE
-           *
-           * Keep structured responses readable rather than
-           * exposing the entire outer Copilot object.
            */
-          else if (copilotAnswer) {
-            content = JSON.stringify(copilotAnswer, null, 2);
+
+          else if (rawCopilotAnswer) {
+            content = JSON.stringify(
+              rawCopilotAnswer,
+              null,
+              2,
+            );
           }
 
           /*
            * EMPTY RESPONSE
            */
+
           else {
-            content = 'No response received from Copilot.';
+            content =
+              'No response received from Copilot.';
           }
         } else {
-          content = 'No response received from Copilot.';
+          content =
+            'No response received from Copilot.';
         }
       } else {
         /*
          * AI SERVICE UNAVAILABLE
          */
+
         content =
           result.error ??
           AI_UNAVAILABLE_MESSAGE;
@@ -248,6 +274,7 @@ export default function Chat() {
       <div className="container mx-auto px-4 py-8 h-screen flex flex-col">
 
         {/* Header */}
+
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">
             Ask Copilot
@@ -262,6 +289,7 @@ export default function Chat() {
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
 
           {/* Chat */}
+
           <div className="lg:col-span-3 flex flex-col min-h-0">
             <Card className="bg-card border-border flex-1 flex flex-col overflow-hidden">
 
@@ -281,6 +309,7 @@ export default function Chat() {
                 >
 
                   {/* Empty state */}
+
                   {messages.length === 0 && (
                     <div className="flex justify-start">
                       <div className="max-w-md px-4 py-3 rounded-lg bg-secondary/50 border border-border">
@@ -308,6 +337,7 @@ export default function Chat() {
                   )}
 
                   {/* Messages */}
+
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
@@ -355,6 +385,7 @@ export default function Chat() {
                   ))}
 
                   {/* Loading */}
+
                   {isSending && (
                     <div className="flex justify-start">
                       <div className="px-4 py-3 rounded-lg bg-secondary/50 border border-border flex items-center gap-2">
@@ -373,6 +404,7 @@ export default function Chat() {
               </CardContent>
 
               {/* Input */}
+
               <div className="border-t border-border p-4">
                 <div className="flex gap-2">
 
@@ -415,9 +447,11 @@ export default function Chat() {
           </div>
 
           {/* Sidebar */}
+
           <div className="lg:col-span-1 space-y-4">
 
             {/* Suggested Questions */}
+
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -444,6 +478,7 @@ export default function Chat() {
             </Card>
 
             {/* Quick Actions */}
+
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -475,6 +510,7 @@ export default function Chat() {
             </Card>
 
             {/* Agent Status */}
+
             <Card className="bg-card border-border">
               <CardContent className="pt-6">
 

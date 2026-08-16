@@ -202,6 +202,9 @@ export async function copyToClipboard(
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export interface CopilotResult {
+  /**
+   * True when the AI service successfully responded.
+   */
   live: boolean;
 
   /**
@@ -223,11 +226,14 @@ export interface CopilotResult {
 /**
  * Central AI Product Manager Copilot request.
  *
- * IMPORTANT:
+ * The frontend sends all Copilot questions to the
+ * dedicated AI service running on port 8002.
  *
- * This MUST call /copilot, not /ask.
+ * CopilotService performs the routing:
  *
- * /copilot performs intent routing:
+ * Casual conversation
+ *      ↓
+ * Gemini
  *
  * PRD question
  *      ↓
@@ -239,11 +245,11 @@ export interface CopilotResult {
  *
  * Product analysis question
  *      ↓
- * AIService / RAG
+ * AIService / RAG / Gemini
  */
 export async function requestCopilot(
   question: string,
-  timeoutMs = 15000,
+  timeoutMs = 30000,
 ): Promise<CopilotResult> {
   const controller = new AbortController();
 
@@ -254,7 +260,7 @@ export async function requestCopilot(
 
   try {
     const response = await fetch(
-      'http://127.0.0.1:8001/copilot',
+      'http://127.0.0.1:8002/copilot',
       {
         method: 'POST',
 
@@ -271,16 +277,14 @@ export async function requestCopilot(
     );
 
     if (!response.ok) {
-      const errorText =
-        await response.text();
+      const errorText = await response.text();
 
       throw new Error(
         `AI service returned ${response.status}: ${errorText}`,
       );
     }
 
-    const result =
-      await response.json();
+    const result = await response.json();
 
     return {
       live: true,

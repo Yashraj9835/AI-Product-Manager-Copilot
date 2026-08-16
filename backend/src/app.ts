@@ -3,6 +3,7 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/auth.routes';
 import feedbackRoutes from './routes/feedback.routes';
+import uploadRoutes from './routes/upload.routes';
 import workspaceRoutes from './routes/workspace.routes';
 import pipelineRoutes from './routes/pipeline.routes';
 import { swaggerSpec } from './config/swagger';
@@ -17,8 +18,10 @@ const corsOrigins = new Set(
     .map((origin) => origin.trim())
     .filter(Boolean)
 );
+
 corsOrigins.add('http://localhost:3000');
 corsOrigins.add('http://localhost:5000');
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -26,6 +29,7 @@ app.use(
         callback(null, true);
         return;
       }
+
       callback(new Error('Origin is not allowed by CORS'));
     },
     credentials: true,
@@ -33,7 +37,7 @@ app.use(
 );
 
 // ── Body parsing ──
-app.use(express.json({ limit: '10mb' })); // Large body for bulk imports
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ── Root info ──
@@ -128,7 +132,10 @@ app.get('/', (_req, res) => {
  *               message: AI PM Copilot API is running
  */
 app.get('/api/health', (_req, res) => {
-  res.json({ success: true, message: 'AI PM Copilot API is running' });
+  res.json({
+    success: true,
+    message: 'AI PM Copilot API is running',
+  });
 });
 
 /* ── Interactive API docs ──────────────────────────────────────────────────
@@ -151,7 +158,6 @@ app.use(
   swaggerUi.setup(swaggerSpec, {
     customSiteTitle: 'AI PM Copilot API — Docs',
     swaggerOptions: {
-      // Keep the pasted JWT across reloads, so "Authorize" survives a refresh.
       persistAuthorization: true,
       displayRequestDuration: true,
       docExpansion: 'list',
@@ -165,6 +171,9 @@ app.use('/api/auth', authRoutes);
 
 // ── API routes (Feedback, Stats, Analyze) ──
 app.use('/api', feedbackRoutes);
+
+// ── API routes (Upload history) ──
+app.use('/api', uploadRoutes);
 
 // ── API routes (User settings, Roadmap, PRD, Theme maintenance) ──
 app.use('/api', workspaceRoutes);
