@@ -144,3 +144,5 @@ database.txt
 .env
 *.env
 .env.example*.zip
+*.zip
+.env.example
