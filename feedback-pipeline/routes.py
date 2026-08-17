@@ -1,11 +1,12 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
 import json
-import os
 import shutil
 import time
 import traceback
+from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
 import pandas as pd
 from pydantic import BaseModel
@@ -26,8 +27,63 @@ router = APIRouter()
 
 
 # ============================================================
+# BASE DIRECTORIES
+# ============================================================
+
+# routes.py is inside:
+#
+# D:\AI-Product-Manager-Copilot\feedback-pipeline
+#
+# Therefore BASE_DIR points to feedback-pipeline.
+BASE_DIR = Path(__file__).resolve().parent
+
+
+UPLOAD_FOLDER = BASE_DIR / "uploads"
+
+SOURCE_FOLDER = (
+    BASE_DIR
+    / "dataset"
+    / "source_data"
+)
+
+PROCESSED_FOLDER = (
+    BASE_DIR
+    / "dataset"
+    / "processed"
+)
+
+PRD_FOLDER = (
+    BASE_DIR
+    / "data"
+    / "prds"
+)
+
+
+UPLOAD_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+SOURCE_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+PROCESSED_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+PRD_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+
+# ============================================================
 # REQUEST MODELS
 # ============================================================
+
 
 class CopilotRequest(BaseModel):
     question: str
@@ -41,12 +97,157 @@ class PRDRequest(BaseModel):
 
 
 # ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    """
+    Detect Groq/API rate-limit errors.
+    """
+
+    error_text = str(error).lower()
+
+    return (
+        "429" in error_text
+        or "rate limit" in error_text
+        or "rate_limit" in error_text
+        or "tokens per day" in error_text
+        or "too many requests" in error_text
+    )
+
+
+def clean_llm_json(raw_response: str) -> str:
+    """
+    Remove common markdown wrappers around JSON.
+    """
+
+    cleaned = (
+        raw_response
+        .replace("```json", "")
+        .replace("```JSON", "")
+        .replace("```", "")
+        .strip()
+    )
+
+    return cleaned
+
+
+def get_counts(
+    dataframe: pd.DataFrame,
+    column: str,
+) -> dict:
+    """
+    Return the top values for a dataframe column.
+
+    Missing columns are safely ignored because the current
+    processed dataset does not necessarily contain every
+    AI-generated column.
+    """
+
+    if column not in dataframe.columns:
+        return {}
+
+    values = (
+        dataframe[column]
+        .fillna("Unknown")
+        .astype(str)
+        .str.strip()
+    )
+
+    values = values[
+        values != ""
+    ]
+
+    if values.empty:
+        return {}
+
+    return (
+        values
+        .value_counts()
+        .head(10)
+        .to_dict()
+    )
+
+
+def save_prd(
+    result: dict,
+    topic: str,
+) -> tuple[str, str]:
+    """
+    Save the generated PRD as a JSON file.
+
+    Returns:
+        prd_id
+        saved_file
+    """
+
+    prd_id = (
+        f"prd_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_"
+        f"{uuid4().hex[:8]}"
+    )
+
+    created_at = (
+        datetime.now(timezone.utc)
+        .isoformat()
+    )
+
+    result["generation_metadata"]["prd_id"] = prd_id
+
+    result["generation_metadata"]["created_at"] = created_at
+
+    result["generation_metadata"]["storage"] = "data/prds"
+
+    safe_topic = "".join(
+        character
+        if character.isalnum()
+        else "_"
+        for character in topic
+    ).strip("_")
+
+    if not safe_topic:
+        safe_topic = "product_feature"
+
+    safe_topic = safe_topic[:60]
+
+    filename = (
+        f"{prd_id}_{safe_topic}.json"
+    )
+
+    filepath = (
+        PRD_FOLDER
+        / filename
+    )
+
+    with open(
+        filepath,
+        "w",
+        encoding="utf-8",
+    ) as file:
+
+        json.dump(
+            result,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
+
+    return (
+        prd_id,
+        str(filepath),
+    )
+
+
+# ============================================================
 # PRD GENERATION
 # ============================================================
 
+
 @router.post("/prd")
 @router.post("/prd/generate")
-async def generate_prd(req: PRDRequest):
+async def generate_prd(
+    req: PRDRequest,
+):
     """
     Generate a context-aware Product Requirements Document.
 
@@ -72,6 +273,8 @@ async def generate_prd(req: PRDRequest):
           ↓
         JSON validation
           ↓
+        Save PRD to data/prds
+          ↓
         Return PRD
     """
 
@@ -89,11 +292,13 @@ async def generate_prd(req: PRDRequest):
     # 2. LOAD PROCESSED DATASET
     # ========================================================
 
-    processed_path = Path(
-        "dataset/processed/final_feedback_dataset.csv"
+    processed_path = (
+        PROCESSED_FOLDER
+        / "final_feedback_dataset.csv"
     )
 
     if not processed_path.exists():
+
         raise HTTPException(
             status_code=404,
             detail=(
@@ -103,11 +308,13 @@ async def generate_prd(req: PRDRequest):
         )
 
     try:
+
         feedback_df = pd.read_csv(
             processed_path
         )
 
     except Exception as exc:
+
         raise HTTPException(
             status_code=500,
             detail=(
@@ -120,6 +327,7 @@ async def generate_prd(req: PRDRequest):
     # ========================================================
 
     if "feedback_text" not in feedback_df.columns:
+
         raise HTTPException(
             status_code=500,
             detail=(
@@ -129,9 +337,12 @@ async def generate_prd(req: PRDRequest):
         )
 
     if feedback_df.empty:
+
         raise HTTPException(
             status_code=404,
-            detail="Processed feedback dataset contains no rows.",
+            detail=(
+                "Processed feedback dataset contains no rows."
+            ),
         )
 
     # ========================================================
@@ -171,64 +382,30 @@ async def generate_prd(req: PRDRequest):
     # FALLBACK
     # --------------------------------------------------------
 
-    # If the feature does not have an exact keyword match,
-    # still provide real customer feedback to the LLM.
+    # If no exact keyword match exists, provide real
+    # customer feedback rather than sending an empty context.
 
     if related_df.empty:
+
         related_df = feedback_df.copy()
 
-    # Keep the context reasonably small.
+    # Keep context reasonably small.
+
     related_df = related_df.head(50)
 
     # ========================================================
-    # 5. HELPER FUNCTION
+    # 5. DATASET ANALYTICS
     # ========================================================
 
-    def get_counts(
-        dataframe: pd.DataFrame,
-        column: str,
-    ) -> dict:
-
-        if column not in dataframe.columns:
-            return {}
-
-        values = (
-            dataframe[column]
-            .fillna("Unknown")
-            .astype(str)
-            .str.strip()
-        )
-
-        values = values[
-            values != ""
-        ]
-
-        if values.empty:
-            return {}
-
-        return (
-            values
-            .value_counts()
-            .head(10)
-            .to_dict()
-        )
-
-    # ========================================================
-    # 6. ACTUAL DATASET ANALYTICS
-    # ========================================================
-
-    # The current dataset uses:
+    # The current processed dataset contains fields such as:
     #
     # sentiment_hint
     # feedback_priority
     # theme
     # pain_point
     #
-    # rather than:
-    #
-    # sentiment
-    # priority
-    # category
+    # Some AI-generated columns may not exist yet.
+    # get_counts() safely handles missing columns.
 
     category_counts = get_counts(
         related_df,
@@ -256,7 +433,7 @@ async def generate_prd(req: PRDRequest):
     )
 
     # ========================================================
-    # 7. RATING ANALYSIS
+    # 6. RATING ANALYSIS
     # ========================================================
 
     rating_summary = {}
@@ -287,7 +464,7 @@ async def generate_prd(req: PRDRequest):
             }
 
     # ========================================================
-    # 8. FEEDBACK SIGNALS
+    # 7. FEEDBACK SIGNALS
     # ========================================================
 
     feedback_signals = {}
@@ -326,7 +503,7 @@ async def generate_prd(req: PRDRequest):
         )
 
     # ========================================================
-    # 9. SEGMENT BREAKDOWN
+    # 8. SEGMENT BREAKDOWN
     # ========================================================
 
     segment_breakdown = {}
@@ -349,7 +526,7 @@ async def generate_prd(req: PRDRequest):
             )
 
     # ========================================================
-    # 10. REAL CUSTOMER QUOTES
+    # 9. REAL CUSTOMER QUOTES
     # ========================================================
 
     customer_quotes = (
@@ -368,7 +545,7 @@ async def generate_prd(req: PRDRequest):
     )
 
     # ========================================================
-    # 11. BUILD REAL PRODUCT CONTEXT
+    # 10. BUILD REAL PRODUCT CONTEXT
     # ========================================================
 
     context = f"""
@@ -410,7 +587,7 @@ REAL CUSTOMER QUOTES:
 """
 
     # ========================================================
-    # 12. REQUESTED PRD SECTIONS
+    # 11. REQUESTED PRD SECTIONS
     # ========================================================
 
     requested_sections = (
@@ -434,7 +611,7 @@ REAL CUSTOMER QUOTES:
     )
 
     # ========================================================
-    # 13. BUILD CONTEXT-RICH PROMPT
+    # 12. BUILD CONTEXT-RICH PROMPT
     # ========================================================
 
     prompt = f"""
@@ -454,7 +631,7 @@ IMPORTANT RULES:
 5. Use the actual themes and pain points.
 6. Use rating information when available.
 7. Consider the feedback signals.
-8. Consider the platform, source, language, city,
+8. Consider platform, source, language, city,
    and visit-type information when relevant.
 9. If evidence is unavailable, say that evidence is
    unavailable instead of inventing it.
@@ -518,7 +695,7 @@ Generate exactly {story_count} user stories.
 """
 
     # ========================================================
-    # 14. CALL LLM
+    # 13. CALL LLM
     # ========================================================
 
     try:
@@ -527,11 +704,8 @@ Generate exactly {story_count} user stories.
             prompt
         )
 
-        cleaned = (
+        cleaned = clean_llm_json(
             raw_response
-            .replace("```json", "")
-            .replace("```", "")
-            .strip()
         )
 
         result = json.loads(
@@ -540,18 +714,12 @@ Generate exactly {story_count} user stories.
 
     except Exception as first_error:
 
-        error_text = str(
-            first_error
-        ).lower()
-
         # ----------------------------------------------------
         # RATE LIMIT
         # ----------------------------------------------------
 
-        if (
-            "429" in error_text
-            or "rate limit" in error_text
-            or "rate_limit" in error_text
+        if is_rate_limit_error(
+            first_error
         ):
 
             raise HTTPException(
@@ -572,7 +740,7 @@ Generate exactly {story_count} user stories.
         )
 
         # ----------------------------------------------------
-        # RETRY ONCE
+        # RETRY ONCE ONLY FOR NON-RATE-LIMIT ERRORS
         # ----------------------------------------------------
 
         retry_prompt = prompt + """
@@ -605,11 +773,8 @@ Do not include explanations.
                 retry_prompt
             )
 
-            cleaned = (
+            cleaned = clean_llm_json(
                 raw_response
-                .replace("```json", "")
-                .replace("```", "")
-                .strip()
             )
 
             result = json.loads(
@@ -618,22 +783,16 @@ Do not include explanations.
 
         except Exception as second_error:
 
-            error_text = str(
+            if is_rate_limit_error(
                 second_error
-            ).lower()
-
-            if (
-                "429" in error_text
-                or "rate limit" in error_text
-                or "rate_limit" in error_text
             ):
 
                 raise HTTPException(
                     status_code=429,
                     detail=(
                         "Groq API rate limit reached. "
-                        "Please wait until the token limit "
-                        "resets."
+                        "Please wait until the Groq token limit "
+                        "resets before generating the PRD."
                     ),
                 )
 
@@ -652,6 +811,22 @@ Do not include explanations.
                     "LLM returned an invalid response."
                 ),
             )
+
+    # ========================================================
+    # 14. VALIDATE JSON OBJECT
+    # ========================================================
+
+    if not isinstance(
+        result,
+        dict,
+    ):
+
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Generated PRD is not a valid JSON object."
+            ),
+        )
 
     # ========================================================
     # 15. VALIDATE REQUIRED PRD SECTIONS
@@ -680,8 +855,12 @@ Do not include explanations.
         raise HTTPException(
             status_code=500,
             detail={
-                "message": "Generated PRD is incomplete.",
-                "missing_sections": missing_sections,
+                "message": (
+                    "Generated PRD is incomplete."
+                ),
+                "missing_sections": (
+                    missing_sections
+                ),
             },
         )
 
@@ -801,6 +980,45 @@ Do not include explanations.
             "draft",
     }
 
+    # ========================================================
+    # 19. SAVE PRD
+    # ========================================================
+
+    try:
+
+        prd_id, saved_file = save_prd(
+            result,
+            topic,
+        )
+
+    except Exception as exc:
+
+        print(
+            "[ERROR] Could not save generated PRD:"
+        )
+
+        print(
+            exc
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"PRD generated successfully but "
+                f"could not be saved: {exc}"
+            ),
+        )
+
+    result[
+        "generation_metadata"
+    ][
+        "saved_file"
+    ] = saved_file
+
+    # ========================================================
+    # 20. LOG RESULT
+    # ========================================================
+
     print(
         "[OK] Context-aware PRD generated"
     )
@@ -815,12 +1033,23 @@ Do not include explanations.
         len(related_df),
     )
 
+    print(
+        "[OK] PRD ID:",
+        prd_id,
+    )
+
+    print(
+        "[OK] PRD saved:",
+        saved_file,
+    )
+
     return result
 
 
 # ============================================================
 # COPILOT
 # ============================================================
+
 
 @router.post("/copilot")
 async def copilot_chat(
@@ -865,14 +1094,8 @@ User Question:
 
     except Exception as exc:
 
-        error_text = str(
+        if is_rate_limit_error(
             exc
-        ).lower()
-
-        if (
-            "429" in error_text
-            or "rate limit" in error_text
-            or "rate_limit" in error_text
         ):
 
             raise HTTPException(
@@ -890,42 +1113,9 @@ User Question:
 
 
 # ============================================================
-# FOLDERS
-# ============================================================
-
-UPLOAD_FOLDER = Path(
-    "uploads"
-)
-
-UPLOAD_FOLDER.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-
-SOURCE_FOLDER = Path(
-    "dataset/source_data"
-)
-
-SOURCE_FOLDER.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-
-PROCESSED_FOLDER = Path(
-    "dataset/processed"
-)
-
-PROCESSED_FOLDER.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-
-# ============================================================
 # CSV UPLOAD API
 # ============================================================
+
 
 @router.post("/upload")
 async def upload_csv(
@@ -1040,7 +1230,9 @@ async def upload_csv(
 
             raise HTTPException(
                 status_code=400,
-                detail="Uploaded CSV contains no rows.",
+                detail=(
+                    "Uploaded CSV contains no rows."
+                ),
             )
 
         # ====================================================
@@ -1310,9 +1502,28 @@ async def upload_csv(
                 f"{batch_start} - {batch_end}"
             )
 
-            batch_result = analyze_batch(
-                batch
-            )
+            try:
+
+                batch_result = analyze_batch(
+                    batch
+                )
+
+            except Exception as exc:
+
+                if is_rate_limit_error(
+                    exc
+                ):
+
+                    raise HTTPException(
+                        status_code=429,
+                        detail=(
+                            "Groq API rate limit reached "
+                            "during feedback analysis. "
+                            "Please wait until the limit resets."
+                        ),
+                    )
+
+                raise
 
             # ------------------------------------------------
             # VERIFY RESULT COUNT
@@ -1692,14 +1903,8 @@ async def upload_csv(
 
         traceback.print_exc()
 
-        error_text = str(
+        if is_rate_limit_error(
             exc
-        ).lower()
-
-        if (
-            "429" in error_text
-            or "rate limit" in error_text
-            or "rate_limit" in error_text
         ):
 
             raise HTTPException(
