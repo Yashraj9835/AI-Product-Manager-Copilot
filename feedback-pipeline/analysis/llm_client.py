@@ -1,41 +1,103 @@
 import os
+
 from dotenv import load_dotenv
 from groq import Groq
 
-# Load environment variables (.env in feedback-pipeline or parent)
-env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
-if os.path.exists(env_path):
-    load_dotenv(dotenv_path=env_path)
-else:
-    load_dotenv()
 
-# Get Groq API key
-api_key = os.getenv("GROQ_API_KEY")
+# ============================================================
+# LOAD ENVIRONMENT
+# ============================================================
+
+env_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        ".env",
+    )
+)
+
+if os.path.exists(env_path):
+    load_dotenv(
+        dotenv_path=env_path,
+        override=True,
+    )
+else:
+    load_dotenv(
+        override=True,
+    )
+
+
+# ============================================================
+# GROQ API KEY
+# ============================================================
+
+api_key = os.getenv(
+    "GROQ_API_KEY"
+)
 
 if not api_key:
-    raise ValueError("GROQ_API_KEY not found in .env")
+    raise ValueError(
+        "GROQ_API_KEY not found in .env"
+    )
+
 
 print("[OK] Groq API Key Loaded")
 
-# Create Groq client
-client = Groq(api_key=api_key)
+
+# ============================================================
+# GROQ CLIENT
+# ============================================================
+
+client = Groq(
+    api_key=api_key
+)
 
 
-def ask_llm(prompt: str) -> str:
+# ============================================================
+# MODEL
+# ============================================================
+
+# This model is confirmed to be available
+# for the current Groq API key.
+
+GROQ_MODEL = "openai/gpt-oss-20b"
+
+
+# ============================================================
+# LLM REQUEST
+# ============================================================
+
+def ask_llm(
+    prompt: str,
+) -> str:
     """
-    Send a prompt to Groq and return the generated text.
+    Send a prompt to Groq and return
+    the generated text.
     """
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=GROQ_MODEL,
+
         messages=[
             {
                 "role": "user",
-                "content": prompt
+                "content": prompt,
             }
         ],
-        temperature=0.2,
-        max_tokens=4096
+
+        temperature=0.1,
+        max_tokens=1024,
+   )
+    content = (
+        response
+        .choices[0]
+        .message
+        .content
     )
 
-    return response.choices[0].message.content.strip()
+    if not content:
+        raise ValueError(
+            "Groq returned an empty response"
+        )
+
+    return content.strip()

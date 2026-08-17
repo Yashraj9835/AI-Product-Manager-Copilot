@@ -1,18 +1,22 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-import pandas as pd
+
+import json
 import os
 import shutil
-from pathlib import Path
+import time
 import traceback
+from pathlib import Path
 
+import pandas as pd
 from pydantic import BaseModel
+
 from preprocessing.collect_data import merge_all
 from preprocessing.validate import validate_dataset
 from preprocessing.clean_data import clean_dataset
 from preprocessing.normalize import main as normalize_dataset
 from preprocessing.feature_engineering import main as feature_engineering
 
-from analysis.batch_analyzer import analyze_feedback_batch
+from analysis.batch_analyzer import analyze_batch
 from analysis.feature_cluster import cluster_features
 from analysis.trend_analysis import analyze_trends
 from analysis.llm_client import ask_llm
@@ -21,8 +25,9 @@ from analysis.llm_client import ask_llm
 router = APIRouter()
 
 
-import json
-
+# ============================================================
+# REQUEST MODELS
+# ============================================================
 
 class CopilotRequest(BaseModel):
     question: str
@@ -33,88 +38,203 @@ class PRDRequest(BaseModel):
     feature: str = ""
 
 
+# ============================================================
+# PRD GENERATION
+# ============================================================
+
 @router.post("/prd")
 async def generate_prd(req: PRDRequest):
     """
-    Generate a Product Requirements Document (PRD) JSON using Groq LLM.
+    Generate a Product Requirements Document (PRD)
+    using the Groq LLM.
     """
-    topic = req.question or req.feature or "New Product Feature"
 
-    prompt = f"""You are an expert Product Manager.
-Generate a structured Product Requirements Document (PRD) for this feature or topic:
+    topic = (
+        req.question
+        or req.feature
+        or "New Product Feature"
+    )
+
+    prompt = f"""
+You are an expert Product Manager.
+
+Generate a structured Product Requirements Document (PRD)
+for this feature or topic:
+
 {topic}
 
-Return ONLY valid JSON. Do NOT use markdown code fences.
+Return ONLY valid JSON.
+Do NOT use markdown code fences.
 
 Required JSON structure:
+
 {{
   "title": "PRD: {topic}",
   "problem_statement": "Detailed problem statement...",
-  "target_users": ["Target user 1", "Target user 2"],
-  "goals": ["Goal 1", "Goal 2"],
-  "requirements": ["Requirement 1", "Requirement 2"],
+  "target_users": [
+    "Target user 1",
+    "Target user 2"
+  ],
+  "goals": [
+    "Goal 1",
+    "Goal 2"
+  ],
+  "requirements": [
+    "Requirement 1",
+    "Requirement 2"
+  ],
   "user_stories": [
-    {{"story": "As a user, I want X so that Y"}}
+    {{
+      "story": "As a user, I want X so that Y"
+    }}
   ],
   "acceptance_criteria": [
-    {{"criteria": ["Given X, when Y, then Z"]}}
+    {{
+      "criteria": [
+        "Given X, when Y, then Z"
+      ]
+    }}
   ],
-  "success_metrics": ["Metric 1", "Metric 2"],
-  "risks": ["Risk 1", "Risk 2"]
+  "success_metrics": [
+    "Metric 1",
+    "Metric 2"
+  ],
+  "risks": [
+    "Risk 1",
+    "Risk 2"
+  ]
 }}
 """
+
     try:
         raw_response = ask_llm(prompt)
-        cleaned = raw_response.replace("```json", "").replace("```", "").strip()
-        result = json.loads(cleaned)
-        return result
-    except Exception as e:
+
+        cleaned = (
+            raw_response
+            .replace("```json", "")
+            .replace("```", "")
+            .strip()
+        )
+
+        return json.loads(cleaned)
+
+    except Exception:
         return {
             "title": f"PRD: {topic}",
-            "problem_statement": f"Define requirements for {topic}",
-            "target_users": ["General Users", "Product Administrators"],
-            "goals": ["Improve user satisfaction", "Streamline product workflow"],
-            "requirements": ["Requirement 1: System stability", "Requirement 2: User interface clarity"],
-            "user_stories": [{"story": f"As a user, I want to use {topic} easily so that my tasks are completed fast"}],
-            "acceptance_criteria": [{"criteria": ["Given the user accesses the feature, when input is provided, then valid output is displayed"]}],
-            "success_metrics": ["User adoption rate > 80%", "Customer satisfaction score > 4.5/5"],
-            "risks": ["Potential integration delays", "User onboarding overhead"]
+            "problem_statement": (
+                f"Define requirements for {topic}"
+            ),
+            "target_users": [
+                "General Users",
+                "Product Administrators",
+            ],
+            "goals": [
+                "Improve user satisfaction",
+                "Streamline product workflow",
+            ],
+            "requirements": [
+                "Requirement 1: System stability",
+                "Requirement 2: User interface clarity",
+            ],
+            "user_stories": [
+                {
+                    "story": (
+                        f"As a user, I want to use {topic} "
+                        "easily so that my tasks are completed fast"
+                    )
+                }
+            ],
+            "acceptance_criteria": [
+                {
+                    "criteria": [
+                        "Given the user accesses the feature, "
+                        "when input is provided, then valid "
+                        "output is displayed"
+                    ]
+                }
+            ],
+            "success_metrics": [
+                "User adoption rate > 80%",
+                "Customer satisfaction score > 4.5/5",
+            ],
+            "risks": [
+                "Potential integration delays",
+                "User onboarding overhead",
+            ],
         }
 
+
+# ============================================================
+# COPILOT
+# ============================================================
 
 @router.post("/copilot")
 async def copilot_chat(req: CopilotRequest):
     """
     Copilot conversational endpoint using Groq LLM.
     """
-    if not req.question or not req.question.strip():
-        raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-    prompt = f"""You are an expert AI Product Manager Copilot assisting a product manager.
-Answer the user's question clearly, concisely, and accurately.
+    if not req.question or not req.question.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Question cannot be empty",
+        )
+
+    prompt = f"""
+You are an expert AI Product Manager Copilot
+assisting a product manager.
+
+Answer the user's question clearly,
+concisely, and accurately.
 
 User Question:
+
 {req.question}
 """
+
     try:
         answer = ask_llm(prompt)
+
         return {
             "intent": "analyze",
-            "answer": answer
+            "answer": answer,
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        )
 
 
 # ============================================================
 # FOLDERS
 # ============================================================
 
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = Path("uploads")
 
-SOURCE_FOLDER = Path("dataset/source_data")
-SOURCE_FOLDER.mkdir(parents=True, exist_ok=True)
+UPLOAD_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+SOURCE_FOLDER = Path(
+    "dataset/source_data"
+)
+
+SOURCE_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+PROCESSED_FOLDER = Path(
+    "dataset/processed"
+)
+
+PROCESSED_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
 
 
 # ============================================================
@@ -122,101 +242,246 @@ SOURCE_FOLDER.mkdir(parents=True, exist_ok=True)
 # ============================================================
 
 @router.post("/upload")
-async def upload_csv(file: UploadFile = File(...)):
+async def upload_csv(
+    file: UploadFile = File(...),
+):
+    """
+    Complete feedback-analysis pipeline.
 
-    print("========== UPLOAD API CALLED ==========")
+    IMPORTANT:
+    The preprocessing pipeline may rebuild the combined
+    historical dataset, but AI analysis is performed ONLY
+    on records belonging to the CSV uploaded in this request.
+
+    Flow:
+
+        CSV upload
+            ↓
+        preprocessing
+            ↓
+        identify uploaded records
+            ↓
+        Groq batch analysis ONLY for uploaded records
+            ↓
+        category / sentiment / priority
+            ↓
+        theme / pain point / recommendation
+            ↓
+        trend analysis
+            ↓
+        feature clustering
+            ↓
+        upload-specific analyzed CSV
+            ↓
+        API response
+    """
+
+    print(
+        "========== UPLOAD API CALLED =========="
+    )
 
     try:
+
+        # ====================================================
+        # VALIDATE FILE
+        # ====================================================
+
+        if not file.filename:
+            raise HTTPException(
+                status_code=400,
+                detail="No filename provided.",
+            )
+
+        if not file.filename.lower().endswith(".csv"):
+            raise HTTPException(
+                status_code=400,
+                detail="Only CSV files are supported.",
+            )
+
+
+        # ====================================================
+        # SAFE FILE NAME
+        # ====================================================
+
+        safe_filename = Path(
+            file.filename
+        ).name
+
+        filepath = (
+            UPLOAD_FOLDER
+            / safe_filename
+        )
+
 
         # ====================================================
         # SAVE UPLOADED FILE
         # ====================================================
 
-        filepath = os.path.join(
-            UPLOAD_FOLDER,
-            file.filename
-        )
+        with open(
+            filepath,
+            "wb",
+        ) as buffer:
 
-        with open(filepath, "wb") as buffer:
             shutil.copyfileobj(
                 file.file,
-                buffer
+                buffer,
             )
 
-        print("[OK] File saved:", filepath)
-
-
-        # ====================================================
-        # COPY TO SOURCE DATA
-        # ====================================================
-
-        destination = SOURCE_FOLDER / file.filename
-
-        shutil.copy(
+        print(
+            "[OK] File saved:",
             filepath,
-            destination
         )
-
-        print("[OK] Copied to source_data")
 
 
         # ====================================================
         # READ UPLOADED CSV
         # ====================================================
 
-        df = pd.read_csv(filepath)
+        df = pd.read_csv(
+            filepath
+        )
 
-        print("Uploaded Columns:")
-        print(df.columns.tolist())
+        print(
+            "Uploaded Columns:"
+        )
 
-        print("Uploaded Rows:", len(df))
+        print(
+            df.columns.tolist()
+        )
+
+        print(
+            "Uploaded Rows:",
+            len(df),
+        )
+
+
+        if df.empty:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded CSV contains no rows.",
+            )
+
+
+        # ====================================================
+        # IDENTIFY UPLOADED RECORDS
+        # ====================================================
+
+        uploaded_feedback_ids = set()
+
+        if "feedback_id" in df.columns:
+
+            uploaded_feedback_ids = set(
+                df["feedback_id"]
+                .dropna()
+                .astype(str)
+                .str.strip()
+                .tolist()
+            )
+
+        uploaded_feedback_texts = set()
+
+        if "feedback_text" in df.columns:
+
+            uploaded_feedback_texts = set(
+                df["feedback_text"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .tolist()
+            )
+
+
+        print(
+            "Uploaded feedback IDs:",
+            len(uploaded_feedback_ids),
+        )
+
+        print(
+            "Uploaded feedback texts:",
+            len(uploaded_feedback_texts),
+        )
+
+
+        # ====================================================
+        # COPY TO SOURCE DATA
+        # ====================================================
+
+        destination = (
+            SOURCE_FOLDER
+            / safe_filename
+        )
+
+        shutil.copy(
+            filepath,
+            destination,
+        )
+
+        print(
+            "[OK] Copied to source_data"
+        )
 
 
         # ====================================================
         # PREPROCESSING
         # ====================================================
 
-        print("========== PREPROCESSING ==========")
+        print(
+            "========== PREPROCESSING =========="
+        )
 
         merge_all()
-        print("[OK] merge_all")
+
+        print(
+            "[OK] merge_all"
+        )
 
         validate_dataset()
-        print("[OK] validate_dataset")
+
+        print(
+            "[OK] validate_dataset"
+        )
 
         clean_dataset()
-        print("[OK] clean_dataset")
+
+        print(
+            "[OK] clean_dataset"
+        )
 
         normalize_dataset()
-        print("[OK] normalize_dataset")
+
+        print(
+            "[OK] normalize_dataset"
+        )
 
         feature_engineering()
-        print("[OK] feature_engineering")
+
+        print(
+            "[OK] feature_engineering"
+        )
 
 
         # ====================================================
-        # LOAD PROCESSED DATA
+        # LOAD FULL PROCESSED DATASET
         # ====================================================
 
         processed_path = Path(
-            "dataset/processed/final_feedback_dataset.csv"
+            "dataset/processed/"
+            "final_feedback_dataset.csv"
         )
 
         if not processed_path.exists():
+
             raise Exception(
                 f"{processed_path} not found"
             )
 
-        analysis_df = pd.read_csv(
+        full_processed_df = pd.read_csv(
             processed_path
         )
 
-        print("Processed Columns:")
-        print(analysis_df.columns.tolist())
-
         print(
-            "Processed Rows:",
-            len(analysis_df)
+            "Full processed rows:",
+            len(full_processed_df),
         )
 
 
@@ -224,11 +489,98 @@ async def upload_csv(file: UploadFile = File(...)):
         # CHECK FEEDBACK COLUMN
         # ====================================================
 
-        if "feedback_text" not in analysis_df.columns:
+        if (
+            "feedback_text"
+            not in full_processed_df.columns
+        ):
 
             raise Exception(
                 "'feedback_text' column missing. "
-                f"Columns found: {analysis_df.columns.tolist()}"
+                f"Columns found: "
+                f"{full_processed_df.columns.tolist()}"
+            )
+
+
+        # ====================================================
+        # FILTER ONLY UPLOADED RECORDS
+        # ====================================================
+
+        print(
+            "========== FILTERING UPLOADED RECORDS =========="
+        )
+
+
+        analysis_df = pd.DataFrame()
+
+
+        # ----------------------------------------------------
+        # FIRST TRY: feedback_id
+        # ----------------------------------------------------
+
+        if (
+            uploaded_feedback_ids
+            and "feedback_id"
+            in full_processed_df.columns
+        ):
+
+            processed_ids = (
+                full_processed_df[
+                    "feedback_id"
+                ]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+            )
+
+            analysis_df = full_processed_df[
+                processed_ids.isin(
+                    uploaded_feedback_ids
+                )
+            ].copy()
+
+
+        # ----------------------------------------------------
+        # SECOND TRY: feedback_text
+        # ----------------------------------------------------
+
+        if analysis_df.empty:
+
+            processed_texts = (
+                full_processed_df[
+                    "feedback_text"
+                ]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+            )
+
+            analysis_df = full_processed_df[
+                processed_texts.isin(
+                    uploaded_feedback_texts
+                )
+            ].copy()
+
+
+        # ----------------------------------------------------
+        # VERIFY FILTER RESULT
+        # ----------------------------------------------------
+
+        print(
+            "Uploaded rows:",
+            len(df),
+        )
+
+        print(
+            "Matched processed rows:",
+            len(analysis_df),
+        )
+
+
+        if analysis_df.empty:
+
+            raise Exception(
+                "Could not match uploaded records "
+                "to the processed dataset."
             )
 
 
@@ -236,10 +588,14 @@ async def upload_csv(file: UploadFile = File(...)):
         # PREPARE FEEDBACK
         # ====================================================
 
-        print("========== PREPARING FEEDBACK ==========")
+        print(
+            "========== PREPARING FEEDBACK =========="
+        )
 
         feedbacks = (
-            analysis_df["feedback_text"]
+            analysis_df[
+                "feedback_text"
+            ]
             .fillna("")
             .astype(str)
             .tolist()
@@ -247,7 +603,7 @@ async def upload_csv(file: UploadFile = File(...)):
 
         print(
             "Total feedbacks to analyze:",
-            len(feedbacks)
+            len(feedbacks),
         )
 
 
@@ -255,22 +611,27 @@ async def upload_csv(file: UploadFile = File(...)):
         # GROQ BATCH ANALYSIS
         # ====================================================
 
-        print("========== GROQ BATCH ANALYSIS ==========")
+        print(
+            "========== GROQ BATCH ANALYSIS =========="
+        )
 
-        # Number of feedback records per API request
-        batch_size = 10
+        # Small batch to control token usage.
+        batch_size = 5
+
+        # Delay between requests.
+        batch_delay_seconds = 3
 
         results = []
 
 
-        # ----------------------------------------------------
-        # PROCESS FEEDBACK IN BATCHES
-        # ----------------------------------------------------
+        # ====================================================
+        # PROCESS ONLY UPLOADED RECORDS
+        # ====================================================
 
         for i in range(
             0,
             len(feedbacks),
-            batch_size
+            batch_size,
         ):
 
             batch = feedbacks[
@@ -278,18 +639,37 @@ async def upload_csv(file: UploadFile = File(...)):
             ]
 
             batch_start = i + 1
-            batch_end = i + len(batch)
+
+            batch_end = (
+                i + len(batch)
+            )
 
             print(
-                f"Processing batch "
+                f"Processing uploaded batch "
                 f"{batch_start} - {batch_end}"
             )
 
 
-            # Send ONE request for this batch
-            batch_result = analyze_feedback_batch(
+            # ------------------------------------------------
+            # CALL BATCH ANALYZER
+            # ------------------------------------------------
+
+            batch_result = analyze_batch(
                 batch
             )
+
+
+            # ------------------------------------------------
+            # VERIFY BATCH RESULT COUNT
+            # ------------------------------------------------
+
+            if len(batch_result) != len(batch):
+
+                raise Exception(
+                    "AI batch result count mismatch. "
+                    f"Expected {len(batch)}, "
+                    f"received {len(batch_result)}."
+                )
 
 
             print(
@@ -298,14 +678,37 @@ async def upload_csv(file: UploadFile = File(...)):
             )
 
 
-            # Add batch results to overall results
+            # ------------------------------------------------
+            # ADD RESULTS
+            # ------------------------------------------------
+
             results.extend(
                 batch_result
             )
 
 
+            # ------------------------------------------------
+            # RATE LIMIT DELAY
+            # ------------------------------------------------
+
+            if (
+                i + batch_size
+                < len(feedbacks)
+            ):
+
+                print(
+                    f"Waiting "
+                    f"{batch_delay_seconds} seconds "
+                    "before next Groq request..."
+                )
+
+                time.sleep(
+                    batch_delay_seconds
+                )
+
+
         # ====================================================
-        # FINAL BATCH SUMMARY
+        # FINAL RESULT COUNT
         # ====================================================
 
         print(
@@ -313,13 +716,13 @@ async def upload_csv(file: UploadFile = File(...)):
         )
 
         print(
-            "TOTAL FEEDBACKS:",
-            len(feedbacks)
+            "UPLOADED FEEDBACKS:",
+            len(feedbacks),
         )
 
         print(
-            "TOTAL AI RESULTS:",
-            len(results)
+            "AI RESULTS:",
+            len(results),
         )
 
         print(
@@ -327,78 +730,117 @@ async def upload_csv(file: UploadFile = File(...)):
         )
 
 
+        if len(results) != len(analysis_df):
+
+            raise Exception(
+                "Final AI result count does not "
+                "match uploaded processed rows. "
+                f"Expected {len(analysis_df)}, "
+                f"received {len(results)}."
+            )
+
+
         # ====================================================
-        # STORE THEME AND PAIN POINT RESULTS
+        # STORE AI RESULTS
         # ====================================================
+
+        categories = []
+
+        sentiments = []
+
+        priorities = []
 
         themes = []
+
         pain_points = []
+
+        recommendations = []
 
 
         for item in results:
 
+            categories.append(
+                item.get(
+                    "category",
+                    "General Delivery Feedback",
+                )
+            )
+
+            sentiments.append(
+                item.get(
+                    "sentiment",
+                    "Neutral",
+                )
+            )
+
+            priorities.append(
+                item.get(
+                    "priority",
+                    "Low",
+                )
+            )
+
             themes.append(
                 item.get(
                     "theme",
-                    "Unknown"
+                    "None",
                 )
             )
 
             pain_points.append(
                 item.get(
                     "pain_point",
-                    "Unknown"
+                    "None",
+                )
+            )
+
+            recommendations.append(
+                item.get(
+                    "ai_recommendation",
+                    "None",
                 )
             )
 
 
         # ====================================================
-        # SAFETY CHECK
+        # WRITE AI COLUMNS
         # ====================================================
 
-        if len(results) == len(analysis_df):
+        analysis_df[
+            "category"
+        ] = categories
 
-            analysis_df["theme"] = themes
+        analysis_df[
+            "sentiment"
+        ] = sentiments
 
-            analysis_df["pain_point"] = pain_points
+        analysis_df[
+            "priority"
+        ] = priorities
 
-            print(
-                "[OK] Result count matches feedback count"
-            )
+        analysis_df[
+            "theme"
+        ] = themes
 
-        else:
+        analysis_df[
+            "pain_point"
+        ] = pain_points
 
-            print(
-                "[WARN] Result count mismatch"
-            )
-
-            print(
-                "Expected:",
-                len(analysis_df)
-            )
-
-            print(
-                "Received:",
-                len(results)
-            )
-
-            # Keep columns but mark unavailable results
-            analysis_df["theme"] = None
-
-            analysis_df["pain_point"] = None
+        analysis_df[
+            "ai_recommendation"
+        ] = recommendations
 
 
-        # ====================================================
-        # SAVE ANALYZED DATASET
-        # ====================================================
-
-        analysis_df.to_csv(
-            processed_path,
-            index=False
+        print(
+            "[OK] Category Classification"
         )
 
         print(
-            "[OK] Analyzed dataset saved"
+            "[OK] Sentiment Analysis"
+        )
+
+        print(
+            "[OK] Priority Detection"
         )
 
         print(
@@ -407,6 +849,34 @@ async def upload_csv(file: UploadFile = File(...)):
 
         print(
             "[OK] Pain Point Detection"
+        )
+
+        print(
+            "[OK] AI Recommendations"
+        )
+
+
+        # ====================================================
+        # SAVE UPLOAD-SPECIFIC ANALYSIS
+        # ====================================================
+
+        upload_stem = Path(
+            safe_filename
+        ).stem
+
+        analyzed_path = (
+            PROCESSED_FOLDER
+            / f"{upload_stem}_analyzed.csv"
+        )
+
+        analysis_df.to_csv(
+            analyzed_path,
+            index=False,
+        )
+
+        print(
+            "[OK] Upload-specific analyzed dataset saved:",
+            analyzed_path,
         )
 
 
@@ -451,13 +921,16 @@ async def upload_csv(file: UploadFile = File(...)):
         return {
 
             "message":
-                "CSV uploaded successfully",
+                "CSV uploaded and analyzed successfully",
 
             "filename":
-                file.filename,
+                safe_filename,
 
             "rows":
                 len(df),
+
+            "matched_processed_rows":
+                len(analysis_df),
 
             "processed_rows":
                 len(results),
@@ -465,37 +938,108 @@ async def upload_csv(file: UploadFile = File(...)):
             "columns":
                 df.columns.tolist(),
 
+            "analyzed_file":
+                str(analyzed_path),
+
+
+            # ------------------------------------------------
+            # AI ANALYSIS
+            # ------------------------------------------------
+
+            "ai_analysis": [
+
+                {
+                    "feedback":
+                        item.get(
+                            "feedback",
+                            "",
+                        ),
+
+                    "category":
+                        item.get(
+                            "category",
+                            "General Delivery Feedback",
+                        ),
+
+                    "sentiment":
+                        item.get(
+                            "sentiment",
+                            "Neutral",
+                        ),
+
+                    "priority":
+                        item.get(
+                            "priority",
+                            "Low",
+                        ),
+
+                    "theme":
+                        item.get(
+                            "theme",
+                            "None",
+                        ),
+
+                    "pain_point":
+                        item.get(
+                            "pain_point",
+                            "None",
+                        ),
+
+                    "ai_recommendation":
+                        item.get(
+                            "ai_recommendation",
+                            "None",
+                        ),
+                }
+
+                for item in results
+            ],
+
+
+            # ------------------------------------------------
+            # BACKWARD-COMPATIBLE THEME EXTRACTION
+            # ------------------------------------------------
+
             "theme_extraction": [
 
                 {
                     "feedback":
                         item.get(
                             "feedback",
-                            ""
+                            "",
                         ),
 
                     "theme":
                         item.get(
                             "theme",
-                            "Unknown"
+                            "None",
                         ),
 
                     "pain_point":
                         item.get(
                             "pain_point",
-                            "Unknown"
-                        )
+                            "None",
+                        ),
                 }
 
                 for item in results
-
             ],
+
+
+            # ------------------------------------------------
+            # TREND ANALYSIS
+            # ------------------------------------------------
 
             "trend_analysis":
                 trend_result,
 
+
+            # ------------------------------------------------
+            # FEATURE CLUSTERS
+            # ------------------------------------------------
+
             "feature_clusters":
-                feature_clusters
+                feature_clusters,
         }
 
 
@@ -503,7 +1047,10 @@ async def upload_csv(file: UploadFile = File(...)):
     # ERROR HANDLING
     # ========================================================
 
-    except Exception as e:
+    except HTTPException:
+        raise
+
+    except Exception as exc:
 
         print(
             "\n========== ERROR =========="
@@ -513,5 +1060,5 @@ async def upload_csv(file: UploadFile = File(...)):
 
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=str(exc),
         )
