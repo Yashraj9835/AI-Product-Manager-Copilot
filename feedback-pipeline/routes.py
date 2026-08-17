@@ -36,6 +36,8 @@ class CopilotRequest(BaseModel):
 class PRDRequest(BaseModel):
     question: str = ""
     feature: str = ""
+    sections: list[str] | None = None
+    num_stories: int = 3
 
 
 # ============================================================
@@ -43,51 +45,458 @@ class PRDRequest(BaseModel):
 # ============================================================
 
 @router.post("/prd")
+@router.post("/prd/generate")
 async def generate_prd(req: PRDRequest):
     """
-    Generate a Product Requirements Document (PRD)
-    using the Groq LLM.
+    Generate a context-aware Product Requirements Document.
+
+    Flow:
+
+        Feature
+          ↓
+        Processed feedback dataset
+          ↓
+        Related customer feedback
+          ↓
+        Themes / pain points / priorities
+          ↓
+        Rating + feedback signals
+          ↓
+        Segment information
+          ↓
+        Real customer quotes
+          ↓
+        Context-rich LLM prompt
+          ↓
+        Structured JSON PRD
+          ↓
+        JSON validation
+          ↓
+        Return PRD
     """
 
+    # ========================================================
+    # 1. DETERMINE FEATURE
+    # ========================================================
+
     topic = (
-        req.question
-        or req.feature
+        (req.feature or "").strip()
+        or (req.question or "").strip()
         or "New Product Feature"
     )
+
+    # ========================================================
+    # 2. LOAD PROCESSED DATASET
+    # ========================================================
+
+    processed_path = Path(
+        "dataset/processed/final_feedback_dataset.csv"
+    )
+
+    if not processed_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Processed feedback dataset not found. "
+                "Run the feedback pipeline first."
+            ),
+        )
+
+    try:
+        feedback_df = pd.read_csv(
+            processed_path
+        )
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"Could not read feedback dataset: {exc}"
+            ),
+        )
+
+    # ========================================================
+    # 3. VALIDATE DATASET
+    # ========================================================
+
+    if "feedback_text" not in feedback_df.columns:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "feedback_text column is missing from "
+                "the processed feedback dataset."
+            ),
+        )
+
+    if feedback_df.empty:
+        raise HTTPException(
+            status_code=404,
+            detail="Processed feedback dataset contains no rows.",
+        )
+
+    # ========================================================
+    # 4. FIND RELATED FEEDBACK
+    # ========================================================
+
+    topic_words = [
+        word.lower()
+        for word in topic.split()
+        if len(word) > 2
+    ]
+
+    if topic_words:
+
+        search_mask = (
+            feedback_df["feedback_text"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
+            .apply(
+                lambda text: any(
+                    word in text
+                    for word in topic_words
+                )
+            )
+        )
+
+        related_df = feedback_df[
+            search_mask
+        ].copy()
+
+    else:
+
+        related_df = feedback_df.copy()
+
+    # --------------------------------------------------------
+    # FALLBACK
+    # --------------------------------------------------------
+
+    # If the feature does not have an exact keyword match,
+    # still provide real customer feedback to the LLM.
+
+    if related_df.empty:
+        related_df = feedback_df.copy()
+
+    # Keep the context reasonably small.
+    related_df = related_df.head(50)
+
+    # ========================================================
+    # 5. HELPER FUNCTION
+    # ========================================================
+
+    def get_counts(
+        dataframe: pd.DataFrame,
+        column: str,
+    ) -> dict:
+
+        if column not in dataframe.columns:
+            return {}
+
+        values = (
+            dataframe[column]
+            .fillna("Unknown")
+            .astype(str)
+            .str.strip()
+        )
+
+        values = values[
+            values != ""
+        ]
+
+        if values.empty:
+            return {}
+
+        return (
+            values
+            .value_counts()
+            .head(10)
+            .to_dict()
+        )
+
+    # ========================================================
+    # 6. ACTUAL DATASET ANALYTICS
+    # ========================================================
+
+    # The current dataset uses:
+    #
+    # sentiment_hint
+    # feedback_priority
+    # theme
+    # pain_point
+    #
+    # rather than:
+    #
+    # sentiment
+    # priority
+    # category
+
+    category_counts = get_counts(
+        related_df,
+        "category",
+    )
+
+    sentiment_counts = get_counts(
+        related_df,
+        "sentiment_hint",
+    )
+
+    priority_counts = get_counts(
+        related_df,
+        "feedback_priority",
+    )
+
+    theme_counts = get_counts(
+        related_df,
+        "theme",
+    )
+
+    pain_point_counts = get_counts(
+        related_df,
+        "pain_point",
+    )
+
+    # ========================================================
+    # 7. RATING ANALYSIS
+    # ========================================================
+
+    rating_summary = {}
+
+    if "rating" in related_df.columns:
+
+        ratings = pd.to_numeric(
+            related_df["rating"],
+            errors="coerce",
+        ).dropna()
+
+        if not ratings.empty:
+
+            rating_summary = {
+                "average_rating": round(
+                    float(ratings.mean()),
+                    2,
+                ),
+                "minimum_rating": float(
+                    ratings.min()
+                ),
+                "maximum_rating": float(
+                    ratings.max()
+                ),
+                "rating_count": int(
+                    ratings.count()
+                ),
+            }
+
+    # ========================================================
+    # 8. FEEDBACK SIGNALS
+    # ========================================================
+
+    feedback_signals = {}
+
+    signal_columns = [
+        "contains_complaint",
+        "contains_praise",
+        "contains_request",
+        "contains_bug",
+        "contains_delivery_issue",
+        "contains_service_issue",
+        "contains_food_issue",
+    ]
+
+    for column in signal_columns:
+
+        if column not in related_df.columns:
+            continue
+
+        values = (
+            related_df[column]
+            .fillna(False)
+            .astype(str)
+            .str.lower()
+            .str.strip()
+        )
+
+        feedback_signals[column] = int(
+            values.isin(
+                [
+                    "true",
+                    "1",
+                    "yes",
+                ]
+            ).sum()
+        )
+
+    # ========================================================
+    # 9. SEGMENT BREAKDOWN
+    # ========================================================
+
+    segment_breakdown = {}
+
+    segment_columns = [
+        "platform",
+        "source",
+        "language",
+        "city",
+        "visit_type",
+    ]
+
+    for column in segment_columns:
+
+        if column in related_df.columns:
+
+            segment_breakdown[column] = get_counts(
+                related_df,
+                column,
+            )
+
+    # ========================================================
+    # 10. REAL CUSTOMER QUOTES
+    # ========================================================
+
+    customer_quotes = (
+        related_df["feedback_text"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+    )
+
+    customer_quotes = (
+        customer_quotes[
+            customer_quotes != ""
+        ]
+        .head(5)
+        .tolist()
+    )
+
+    # ========================================================
+    # 11. BUILD REAL PRODUCT CONTEXT
+    # ========================================================
+
+    context = f"""
+FEATURE / TOPIC:
+{topic}
+
+RELATED FEEDBACK COUNT:
+{len(related_df)}
+
+TOTAL DATASET FEEDBACK COUNT:
+{len(feedback_df)}
+
+CATEGORY BREAKDOWN:
+{json.dumps(category_counts, indent=2)}
+
+SENTIMENT BREAKDOWN:
+{json.dumps(sentiment_counts, indent=2)}
+
+PRIORITY BREAKDOWN:
+{json.dumps(priority_counts, indent=2)}
+
+TOP THEMES:
+{json.dumps(theme_counts, indent=2)}
+
+TOP PAIN POINTS:
+{json.dumps(pain_point_counts, indent=2)}
+
+RATING SUMMARY:
+{json.dumps(rating_summary, indent=2)}
+
+FEEDBACK SIGNALS:
+{json.dumps(feedback_signals, indent=2)}
+
+SEGMENT BREAKDOWN:
+{json.dumps(segment_breakdown, indent=2)}
+
+REAL CUSTOMER QUOTES:
+{json.dumps(customer_quotes, indent=2)}
+"""
+
+    # ========================================================
+    # 12. REQUESTED PRD SECTIONS
+    # ========================================================
+
+    requested_sections = (
+        req.sections
+        if req.sections
+        else [
+            "problem_statement",
+            "target_users",
+            "goals",
+            "requirements",
+            "user_stories",
+            "acceptance_criteria",
+            "success_metrics",
+            "risks",
+        ]
+    )
+
+    story_count = max(
+        req.num_stories,
+        1,
+    )
+
+    # ========================================================
+    # 13. BUILD CONTEXT-RICH PROMPT
+    # ========================================================
 
     prompt = f"""
 You are an expert Product Manager.
 
-Generate a structured Product Requirements Document (PRD)
-for this feature or topic:
+Create a structured Product Requirements Document (PRD)
+for this feature:
 
 {topic}
 
-Return ONLY valid JSON.
-Do NOT use markdown code fences.
+IMPORTANT RULES:
 
-Required JSON structure:
+1. Use the provided customer feedback as evidence.
+2. Do not invent customer quotes.
+3. Do not invent statistics.
+4. Use real numbers from the provided context when useful.
+5. Use the actual themes and pain points.
+6. Use rating information when available.
+7. Consider the feedback signals.
+8. Consider the platform, source, language, city,
+   and visit-type information when relevant.
+9. If evidence is unavailable, say that evidence is
+   unavailable instead of inventing it.
+10. Return ONLY valid JSON.
+11. Do NOT return markdown.
+12. Do NOT use ```json.
+13. Do NOT include explanations outside JSON.
+
+REAL PRODUCT CONTEXT:
+
+{context}
+
+REQUESTED PRD SECTIONS:
+
+{json.dumps(requested_sections, indent=2)}
+
+Return exactly this JSON structure:
 
 {{
   "title": "PRD: {topic}",
-  "problem_statement": "Detailed problem statement...",
+
+  "problem_statement":
+    "Problem supported by customer evidence.",
+
   "target_users": [
-    "Target user 1",
-    "Target user 2"
+    "Target user"
   ],
+
   "goals": [
-    "Goal 1",
-    "Goal 2"
+    "Product goal"
   ],
+
   "requirements": [
-    "Requirement 1",
-    "Requirement 2"
+    "Functional requirement"
   ],
+
   "user_stories": [
     {{
       "story": "As a user, I want X so that Y"
     }}
   ],
+
   "acceptance_criteria": [
     {{
       "criteria": [
@@ -95,19 +504,28 @@ Required JSON structure:
       ]
     }}
   ],
+
   "success_metrics": [
-    "Metric 1",
-    "Metric 2"
+    "Measurable success metric"
   ],
+
   "risks": [
-    "Risk 1",
-    "Risk 2"
+    "Potential risk"
   ]
 }}
+
+Generate exactly {story_count} user stories.
 """
 
+    # ========================================================
+    # 14. CALL LLM
+    # ========================================================
+
     try:
-        raw_response = ask_llm(prompt)
+
+        raw_response = ask_llm(
+            prompt
+        )
 
         cleaned = (
             raw_response
@@ -116,52 +534,288 @@ Required JSON structure:
             .strip()
         )
 
-        return json.loads(cleaned)
+        result = json.loads(
+            cleaned
+        )
 
-    except Exception:
-        return {
-            "title": f"PRD: {topic}",
-            "problem_statement": (
-                f"Define requirements for {topic}"
+    except Exception as first_error:
+
+        error_text = str(
+            first_error
+        ).lower()
+
+        # ----------------------------------------------------
+        # RATE LIMIT
+        # ----------------------------------------------------
+
+        if (
+            "429" in error_text
+            or "rate limit" in error_text
+            or "rate_limit" in error_text
+        ):
+
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "Groq API rate limit reached. "
+                    "Please wait until the Groq token limit "
+                    "resets before generating the PRD."
+                ),
+            )
+
+        print(
+            "[WARN] First PRD generation attempt failed:"
+        )
+
+        print(
+            first_error
+        )
+
+        # ----------------------------------------------------
+        # RETRY ONCE
+        # ----------------------------------------------------
+
+        retry_prompt = prompt + """
+
+RETRY INSTRUCTION:
+
+The previous response could not be parsed.
+
+Return ONLY one valid JSON object.
+
+The JSON MUST contain:
+
+title
+problem_statement
+target_users
+goals
+requirements
+user_stories
+acceptance_criteria
+success_metrics
+risks
+
+Do not include markdown.
+Do not include explanations.
+"""
+
+        try:
+
+            raw_response = ask_llm(
+                retry_prompt
+            )
+
+            cleaned = (
+                raw_response
+                .replace("```json", "")
+                .replace("```", "")
+                .strip()
+            )
+
+            result = json.loads(
+                cleaned
+            )
+
+        except Exception as second_error:
+
+            error_text = str(
+                second_error
+            ).lower()
+
+            if (
+                "429" in error_text
+                or "rate limit" in error_text
+                or "rate_limit" in error_text
+            ):
+
+                raise HTTPException(
+                    status_code=429,
+                    detail=(
+                        "Groq API rate limit reached. "
+                        "Please wait until the token limit "
+                        "resets."
+                    ),
+                )
+
+            print(
+                "[ERROR] PRD generation failed after retry:"
+            )
+
+            print(
+                second_error
+            )
+
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "PRD generation failed because the "
+                    "LLM returned an invalid response."
+                ),
+            )
+
+    # ========================================================
+    # 15. VALIDATE REQUIRED PRD SECTIONS
+    # ========================================================
+
+    required_keys = [
+        "title",
+        "problem_statement",
+        "target_users",
+        "goals",
+        "requirements",
+        "user_stories",
+        "acceptance_criteria",
+        "success_metrics",
+        "risks",
+    ]
+
+    missing_sections = [
+        key
+        for key in required_keys
+        if key not in result
+    ]
+
+    if missing_sections:
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Generated PRD is incomplete.",
+                "missing_sections": missing_sections,
+            },
+        )
+
+    # ========================================================
+    # 16. VALIDATE USER STORIES
+    # ========================================================
+
+    valid_stories = []
+
+    for story in result.get(
+        "user_stories",
+        [],
+    ):
+
+        if (
+            isinstance(story, dict)
+            and story.get("story")
+        ):
+
+            valid_stories.append(
+                story
+            )
+
+    if not valid_stories:
+
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Generated PRD contains no valid "
+                "user stories."
             ),
-            "target_users": [
-                "General Users",
-                "Product Administrators",
-            ],
-            "goals": [
-                "Improve user satisfaction",
-                "Streamline product workflow",
-            ],
-            "requirements": [
-                "Requirement 1: System stability",
-                "Requirement 2: User interface clarity",
-            ],
-            "user_stories": [
+        )
+
+    result[
+        "user_stories"
+    ] = valid_stories
+
+    # ========================================================
+    # 17. VALIDATE ACCEPTANCE CRITERIA
+    # ========================================================
+
+    valid_criteria = []
+
+    for item in result.get(
+        "acceptance_criteria",
+        [],
+    ):
+
+        if not isinstance(
+            item,
+            dict,
+        ):
+            continue
+
+        criteria = item.get(
+            "criteria"
+        )
+
+        if (
+            isinstance(
+                criteria,
+                list,
+            )
+            and criteria
+        ):
+
+            valid_criteria.append(
                 {
-                    "story": (
-                        f"As a user, I want to use {topic} "
-                        "easily so that my tasks are completed fast"
-                    )
+                    "criteria": criteria
                 }
-            ],
-            "acceptance_criteria": [
-                {
-                    "criteria": [
-                        "Given the user accesses the feature, "
-                        "when input is provided, then valid "
-                        "output is displayed"
-                    ]
-                }
-            ],
-            "success_metrics": [
-                "User adoption rate > 80%",
-                "Customer satisfaction score > 4.5/5",
-            ],
-            "risks": [
-                "Potential integration delays",
-                "User onboarding overhead",
-            ],
-        }
+            )
+
+    if not valid_criteria:
+
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Generated PRD contains no valid "
+                "acceptance criteria."
+            ),
+        )
+
+    result[
+        "acceptance_criteria"
+    ] = valid_criteria
+
+    # ========================================================
+    # 18. GENERATION METADATA
+    # ========================================================
+
+    result[
+        "generation_metadata"
+    ] = {
+        "feature": topic,
+
+        "related_feedback_count":
+            len(related_df),
+
+        "total_feedback_count":
+            len(feedback_df),
+
+        "context_sources": [
+            "customer_feedback",
+            "sentiment_hint",
+            "feedback_priority",
+            "theme",
+            "pain_point",
+            "rating",
+            "feedback_signals",
+            "segment_breakdown",
+        ],
+
+        "model_context":
+            "Groq",
+
+        "status":
+            "draft",
+    }
+
+    print(
+        "[OK] Context-aware PRD generated"
+    )
+
+    print(
+        "[OK] Feature:",
+        topic,
+    )
+
+    print(
+        "[OK] Related feedback:",
+        len(related_df),
+    )
+
+    return result
 
 
 # ============================================================
@@ -169,12 +823,18 @@ Required JSON structure:
 # ============================================================
 
 @router.post("/copilot")
-async def copilot_chat(req: CopilotRequest):
+async def copilot_chat(
+    req: CopilotRequest,
+):
     """
     Copilot conversational endpoint using Groq LLM.
     """
 
-    if not req.question or not req.question.strip():
+    if (
+        not req.question
+        or not req.question.strip()
+    ):
+
         raise HTTPException(
             status_code=400,
             detail="Question cannot be empty",
@@ -193,7 +853,10 @@ User Question:
 """
 
     try:
-        answer = ask_llm(prompt)
+
+        answer = ask_llm(
+            prompt
+        )
 
         return {
             "intent": "analyze",
@@ -201,6 +864,25 @@ User Question:
         }
 
     except Exception as exc:
+
+        error_text = str(
+            exc
+        ).lower()
+
+        if (
+            "429" in error_text
+            or "rate limit" in error_text
+            or "rate_limit" in error_text
+        ):
+
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "Groq API rate limit reached. "
+                    "Please wait until the limit resets."
+                ),
+            )
+
         raise HTTPException(
             status_code=500,
             detail=str(exc),
@@ -211,12 +893,15 @@ User Question:
 # FOLDERS
 # ============================================================
 
-UPLOAD_FOLDER = Path("uploads")
+UPLOAD_FOLDER = Path(
+    "uploads"
+)
 
 UPLOAD_FOLDER.mkdir(
     parents=True,
     exist_ok=True,
 )
+
 
 SOURCE_FOLDER = Path(
     "dataset/source_data"
@@ -226,6 +911,7 @@ SOURCE_FOLDER.mkdir(
     parents=True,
     exist_ok=True,
 )
+
 
 PROCESSED_FOLDER = Path(
     "dataset/processed"
@@ -248,11 +934,6 @@ async def upload_csv(
     """
     Complete feedback-analysis pipeline.
 
-    IMPORTANT:
-    The preprocessing pipeline may rebuild the combined
-    historical dataset, but AI analysis is performed ONLY
-    on records belonging to the CSV uploaded in this request.
-
     Flow:
 
         CSV upload
@@ -261,7 +942,7 @@ async def upload_csv(
             ↓
         identify uploaded records
             ↓
-        Groq batch analysis ONLY for uploaded records
+        Groq batch analysis
             ↓
         category / sentiment / priority
             ↓
@@ -283,24 +964,27 @@ async def upload_csv(
     try:
 
         # ====================================================
-        # VALIDATE FILE
+        # 1. VALIDATE FILE
         # ====================================================
 
         if not file.filename:
+
             raise HTTPException(
                 status_code=400,
                 detail="No filename provided.",
             )
 
-        if not file.filename.lower().endswith(".csv"):
+        if not file.filename.lower().endswith(
+            ".csv"
+        ):
+
             raise HTTPException(
                 status_code=400,
                 detail="Only CSV files are supported.",
             )
 
-
         # ====================================================
-        # SAFE FILE NAME
+        # 2. SAFE FILE NAME
         # ====================================================
 
         safe_filename = Path(
@@ -312,9 +996,8 @@ async def upload_csv(
             / safe_filename
         )
 
-
         # ====================================================
-        # SAVE UPLOADED FILE
+        # 3. SAVE UPLOADED FILE
         # ====================================================
 
         with open(
@@ -332,9 +1015,8 @@ async def upload_csv(
             filepath,
         )
 
-
         # ====================================================
-        # READ UPLOADED CSV
+        # 4. READ UPLOADED CSV
         # ====================================================
 
         df = pd.read_csv(
@@ -354,16 +1036,15 @@ async def upload_csv(
             len(df),
         )
 
-
         if df.empty:
+
             raise HTTPException(
                 status_code=400,
                 detail="Uploaded CSV contains no rows.",
             )
 
-
         # ====================================================
-        # IDENTIFY UPLOADED RECORDS
+        # 5. IDENTIFY UPLOADED RECORDS
         # ====================================================
 
         uploaded_feedback_ids = set()
@@ -390,7 +1071,6 @@ async def upload_csv(
                 .tolist()
             )
 
-
         print(
             "Uploaded feedback IDs:",
             len(uploaded_feedback_ids),
@@ -401,9 +1081,8 @@ async def upload_csv(
             len(uploaded_feedback_texts),
         )
 
-
         # ====================================================
-        # COPY TO SOURCE DATA
+        # 6. COPY TO SOURCE DATA
         # ====================================================
 
         destination = (
@@ -420,9 +1099,8 @@ async def upload_csv(
             "[OK] Copied to source_data"
         )
 
-
         # ====================================================
-        # PREPROCESSING
+        # 7. PREPROCESSING
         # ====================================================
 
         print(
@@ -459,14 +1137,13 @@ async def upload_csv(
             "[OK] feature_engineering"
         )
 
-
         # ====================================================
-        # LOAD FULL PROCESSED DATASET
+        # 8. LOAD PROCESSED DATASET
         # ====================================================
 
-        processed_path = Path(
-            "dataset/processed/"
-            "final_feedback_dataset.csv"
+        processed_path = (
+            PROCESSED_FOLDER
+            / "final_feedback_dataset.csv"
         )
 
         if not processed_path.exists():
@@ -484,9 +1161,8 @@ async def upload_csv(
             len(full_processed_df),
         )
 
-
         # ====================================================
-        # CHECK FEEDBACK COLUMN
+        # 9. CHECK FEEDBACK COLUMN
         # ====================================================
 
         if (
@@ -500,21 +1176,18 @@ async def upload_csv(
                 f"{full_processed_df.columns.tolist()}"
             )
 
-
         # ====================================================
-        # FILTER ONLY UPLOADED RECORDS
+        # 10. FILTER UPLOADED RECORDS
         # ====================================================
 
         print(
             "========== FILTERING UPLOADED RECORDS =========="
         )
 
-
         analysis_df = pd.DataFrame()
 
-
         # ----------------------------------------------------
-        # FIRST TRY: feedback_id
+        # FIRST: MATCH BY FEEDBACK ID
         # ----------------------------------------------------
 
         if (
@@ -538,9 +1211,8 @@ async def upload_csv(
                 )
             ].copy()
 
-
         # ----------------------------------------------------
-        # SECOND TRY: feedback_text
+        # SECOND: MATCH BY FEEDBACK TEXT
         # ----------------------------------------------------
 
         if analysis_df.empty:
@@ -560,11 +1232,6 @@ async def upload_csv(
                 )
             ].copy()
 
-
-        # ----------------------------------------------------
-        # VERIFY FILTER RESULT
-        # ----------------------------------------------------
-
         print(
             "Uploaded rows:",
             len(df),
@@ -575,7 +1242,6 @@ async def upload_csv(
             len(analysis_df),
         )
 
-
         if analysis_df.empty:
 
             raise Exception(
@@ -583,9 +1249,8 @@ async def upload_csv(
                 "to the processed dataset."
             )
 
-
         # ====================================================
-        # PREPARE FEEDBACK
+        # 11. PREPARE FEEDBACK
         # ====================================================
 
         print(
@@ -606,26 +1271,22 @@ async def upload_csv(
             len(feedbacks),
         )
 
-
         # ====================================================
-        # GROQ BATCH ANALYSIS
+        # 12. GROQ BATCH ANALYSIS
         # ====================================================
 
         print(
             "========== GROQ BATCH ANALYSIS =========="
         )
 
-        # Small batch to control token usage.
         batch_size = 5
 
-        # Delay between requests.
         batch_delay_seconds = 3
 
         results = []
 
-
         # ====================================================
-        # PROCESS ONLY UPLOADED RECORDS
+        # 13. PROCESS BATCHES
         # ====================================================
 
         for i in range(
@@ -649,18 +1310,12 @@ async def upload_csv(
                 f"{batch_start} - {batch_end}"
             )
 
-
-            # ------------------------------------------------
-            # CALL BATCH ANALYZER
-            # ------------------------------------------------
-
             batch_result = analyze_batch(
                 batch
             )
 
-
             # ------------------------------------------------
-            # VERIFY BATCH RESULT COUNT
+            # VERIFY RESULT COUNT
             # ------------------------------------------------
 
             if len(batch_result) != len(batch):
@@ -671,24 +1326,17 @@ async def upload_csv(
                     f"received {len(batch_result)}."
                 )
 
-
             print(
                 f"Batch returned "
                 f"{len(batch_result)} results"
             )
 
-
-            # ------------------------------------------------
-            # ADD RESULTS
-            # ------------------------------------------------
-
             results.extend(
                 batch_result
             )
 
-
             # ------------------------------------------------
-            # RATE LIMIT DELAY
+            # DELAY
             # ------------------------------------------------
 
             if (
@@ -706,9 +1354,8 @@ async def upload_csv(
                     batch_delay_seconds
                 )
 
-
         # ====================================================
-        # FINAL RESULT COUNT
+        # 14. FINAL RESULT COUNT
         # ====================================================
 
         print(
@@ -729,8 +1376,9 @@ async def upload_csv(
             "======================================"
         )
 
-
-        if len(results) != len(analysis_df):
+        if len(results) != len(
+            analysis_df
+        ):
 
             raise Exception(
                 "Final AI result count does not "
@@ -739,9 +1387,8 @@ async def upload_csv(
                 f"received {len(results)}."
             )
 
-
         # ====================================================
-        # STORE AI RESULTS
+        # 15. STORE AI RESULTS
         # ====================================================
 
         categories = []
@@ -755,7 +1402,6 @@ async def upload_csv(
         pain_points = []
 
         recommendations = []
-
 
         for item in results:
 
@@ -801,9 +1447,8 @@ async def upload_csv(
                 )
             )
 
-
         # ====================================================
-        # WRITE AI COLUMNS
+        # 16. WRITE AI COLUMNS
         # ====================================================
 
         analysis_df[
@@ -830,7 +1475,6 @@ async def upload_csv(
             "ai_recommendation"
         ] = recommendations
 
-
         print(
             "[OK] Category Classification"
         )
@@ -855,9 +1499,8 @@ async def upload_csv(
             "[OK] AI Recommendations"
         )
 
-
         # ====================================================
-        # SAVE UPLOAD-SPECIFIC ANALYSIS
+        # 17. SAVE UPLOAD-SPECIFIC ANALYSIS
         # ====================================================
 
         upload_stem = Path(
@@ -879,9 +1522,8 @@ async def upload_csv(
             analyzed_path,
         )
 
-
         # ====================================================
-        # TREND ANALYSIS
+        # 18. TREND ANALYSIS
         # ====================================================
 
         print(
@@ -896,9 +1538,8 @@ async def upload_csv(
             "[OK] Trend Analysis"
         )
 
-
         # ====================================================
-        # FEATURE CLUSTERING
+        # 19. FEATURE CLUSTERING
         # ====================================================
 
         print(
@@ -913,13 +1554,11 @@ async def upload_csv(
             "[OK] Feature Clustering"
         )
 
-
         # ====================================================
-        # API RESPONSE
+        # 20. API RESPONSE
         # ====================================================
 
         return {
-
             "message":
                 "CSV uploaded and analyzed successfully",
 
@@ -940,7 +1579,6 @@ async def upload_csv(
 
             "analyzed_file":
                 str(analyzed_path),
-
 
             # ------------------------------------------------
             # AI ANALYSIS
@@ -995,9 +1633,8 @@ async def upload_csv(
                 for item in results
             ],
 
-
             # ------------------------------------------------
-            # BACKWARD-COMPATIBLE THEME EXTRACTION
+            # THEME EXTRACTION
             # ------------------------------------------------
 
             "theme_extraction": [
@@ -1025,14 +1662,12 @@ async def upload_csv(
                 for item in results
             ],
 
-
             # ------------------------------------------------
             # TREND ANALYSIS
             # ------------------------------------------------
 
             "trend_analysis":
                 trend_result,
-
 
             # ------------------------------------------------
             # FEATURE CLUSTERS
@@ -1041,7 +1676,6 @@ async def upload_csv(
             "feature_clusters":
                 feature_clusters,
         }
-
 
     # ========================================================
     # ERROR HANDLING
@@ -1057,6 +1691,24 @@ async def upload_csv(
         )
 
         traceback.print_exc()
+
+        error_text = str(
+            exc
+        ).lower()
+
+        if (
+            "429" in error_text
+            or "rate limit" in error_text
+            or "rate_limit" in error_text
+        ):
+
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "Groq API rate limit reached. "
+                    "Please wait until the limit resets."
+                ),
+            )
 
         raise HTTPException(
             status_code=500,
