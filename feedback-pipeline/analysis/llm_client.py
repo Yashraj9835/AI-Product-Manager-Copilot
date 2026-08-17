@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from groq import Groq
+from openai import OpenAI
 
 
 # ============================================================
@@ -28,28 +28,32 @@ else:
 
 
 # ============================================================
-# GROQ API KEY
+# GEMINI API KEY
 # ============================================================
 
 api_key = os.getenv(
-    "GROQ_API_KEY"
+    "GEMINI_API_KEY"
 )
 
 if not api_key:
     raise ValueError(
-        "GROQ_API_KEY not found in .env"
+        "GEMINI_API_KEY not found in .env"
     )
 
 
-print("[OK] Groq API Key Loaded")
+print("[OK] Gemini API Key Loaded")
 
 
 # ============================================================
-# GROQ CLIENT
+# GEMINI CLIENT
 # ============================================================
 
-client = Groq(
-    api_key=api_key
+client = OpenAI(
+    api_key=api_key,
+    base_url=(
+        "https://generativelanguage.googleapis.com/"
+        "v1beta/openai/"
+    ),
 )
 
 
@@ -57,10 +61,7 @@ client = Groq(
 # MODEL
 # ============================================================
 
-# This model is confirmed to be available
-# for the current Groq API key.
-
-GROQ_MODEL = "openai/gpt-oss-20b"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 
 # ============================================================
@@ -71,23 +72,55 @@ def ask_llm(
     prompt: str,
 ) -> str:
     """
-    Send a prompt to Groq and return
+    Send a prompt to Gemini and return
     the generated text.
+
+    JSON mode is enabled only when the
+    prompt explicitly requests valid JSON.
+
+    This keeps normal Copilot responses
+    as normal text.
     """
 
-    response = client.chat.completions.create(
-        model=GROQ_MODEL,
+    request_options = {
+        "model": GEMINI_MODEL,
 
-        messages=[
+        "messages": [
             {
                 "role": "user",
                 "content": prompt,
             }
         ],
 
-        temperature=0.1,
-        max_tokens=1024,
-   )
+        "temperature": 0.1,
+        "max_tokens": 4096,
+    }
+
+    # --------------------------------------------------------
+    # ENABLE JSON MODE ONLY FOR JSON REQUESTS
+    # --------------------------------------------------------
+
+    prompt_lower = prompt.lower()
+
+    json_requested = (
+        "generate only valid json" in prompt_lower
+        or "return only valid json" in prompt_lower
+        or "return exactly this json structure" in prompt_lower
+    )
+
+    if json_requested:
+        request_options["response_format"] = {
+            "type": "json_object"
+        }
+
+    # --------------------------------------------------------
+    # SEND REQUEST
+    # --------------------------------------------------------
+
+    response = client.chat.completions.create(
+        **request_options
+    )
+
     content = (
         response
         .choices[0]
@@ -97,7 +130,7 @@ def ask_llm(
 
     if not content:
         raise ValueError(
-            "Groq returned an empty response"
+            "Gemini returned an empty response"
         )
 
     return content.strip()

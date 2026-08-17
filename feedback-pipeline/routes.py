@@ -391,7 +391,7 @@ async def generate_prd(
 
     # Keep context reasonably small.
 
-    related_df = related_df.head(50)
+    related_df = related_df.head(15)
 
     # ========================================================
     # 5. DATASET ANALYTICS
@@ -974,7 +974,7 @@ Do not include explanations.
         ],
 
         "model_context":
-            "Groq",
+            "Gemini",
 
         "status":
             "draft",
