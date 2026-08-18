@@ -140,9 +140,3 @@ Thumbs.db
 
 database.txt
 .env
-
-.env
-*.env
-.env.example*.zip
-*.zip
-.env.example
