@@ -1,255 +1,103 @@
 import { Request, Response, NextFunction } from 'express';
 import { Feedback } from '../models/Feedback';
-import { Upload } from '../models/Upload';
 
 /**
  * GET /api/stats
- *
- * Dashboard statistics.
- *
- * If uploadId is supplied:
- *
- *   /api/stats?uploadId=XXXXXXXX
- *
- * ONLY that uploaded dataset is used.
- *
- * Without uploadId, statistics are calculated across all feedback.
+ * Dashboard statistics aggregated directly in MongoDB.
  */
 export async function getStats(
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> {
   try {
-    const uploadId =
-      typeof req.query.uploadId === 'string'
-        ? req.query.uploadId.trim()
-        : '';
+    const [total, byCategory, bySentiment, byPriority, bySource, weeklyVolume] =
+      await Promise.all([
+        Feedback.countDocuments(),
 
-    // ---------------------------------------------------------
-    // Build dashboard filter
-    // ---------------------------------------------------------
+        Feedback.aggregate([
+          { $match: { category: { $ne: null } } },
+          { $group: { _id: '$category', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+        ]),
 
-    const filter: Record<string, any> = {};
+        Feedback.aggregate([
+          { $match: { sentiment: { $ne: null } } },
+          { $group: { _id: '$sentiment', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+        ]),
 
-    if (uploadId) {
-      filter.uploadId = uploadId;
-    }
+        Feedback.aggregate([
+          { $match: { priority: { $ne: null } } },
+          { $group: { _id: '$priority', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+        ]),
 
-    // ---------------------------------------------------------
-    // Load selected upload information
-    // ---------------------------------------------------------
+        Feedback.aggregate([
+          { $match: { source: { $ne: null } } },
+          { $group: { _id: '$source', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+        ]),
 
-    let upload = null;
-
-    if (uploadId) {
-      upload = await Upload.findById(uploadId).lean();
-
-      if (!upload) {
-        res.status(404).json({
-          success: false,
-          error: `Upload "${uploadId}" not found`,
-        });
-        return;
-      }
-    }
-
-    // ---------------------------------------------------------
-    // Aggregate dashboard data
-    // ---------------------------------------------------------
-
-    const [
-      total,
-      byCategory,
-      bySentiment,
-      byPriority,
-      bySource,
-      byTheme,
-    ] = await Promise.all([
-      // Total feedback
-      Feedback.countDocuments(filter),
-
-      // Category
-      Feedback.aggregate([
-        { $match: filter },
-
-        {
-          $match: {
-            category: {
-              $nin: [null, ''],
+        // Last 8 calendar weeks, calculated directly from MongoDB.
+        Feedback.aggregate([
+          {
+            $match: {
+              createdAt: { $ne: null },
             },
           },
-        },
-
-        {
-          $group: {
-            _id: '$category',
-            count: { $sum: 1 },
-          },
-        },
-
-        {
-          $sort: {
-            count: -1,
-          },
-        },
-      ]),
-
-      // Sentiment
-      Feedback.aggregate([
-        { $match: filter },
-
-        {
-          $match: {
-            sentiment: {
-              $nin: [null, ''],
+          {
+            $group: {
+              _id: {
+                $dateTrunc: {
+                  date: '$createdAt',
+                  unit: 'week',
+                  startOfWeek: 'monday',
+                },
+              },
+              feedback: { $sum: 1 },
+              themes: {
+                $addToSet: '$category',
+              },
             },
           },
-        },
-
-        {
-          $group: {
-            _id: '$sentiment',
-            count: { $sum: 1 },
-          },
-        },
-
-        {
-          $sort: {
-            count: -1,
-          },
-        },
-      ]),
-
-      // Priority
-      Feedback.aggregate([
-        { $match: filter },
-
-        {
-          $match: {
-            priority: {
-              $nin: [null, ''],
+          {
+            $project: {
+              _id: 0,
+              weekStart: '$_id',
+              feedback: 1,
+              themes: {
+                $size: {
+                  $filter: {
+                    input: '$themes',
+                    as: 'theme',
+                    cond: { $ne: ['$$theme', null] },
+                  },
+                },
+              },
             },
           },
-        },
+          { $sort: { weekStart: -1 } },
+          { $limit: 8 },
+          { $sort: { weekStart: 1 } },
+        ]),
+      ]);
 
-        {
-          $group: {
-            _id: '$priority',
-            count: { $sum: 1 },
-          },
-        },
-
-        {
-          $sort: {
-            count: -1,
-          },
-        },
-      ]),
-
-      // Source
-      Feedback.aggregate([
-        { $match: filter },
-
-        {
-          $match: {
-            source: {
-              $nin: [null, ''],
-            },
-          },
-        },
-
-        {
-          $group: {
-            _id: '$source',
-            count: { $sum: 1 },
-          },
-        },
-
-        {
-          $sort: {
-            count: -1,
-          },
-        },
-      ]),
-
-      // Theme
-      Feedback.aggregate([
-        { $match: filter },
-
-        {
-          $match: {
-            theme: {
-              $nin: [null, ''],
-            },
-          },
-        },
-
-        {
-          $group: {
-            _id: '$theme',
-            count: { $sum: 1 },
-          },
-        },
-
-        {
-          $sort: {
-            count: -1,
-          },
-        },
-      ]),
-    ]);
-
-    // ---------------------------------------------------------
-    // Convert MongoDB aggregation format to Recharts format
-    // ---------------------------------------------------------
-
-    const formatForRecharts = (
-      data: Array<{
-        _id: string;
-        count: number;
-      }>,
-    ) =>
+    const formatForRecharts = (data: any[]) =>
       data.map((item) => ({
         name: item._id,
         value: item.count,
       }));
 
-    // ---------------------------------------------------------
-    // Response
-    // ---------------------------------------------------------
-
     res.json({
       success: true,
-
       data: {
         total,
-
-        byCategory:
-          formatForRecharts(byCategory),
-
-        bySentiment:
-          formatForRecharts(bySentiment),
-
-        byPriority:
-          formatForRecharts(byPriority),
-
-        bySource:
-          formatForRecharts(bySource),
-
-        byTheme:
-          formatForRecharts(byTheme),
-
-        upload: upload
-          ? {
-              id: String(upload._id),
-              name: upload.name,
-              items: upload.items,
-              failed: upload.failed,
-              status: upload.status,
-              createdAt: upload.createdAt,
-            }
-          : null,
+        byCategory: formatForRecharts(byCategory),
+        bySentiment: formatForRecharts(bySentiment),
+        byPriority: formatForRecharts(byPriority),
+        bySource: formatForRecharts(bySource),
+        weeklyVolume,
       },
     });
   } catch (error) {

@@ -1,67 +1,27 @@
-# ============================================================
-# DEPENDENCIES
-# ============================================================
-
-**/node_modules/
+# Dependencies
+**/node_modules
 .pnpm-store/
-jspm_packages/
 
-
-# ============================================================
-# BUILD OUTPUTS
-# ============================================================
-
+# Build outputs
 dist/
 build/
 *.dist
 
-.next/
-.nuxt/
-.out/
-.storybook-out/
-.cache/
-.parcel-cache/
-
-
-# ============================================================
-# ENVIRONMENT VARIABLES / SECRETS
-# ============================================================
-
+# Environment variables
 .env
-*.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-
-# ============================================================
-# PYTHON
-# ============================================================
-
-__pycache__/
-*.py[cod]
-*.pyo
-
-.venv/
-venv/
-
-
-# ============================================================
-# IDE
-# ============================================================
-
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-
-# ============================================================
-# OS GENERATED FILES
-# ============================================================
-
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -70,12 +30,8 @@ venv/
 ehthumbs.db
 Thumbs.db
 
-
-# ============================================================
-# LOGS
-# ============================================================
-
-logs/
+# Logs
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -83,79 +39,104 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-
-# ============================================================
-# RUNTIME / TEMPORARY FILES
-# ============================================================
-
-pids/
+# Runtime data
+pids
 *.pid
 *.seed
 *.pid.lock
 *.bak
 
-tmp/
-temp/
-
-
-# ============================================================
-# COVERAGE
-# ============================================================
-
+# Coverage directory used by tools like istanbul
 coverage/
 *.lcov
-.nyc_output/
 
+# nyc test coverage
+.nyc_output
 
-# ============================================================
-# CACHE / TOOLING
-# ============================================================
+# Dependency directories
+jspm_packages/
 
+# TypeScript cache
 *.tsbuildinfo
-.npm/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
 .eslintcache
+
+# Microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
 
+# Optional REPL history
+.node_repl_history
 
-# ============================================================
-# DATABASE
-# ============================================================
+# Output of 'npm pack'
+*.tgz
 
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Database
 *.db
 *.sqlite
 *.sqlite3
-database.txt
 
+# Webdev artifacts (checkpoint zips, migrations, etc.)
+.webdev/
 
-# ============================================================
-# QDRANT
-# ============================================================
+# Manus version file (auto-generated, not part of source)
+client/public/__manus__/version.json
+.project-config.json
 
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+*.env
+
+# Local Qdrant storage
 qdrant_data/
 ai-service/qdrant_data/
 
+# IDE
+.vscode/
+.idea/
 
-# ============================================================
-# WEBDEV / PROJECT GENERATED FILES
-# ============================================================
+# OS
+.DS_Store
+Thumbs.db
 
-.webdev/
-.project-config.json
-client/public/__manus__/version.json
-
-
-# ============================================================
-# FEEDBACK PIPELINE RUNTIME DATA
-# ============================================================
-
-feedback-pipeline/uploads/
-feedback-pipeline/dataset/source_data/
-feedback-pipeline/dataset/raw/
-feedback-pipeline/dataset/processed/
-feedback-pipeline/reports/
-
-# Local test CSV
-feedback-pipeline/test_feedback.csv
+database.txt
+.env
