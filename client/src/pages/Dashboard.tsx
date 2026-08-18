@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -14,9 +13,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-
 import { Button } from '@/components/ui/button';
-
 import {
   Card,
   CardContent,
@@ -24,110 +21,107 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
 import { Badge } from '@/components/ui/badge';
-
 import {
-  TrendingUp,
-  TrendingDown,
-  Upload,
-  Settings,
   AlertCircle,
+  AlertTriangle,
+  ArrowRight,
   FileText,
-  RefreshCw,
+  Layers,
+  MessageSquare,
+  Settings,
+  Upload,
 } from 'lucide-react';
-
 import { useApi } from '@/hooks/useApi';
 
-const COLORS = [
-  'oklch(0.55 0.24 260)',
-  'oklch(0.60 0.18 140)',
-  'oklch(0.70 0.20 60)',
-  'oklch(0.50 0.20 280)',
-  'oklch(0.60 0.20 320)',
-  'oklch(0.65 0.18 200)',
-];
-
-interface UploadRecord {
-  _id: string;
+type StatItem = {
   name: string;
-  items: number;
-  failed?: number;
-  status: string;
-  error?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+  value: number;
+};
 
-interface FeedbackRecord {
+type StatsData = {
+  total?: number;
+  byCategory?: StatItem[];
+  bySource?: StatItem[];
+  byPriority?: StatItem[];
+  bySentiment?: StatItem[];
+};
+
+type Feedback = {
   _id?: string;
   feedbackId?: string;
-  uploadId?: string;
-
   text?: string;
-
-  category?: string;
-  theme?: string;
-  painPoint?: string;
-
-  sentiment?: string;
-  priority?: string;
   source?: string;
-
+  category?: string;
+  priority?: string;
+  sentiment?: string;
   createdAt?: string;
-  updatedAt?: string;
-}
+};
 
-interface PRDRecord {
+type PRD = {
   _id?: string;
   title?: string;
   status?: string;
-  sections?: any[];
+  sections?: unknown[];
   updatedAt?: string;
-}
+};
 
-interface ChartDatum {
-  name: string;
-  value: number;
-}
+const SOURCE_COLORS = [
+  '#6366f1',
+  '#22c55e',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#06b6d4',
+  '#ec4899',
+  '#84cc16',
+];
 
-interface StatsData {
-  total: number;
-  byCategory: ChartDatum[];
-  bySentiment: ChartDatum[];
-  byPriority: ChartDatum[];
-  bySource: ChartDatum[];
-  byTheme?: ChartDatum[];
-  upload?: {
-    id: string;
-    name: string;
-    items: number;
-    failed?: number;
-    status: string;
-    createdAt?: string;
-  } | null;
+const SENTIMENT_COLORS: Record<string, string> = {
+  positive: '#22c55e',
+  negative: '#ef4444',
+  neutral: '#f59e0b',
+};
+
+const CATEGORY_COLORS = [
+  '#6366f1',
+  '#8b5cf6',
+  '#06b6d4',
+  '#22c55e',
+  '#f59e0b',
+  '#ef4444',
+  '#ec4899',
+  '#84cc16',
+];
+
+function asArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+
+  if (
+    value &&
+    typeof value === 'object' &&
+    Array.isArray((value as { data?: unknown }).data)
+  ) {
+    return (value as { data: T[] }).data;
+  }
+
+  return [];
 }
 
 export default function Dashboard() {
-  // =========================================================
-  // API STATE
-  // =========================================================
-
-  const {
-    data: uploadsData,
-    isLoading: isUploadsLoading,
-    error: uploadsError,
-    fetchData: fetchUploads,
-  } = useApi<any>();
+  /*
+   * IMPORTANT:
+   * Every React hook is kept ABOVE every conditional return.
+   *
+   * The previous Dashboard had useMemo calls below the loading/error
+   * returns. On the first render those hooks were skipped; after the API
+   * finished loading they ran. That changes the number/order of hooks and
+   * causes:
+   *
+   * "Rendered fewer hooks than expected."
+   *
+   * This version deliberately uses NO useMemo at all.
+   */
 
   const {
     data: statsData,
@@ -141,608 +135,128 @@ export default function Dashboard() {
     isLoading: isFeedbackLoading,
     error: feedbackError,
     fetchData: fetchFeedback,
-  } = useApi<any>();
+  } = useApi<Feedback[]>();
 
   const {
     data: prdData,
+    isLoading: isPRDLoading,
     fetchData: fetchPRDs,
-  } = useApi<any>();
+  } = useApi<PRD[]>();
 
-  // =========================================================
-  // SELECTED UPLOAD
-  // =========================================================
-
-  const [selectedUploadId, setSelectedUploadId] =
-    useState<string>('');
-
-  const [isRefreshing, setIsRefreshing] =
-    useState(false);
-
-  const [hasInitializedUpload, setHasInitializedUpload] =
-    useState(false);
-
-  // =========================================================
-  // NORMALIZE UPLOAD DATA
-  // =========================================================
-
-  const uploads: UploadRecord[] = useMemo(() => {
-    if (!uploadsData) {
-      return [];
-    }
-
-    if (Array.isArray(uploadsData)) {
-      return uploadsData;
-    }
-
-    if (Array.isArray(uploadsData.data)) {
-      return uploadsData.data;
-    }
-
-    return [];
-  }, [uploadsData]);
-
-  // Only completed uploads can be selected.
-  const completedUploads = useMemo(() => {
-    return [...uploads]
-      .filter(
-        (upload) =>
-          upload.status === 'completed' &&
-          upload._id,
-      )
-      .sort(
-        (a, b) =>
-          new Date(
-            b.createdAt || 0,
-          ).getTime() -
-          new Date(
-            a.createdAt || 0,
-          ).getTime(),
-      );
-  }, [uploads]);
-
-  // =========================================================
-  // ACTIVE UPLOAD
-  // =========================================================
-
-  const selectedUpload = useMemo(() => {
-    if (!selectedUploadId) {
-      return null;
-    }
-
-    return (
-      completedUploads.find(
-        (upload) =>
-          String(upload._id) ===
-          String(selectedUploadId),
-      ) || null
-    );
-  }, [
-    completedUploads,
-    selectedUploadId,
-  ]);
-
-  // =========================================================
-  // LOAD UPLOAD HISTORY
-  // =========================================================
-
-  const loadUploads = async () => {
-    await fetchUploads({
-      method: 'GET',
-      url: '/uploads',
-    });
-  };
-
-  // =========================================================
-  // INITIAL LOAD
-  // =========================================================
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadUploads().catch((error) => {
-      console.error(
-        'Failed to load uploads:',
-        error,
-      );
+    void fetchStats({
+      method: 'GET',
+      url: '/stats',
     });
 
-    fetchPRDs({
+    void fetchFeedback({
+      method: 'GET',
+      url: '/feedback',
+      params: {
+        limit: 100,
+        page: 1,
+      },
+    });
+
+    void fetchPRDs({
       method: 'GET',
       url: '/prd',
     }).catch(() => {
-      // PRDs are independent from dashboard data.
+      // PRDs are optional for the dashboard.
     });
-  }, [
-    fetchUploads,
-    fetchPRDs,
-  ]);
+  }, [fetchStats, fetchFeedback, fetchPRDs]);
 
-  // =========================================================
-  // AUTOMATICALLY SELECT NEWEST COMPLETED UPLOAD
-  // ONLY ON FIRST LOAD
-  // =========================================================
-
-  useEffect(() => {
-    if (
-      hasInitializedUpload ||
-      completedUploads.length === 0
-    ) {
-      return;
-    }
-
-    const newestUpload =
-      completedUploads[0];
-
-    if (newestUpload?._id) {
-      setSelectedUploadId(
-        String(newestUpload._id),
-      );
-
-      setHasInitializedUpload(true);
-    }
-  }, [
-    completedUploads,
-    hasInitializedUpload,
-  ]);
-
-  // =========================================================
-  // LOAD DATA FOR SELECTED UPLOAD
-  // =========================================================
-
-  useEffect(() => {
-    if (!selectedUploadId) {
-      return;
-    }
-
-    const loadSelectedDataset = async () => {
-      try {
-        /*
-         * IMPORTANT:
-         *
-         * Stats is filtered by uploadId.
-         *
-         * This is what makes:
-         *
-         * 5000 records -> 5000
-         * 10 records   -> 10
-         *
-         * instead of always showing the first 100 records.
-         */
-
-        await fetchStats({
-          method: 'GET',
-          url: '/stats',
-          params: {
-            uploadId: selectedUploadId,
-          },
-        });
-
-        /*
-         * Feedback records are used only for
-         * the weekly volume chart.
-         *
-         * Dashboard totals/charts use /stats.
-         */
-        await fetchFeedback({
-          method: 'GET',
-          url: '/feedback',
-          params: {
-            uploadId: selectedUploadId,
-            limit: 100,
-          },
-        });
-      } catch (error) {
-        console.error(
-          'Failed to load selected dataset:',
-          error,
-        );
-      }
-    };
-
-    loadSelectedDataset();
-  }, [
-    selectedUploadId,
-    fetchStats,
-    fetchFeedback,
-  ]);
-
-  // =========================================================
-  // REFRESH
-  // =========================================================
-
-  const loadDashboard = async () => {
-    setIsRefreshing(true);
+  const handleRetry = async () => {
+    setRefreshing(true);
 
     try {
-      /*
-       * Reload uploads first.
-       *
-       * We DO NOT automatically change selectedUploadId.
-       * This is important because the user may have manually
-       * selected an older dataset.
-       */
-
-      await loadUploads();
-
-      /*
-       * Reload currently selected dataset.
-       */
-
-      if (selectedUploadId) {
-        await fetchStats({
+      await Promise.allSettled([
+        fetchStats({
           method: 'GET',
           url: '/stats',
-          params: {
-            uploadId: selectedUploadId,
-          },
-        });
-
-        await fetchFeedback({
+        }),
+        fetchFeedback({
           method: 'GET',
           url: '/feedback',
           params: {
-            uploadId: selectedUploadId,
             limit: 100,
+            page: 1,
           },
-        });
-      }
-    } catch (error) {
-      console.error(
-        'Failed to refresh dashboard:',
-        error,
-      );
+        }),
+        fetchPRDs({
+          method: 'GET',
+          url: '/prd',
+        }),
+      ]);
     } finally {
-      setIsRefreshing(false);
+      setRefreshing(false);
     }
   };
 
-  // =========================================================
-  // FEEDBACK NORMALIZATION
-  // =========================================================
+  /*
+   * These are normal variables, NOT hooks.
+   * They can safely be calculated after the hooks and before rendering.
+   */
+  const stats: StatsData = {
+    total: Number(statsData?.total ?? 0),
+    byCategory: asArray<StatItem>(statsData?.byCategory),
+    bySource: asArray<StatItem>(statsData?.bySource),
+    byPriority: asArray<StatItem>(statsData?.byPriority),
+    bySentiment: asArray<StatItem>(statsData?.bySentiment),
+  };
 
-  const feedbackList: FeedbackRecord[] =
-    useMemo(() => {
-      if (!feedbackData) {
-        return [];
-      }
+  const feedbackList = asArray<Feedback>(feedbackData);
+  const prdList = asArray<PRD>(prdData);
 
-      if (Array.isArray(feedbackData)) {
-        return feedbackData;
-      }
+  const topCategories = [...(stats.byCategory ?? [])]
+    .sort((a, b) => Number(b.value) - Number(a.value))
+    .slice(0, 8);
 
-      if (
-        Array.isArray(
-          feedbackData.data,
-        )
-      ) {
-        return feedbackData.data;
-      }
+  const sourceData = [...(stats.bySource ?? [])]
+    .sort((a, b) => Number(b.value) - Number(a.value));
 
-      return [];
-    }, [feedbackData]);
+  const priorityData = [...(stats.byPriority ?? [])]
+    .sort((a, b) => Number(b.value) - Number(a.value));
 
-  // =========================================================
-  // PRD NORMALIZATION
-  // =========================================================
+  const sentimentData = [...(stats.bySentiment ?? [])]
+    .sort((a, b) => Number(b.value) - Number(a.value));
 
-  const prdList: PRDRecord[] =
-    useMemo(() => {
-      if (!prdData) {
-        return [];
-      }
+  const recentFeedback = [...feedbackList]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime(),
+    )
+    .slice(0, 5);
 
-      if (Array.isArray(prdData)) {
-        return prdData;
-      }
-
-      if (
-        Array.isArray(
-          prdData.data,
-        )
-      ) {
-        return prdData.data;
-      }
-
-      return [];
-    }, [prdData]);
-
-  // =========================================================
-  // STATS DATA
-  // =========================================================
-
-  const dashboardStats: StatsData = useMemo(() => {
-    return {
-      total:
-        Number(
-          statsData?.total,
-        ) || 0,
-
-      byCategory:
-        Array.isArray(
-          statsData?.byCategory,
-        )
-          ? statsData.byCategory
-          : [],
-
-      bySentiment:
-        Array.isArray(
-          statsData?.bySentiment,
-        )
-          ? statsData.bySentiment
-          : [],
-
-      byPriority:
-        Array.isArray(
-          statsData?.byPriority,
-        )
-          ? statsData.byPriority
-          : [],
-
-      bySource:
-        Array.isArray(
-          statsData?.bySource,
-        )
-          ? statsData.bySource
-          : [],
-
-      byTheme:
-        Array.isArray(
-          statsData?.byTheme,
-        )
-          ? statsData.byTheme
-          : [],
-
-      upload:
-        statsData?.upload || null,
-    };
-  }, [statsData]);
-
-  // =========================================================
-  // TOTAL
-  // =========================================================
-
-  const total =
-    dashboardStats.total;
-
-  // =========================================================
-  // CATEGORY DATA
-  // =========================================================
-
-  const categoryCounts =
-    dashboardStats.byCategory;
-
-  // =========================================================
-  // SENTIMENT DATA
-  // =========================================================
-
-  const sentimentData =
-    dashboardStats.bySentiment;
-
-  // =========================================================
-  // SOURCE DATA
-  // =========================================================
-
-  const sourceData =
-    dashboardStats.bySource;
-
-  // =========================================================
-  // HIGH PRIORITY
-  // =========================================================
+  const recentPRDs = [...prdList]
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt || 0).getTime() -
+        new Date(a.updatedAt || 0).getTime(),
+    )
+    .slice(0, 4);
 
   const highPriority =
-    dashboardStats.byPriority.find(
-      (item) =>
-        String(
-          item.name,
-        ).toLowerCase() ===
-        'high',
-    )?.value || 0;
+    (stats.byPriority ?? []).find(
+      (item) => String(item.name).toLowerCase() === 'high',
+    )?.value ?? 0;
 
-  // =========================================================
-  // THEMES
-  // =========================================================
+  const readyPRDs = prdList.filter(
+    (prd) => String(prd.status).toLowerCase() === 'ready',
+  ).length;
 
-  const themesFound =
-    dashboardStats.byTheme &&
-    dashboardStats.byTheme.length > 0
-      ? dashboardStats.byTheme.length
-      : categoryCounts.length;
-
-  // =========================================================
-  // FEEDBACK VOLUME
-  // =========================================================
-
-  const feedbackVolumeData =
-    useMemo(() => {
-      if (
-        feedbackList.length === 0
-      ) {
-        return Array.from(
-          { length: 8 },
-          (_, index) => ({
-            week: `W${index + 1}`,
-            feedback: 0,
-            themes: 0,
-          }),
-        );
-      }
-
-      const dates =
-        feedbackList
-          .map(
-            (item) =>
-              new Date(
-                item.createdAt ||
-                  item.updatedAt ||
-                  0,
-              ),
-          )
-          .filter(
-            (date) =>
-              !Number.isNaN(
-                date.getTime(),
-              ),
-          );
-
-      const latestDate =
-        dates.length > 0
-          ? new Date(
-              Math.max(
-                ...dates.map(
-                  (date) =>
-                    date.getTime(),
-                ),
-              ),
-            )
-          : new Date();
-
-      return Array.from(
-        { length: 8 },
-        (_, index) => {
-          const end =
-            new Date(
-              latestDate,
-            );
-
-          end.setDate(
-            end.getDate() -
-              (7 - index) * 7,
-          );
-
-          const start =
-            new Date(end);
-
-          start.setDate(
-            start.getDate() - 6,
-          );
-
-          const items =
-            feedbackList.filter(
-              (feedback) => {
-                const createdAt =
-                  new Date(
-                    feedback.createdAt ||
-                      feedback.updatedAt ||
-                      0,
-                  );
-
-                return (
-                  createdAt >=
-                    start &&
-                  createdAt <= end
-                );
-              },
-            );
-
-          const themes =
-            new Set(
-              items
-                .map(
-                  (item) =>
-                    item.theme ||
-                    item.category,
-                )
-                .filter(Boolean),
-            ).size;
-
-          return {
-            week: `W${index + 1}`,
-            feedback:
-              items.length,
-            themes,
-          };
-        },
-      );
-    }, [feedbackList]);
-
-  // =========================================================
-  // TOP CATEGORIES
-  // =========================================================
-
-  const topCategories =
-    categoryCounts
-      .slice(0, 8)
-      .map(
-        (category, index) => ({
-          theme:
-            category.name,
-
-          count:
-            category.value,
-
-          trend: 'Current',
-
-          severity:
-            category.value >=
-            Math.max(
-              1,
-              total * 0.2,
-            )
-              ? 'High'
-              : category.value >=
-                  Math.max(
-                    1,
-                    total * 0.1,
-                  )
-                ? 'Medium'
-                : 'Low',
-
-          color:
-            COLORS[
-              index %
-                COLORS.length
-            ],
-        }),
-      );
-
-  // =========================================================
-  // PRDS
-  // =========================================================
-
-  const recentPRDsData =
-    prdList
-      .slice(0, 4)
-      .map((prd) => ({
-        id: prd._id,
-
-        title:
-          prd.title ||
-          'Untitled PRD',
-
-        date:
-          prd.updatedAt
-            ? new Date(
-                prd.updatedAt,
-              ).toLocaleDateString()
-            : '—',
-
-        status:
-          prd.status === 'ready'
-            ? 'Ready'
-            : prd.status === 'review'
-              ? 'Review'
-              : 'Draft',
-
-        sections:
-          Array.isArray(
-            prd.sections,
-          )
-            ? prd.sections.length
-            : 0,
-      }));
-
-  // =========================================================
-  // LOADING
-  // =========================================================
-
-  if (
-    isUploadsLoading ||
-    isStatsLoading ||
-    isFeedbackLoading
-  ) {
+  /*
+   * We intentionally do NOT return early until after ALL hooks have already
+   * been called. This keeps the hook order identical on every render.
+   */
+  if (isStatsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-muted-foreground">
             Loading dashboard data...
           </p>
@@ -751,1021 +265,635 @@ export default function Dashboard() {
     );
   }
 
-  // =========================================================
-  // ERROR
-  // =========================================================
-
-  if (
-    uploadsError ||
-    statsError ||
-    feedbackError
-  ) {
+  if (statsError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-destructive max-w-md text-center">
-          <AlertCircle className="w-12 h-12" />
-
-          <p className="text-lg font-semibold">
-            Failed to load dashboard
-          </p>
-
-          <p className="text-sm">
-            {uploadsError ||
-              statsError ||
-              feedbackError}
-          </p>
-
-          <Button
-            onClick={() =>
-              loadDashboard()
-            }
-            variant="outline"
-            className="gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // =========================================================
-  // NO UPLOADS
-  // =========================================================
-
-  if (
-    completedUploads.length === 0
-  ) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">
-                Dashboard
-              </h1>
-
-              <p className="text-sm text-muted-foreground mt-1">
-                No uploaded dataset selected
-              </p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <Card className="max-w-lg w-full">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-destructive" />
+              <CardTitle>Unable to load dashboard</CardTitle>
             </div>
+            <CardDescription>
+              The dashboard could not retrieve statistics from the backend.
+            </CardDescription>
+          </CardHeader>
 
-            <Link href="/feedback">
-              <Button className="gap-2">
-                <Upload className="w-4 h-4" />
-                Import Data
-              </Button>
-            </Link>
-          </div>
-        </div>
+          <CardContent>
+            <p className="text-sm text-destructive mb-4">
+              {String(statsError)}
+            </p>
 
-        <div className="container mx-auto px-4 py-8">
-          <Card className="border-primary/30">
-            <CardContent className="py-16 text-center">
-              <FileText className="w-12 h-12 text-primary mx-auto mb-4" />
-
-              <h2 className="text-xl font-semibold mb-2">
-                No completed uploads
-              </h2>
-
-              <p className="text-sm text-muted-foreground mb-6">
-                Upload a CSV, JSON, or TXT file
-                from Feedback Ingestion.
-              </p>
-
-              <Link href="/feedback">
-                <Button className="gap-2">
-                  <Upload className="w-4 h-4" />
-                  Import Data
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+            <Button onClick={handleRetry} disabled={refreshing}>
+              {refreshing ? 'Retrying...' : 'Retry'}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
-
-  // =========================================================
-  // MAIN DASHBOARD
-  // =========================================================
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-
+      {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
-
+        <div className="container mx-auto px-4 py-5 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">
-              Dashboard
+              AI Product Manager Copilot
             </h1>
-
             <p className="text-sm text-muted-foreground mt-1">
-              {selectedUpload
-                ? `Showing data from ${selectedUpload.name}`
-                : 'Select a dataset'}
+              Customer feedback intelligence dashboard
             </p>
           </div>
 
           <div className="flex gap-3">
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() =>
-                loadDashboard()
-              }
-              disabled={isRefreshing}
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${
-                  isRefreshing
-                    ? 'animate-spin'
-                    : ''
-                }`}
-              />
-
-              Refresh
-            </Button>
-
             <Link href="/settings">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
+              <Button variant="outline" size="sm" className="gap-2">
                 <Settings className="w-4 h-4" />
                 Settings
               </Button>
             </Link>
 
             <Link href="/feedback">
-              <Button
-                size="sm"
-                className="gap-2 bg-primary hover:bg-primary/90"
-              >
+              <Button size="sm" className="gap-2">
                 <Upload className="w-4 h-4" />
                 Import Data
               </Button>
             </Link>
-
           </div>
         </div>
       </div>
 
-      {/* =====================================================
-          MAIN
-      ===================================================== */}
-
-      <div className="container mx-auto px-4 py-8">
-
-        {/* ===================================================
-            DATASET SELECTOR
-        =================================================== */}
-
-        <Card className="mb-8 border-primary/30 bg-primary/5">
-
-          <CardHeader>
-            <CardTitle>
-              Dashboard Dataset
-            </CardTitle>
-
-            <CardDescription>
-              Select any completed upload to
-              analyze that dataset.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-
-            <select
-              value={selectedUploadId}
-              onChange={(event) => {
-                const id =
-                  event.target.value;
-
-                setSelectedUploadId(id);
-              }}
-              className="w-full rounded-md border border-border bg-background px-3 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
-            >
-
-              <option value="">
-                Select a dataset
-              </option>
-
-              {completedUploads.map(
-                (upload) => (
-                  <option
-                    key={upload._id}
-                    value={upload._id}
-                  >
-                    {upload.name} —{' '}
-                    {Number(
-                      upload.items || 0,
-                    ).toLocaleString()}{' '}
-                    records
-                  </option>
-                ),
-              )}
-
-            </select>
-
-            {selectedUpload && (
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-primary" />
-
-                  <span className="text-sm font-medium">
-                    {selectedUpload.name}
-                  </span>
-                </div>
-
-                <Badge
-                  variant="outline"
-                  className="border-chart-1 text-chart-1"
-                >
-                  {Number(
-                    selectedUpload.items ||
-                      0,
-                  ).toLocaleString()}{' '}
-                  records
-                </Badge>
-
-                <Badge
-                  variant="outline"
-                  className="border-primary text-primary"
-                >
-                  {selectedUpload.status}
-                </Badge>
-
-              </div>
-            )}
-
-          </CardContent>
-        </Card>
-
-        {/* ===================================================
-            KPI CARDS
-        =================================================== */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-
-          {/* TOTAL FEEDBACK */}
-
-          <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-
+      <main className="container mx-auto px-4 py-8">
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 TOTAL FEEDBACK
               </CardTitle>
             </CardHeader>
-
             <CardContent>
-
-              <span className="text-4xl font-bold">
-                {total.toLocaleString()}
-              </span>
-
-              <div className="flex items-center gap-1 mt-2 text-sm">
-
-                <TrendingUp className="w-4 h-4 text-chart-1" />
-
-                <span className="text-chart-1">
-                  From selected upload
+              <div className="flex items-center justify-between">
+                <span className="text-4xl font-bold">
+                  {Number(stats.total).toLocaleString()}
                 </span>
-
+                <div className="p-3 rounded-full bg-primary/10">
+                  <MessageSquare className="w-6 h-6 text-primary" />
+                </div>
               </div>
-
+              <p className="text-sm text-muted-foreground mt-2">
+                Analyzed customer feedback
+              </p>
             </CardContent>
           </Card>
 
-          {/* THEMES */}
-
-          <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 THEMES FOUND
               </CardTitle>
             </CardHeader>
-
             <CardContent>
-
-              <span className="text-4xl font-bold">
-                {themesFound}
-              </span>
-
-              <div className="flex items-center gap-1 mt-2 text-sm">
-
-                <TrendingUp className="w-4 h-4 text-chart-1" />
-
-                <span className="text-chart-1">
-                  In this dataset
+              <div className="flex items-center justify-between">
+                <span className="text-4xl font-bold">
+                  {stats.byCategory?.length ?? 0}
                 </span>
-
+                <div className="p-3 rounded-full bg-purple-500/10">
+                  <Layers className="w-6 h-6 text-purple-500" />
+                </div>
               </div>
-
+              <p className="text-sm text-muted-foreground mt-2">
+                Product-related categories
+              </p>
             </CardContent>
           </Card>
 
-          {/* HIGH PRIORITY */}
-
-          <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 HIGH PRIORITY
               </CardTitle>
             </CardHeader>
-
             <CardContent>
-
-              <span className="text-4xl font-bold">
-                {highPriority.toLocaleString()}
-              </span>
-
-              <div className="flex items-center gap-1 mt-2 text-sm">
-
-                <TrendingDown className="w-4 h-4 text-chart-3" />
-
-                <span className="text-chart-3">
-                  Needs attention
+              <div className="flex items-center justify-between">
+                <span className="text-4xl font-bold">
+                  {Number(highPriority).toLocaleString()}
                 </span>
-
+                <div className="p-3 rounded-full bg-red-500/10">
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                </div>
               </div>
-
+              <p className="text-sm text-muted-foreground mt-2">
+                Issues requiring attention
+              </p>
             </CardContent>
           </Card>
 
-          {/* PRDS */}
-
-          <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 PRDS GENERATED
               </CardTitle>
             </CardHeader>
-
             <CardContent>
-
-              <span
-                className="text-4xl font-bold"
-                data-testid="prd-count"
-              >
-                {prdList.length}
-              </span>
-
-              <div className="flex items-center gap-1 mt-2 text-sm">
-
-                <TrendingUp className="w-4 h-4 text-chart-1" />
-
-                <span className="text-chart-1">
-                  {
-                    prdList.filter(
-                      (prd) =>
-                        prd.status ===
-                        'ready',
-                    ).length
-                  }{' '}
-                  ready
+              <div className="flex items-center justify-between">
+                <span className="text-4xl font-bold">
+                  {prdList.length}
                 </span>
-
+                <div className="p-3 rounded-full bg-green-500/10">
+                  <FileText className="w-6 h-6 text-green-500" />
+                </div>
               </div>
-
+              <p className="text-sm text-muted-foreground mt-2">
+                {readyPRDs} ready
+                {isPRDLoading ? ' · loading...' : ''}
+              </p>
             </CardContent>
           </Card>
-
         </div>
 
-        {/* ===================================================
-            CHARTS
-        =================================================== */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-          {/* FEEDBACK VOLUME */}
-
-          <Card className="lg:col-span-2 bg-card border-border">
-
+        {/* CATEGORY + SOURCES */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card>
             <CardHeader>
-
-              <CardTitle>
-                Feedback Volume
-              </CardTitle>
-
+              <CardTitle>Feedback by Category</CardTitle>
               <CardDescription>
-                Feedback and themes from{' '}
-                {selectedUpload?.name}
+                Most reported product-related issues
               </CardDescription>
-
             </CardHeader>
 
             <CardContent>
-
-              <ResponsiveContainer
-                width="100%"
-                height={300}
-              >
-
-                <LineChart
-                  data={
-                    feedbackVolumeData
-                  }
-                >
-
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="oklch(0.25 0.02 280)"
-                  />
-
-                  <XAxis
-                    dataKey="week"
-                    stroke="oklch(0.65 0.02 280)"
-                  />
-
-                  <YAxis
-                    stroke="oklch(0.65 0.02 280)"
-                  />
-
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor:
-                        'oklch(0.18 0.01 280)',
-                      border:
-                        '1px solid oklch(0.25 0.02 280)',
-                      borderRadius:
-                        '0.65rem',
+              {topCategories.length === 0 ? (
+                <div className="h-[320px] flex items-center justify-center text-muted-foreground">
+                  No category data available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart
+                    data={topCategories}
+                    layout="vertical"
+                    margin={{
+                      top: 5,
+                      right: 20,
+                      left: 20,
+                      bottom: 5,
                     }}
-                  />
-
-                  <Legend />
-
-                  <Line
-                    type="monotone"
-                    dataKey="feedback"
-                    stroke="oklch(0.55 0.24 260)"
-                    strokeWidth={2}
-                  />
-
-                  <Line
-                    type="monotone"
-                    dataKey="themes"
-                    stroke="oklch(0.60 0.18 140)"
-                    strokeWidth={2}
-                  />
-
-                </LineChart>
-
-              </ResponsiveContainer>
-
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={false}
+                    />
+                    <XAxis
+                      type="number"
+                      allowDecimals={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={120}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip />
+                    <Bar
+                      dataKey="value"
+                      name="Feedback"
+                      radius={[0, 5, 5, 0]}
+                      fill="#6366f1"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
-          {/* SENTIMENT */}
-
-          <Card className="bg-card border-border">
-
+          <Card>
             <CardHeader>
-
-              <CardTitle>
-                Sentiment
-              </CardTitle>
-
+              <CardTitle>Data Sources</CardTitle>
               <CardDescription>
-                Sentiment distribution
+                Distribution of customer feedback sources
               </CardDescription>
-
             </CardHeader>
 
             <CardContent>
-
-              {sentimentData.length > 0 ? (
-                <ResponsiveContainer
-                  width="100%"
-                  height={300}
-                >
-
+              {sourceData.length === 0 ? (
+                <div className="h-[320px] flex items-center justify-center text-muted-foreground">
+                  No source data available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
-
                     <Pie
-                      data={
-                        sentimentData
-                      }
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={45}
-                      outerRadius={75}
-                      paddingAngle={3}
+                      data={sourceData}
                       dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={105}
+                      label={({ name, percent }) =>
+                        `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                      }
                     >
+                      {sourceData.map((_, index) => (
+                        <Cell
+                          key={`source-${index}`}
+                          fill={
+                            SOURCE_COLORS[
+                              index % SOURCE_COLORS.length
+                            ]
+                          }
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-                      {sentimentData.map(
-                        (
-                          _entry,
-                          index,
-                        ) => (
+        {/* PRIORITY + SENTIMENT */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Priority Distribution</CardTitle>
+              <CardDescription>
+                AI-classified feedback priority
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {priorityData.length === 0 ? (
+                <div className="h-[260px] flex items-center justify-center text-muted-foreground">
+                  No priority data available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={priorityData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar
+                      dataKey="value"
+                      name="Feedback"
+                      radius={[5, 5, 0, 0]}
+                      fill="#ef4444"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Sentiment</CardTitle>
+              <CardDescription>
+                Overall sentiment across analyzed feedback
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {sentimentData.length === 0 ? (
+                <div className="h-[260px] flex items-center justify-center text-muted-foreground">
+                  No sentiment data available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={sentimentData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      label
+                    >
+                      {sentimentData.map((item, index) => {
+                        const key = String(item.name).toLowerCase();
+
+                        return (
                           <Cell
                             key={`sentiment-${index}`}
                             fill={
-                              COLORS[
-                                index %
-                                  COLORS.length
+                              SENTIMENT_COLORS[key] ||
+                              SOURCE_COLORS[
+                                index % SOURCE_COLORS.length
                               ]
                             }
                           />
-                        ),
-                      )}
-
+                        );
+                      })}
                     </Pie>
-
                     <Tooltip />
-
-                    <Legend
-                      verticalAlign="bottom"
-                      height={36}
-                    />
-
+                    <Legend />
                   </PieChart>
-
                 </ResponsiveContainer>
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  No sentiment data
-                </div>
               )}
-
             </CardContent>
           </Card>
-
         </div>
 
-        {/* ===================================================
-            SOURCE + CATEGORY
-        =================================================== */}
+        {/* TOP PRODUCT ISSUES */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Top Product Issues</CardTitle>
+                <CardDescription>
+                  Most frequently reported customer problems
+                </CardDescription>
+              </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <Link href="/themes">
+                <Button variant="outline" size="sm" className="gap-2">
+                  View all
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
 
-          {/* SOURCES */}
+          <CardContent>
+            {topCategories.length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground">
+                No category information available.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border text-left">
+                      <th className="py-3 px-4 text-sm font-medium text-muted-foreground">
+                        CATEGORY
+                      </th>
+                      <th className="py-3 px-4 text-sm font-medium text-muted-foreground">
+                        COUNT
+                      </th>
+                      <th className="py-3 px-4 text-sm font-medium text-muted-foreground">
+                        SHARE
+                      </th>
+                      <th className="py-3 px-4 text-sm font-medium text-muted-foreground">
+                        SEVERITY
+                      </th>
+                    </tr>
+                  </thead>
 
-          <Card className="bg-card border-border">
+                  <tbody>
+                    {topCategories.map((category, index) => {
+                      const percentage =
+                        Number(stats.total) > 0
+                          ? (
+                              (Number(category.value) /
+                                Number(stats.total)) *
+                              100
+                            ).toFixed(1)
+                          : '0.0';
 
-            <CardHeader>
+                      let severity = 'Low';
 
-              <CardTitle>
-                Data Sources
-              </CardTitle>
-
-              <CardDescription>
-                Sources inside{' '}
-                {selectedUpload?.name}
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              {sourceData.length > 0 ? (
-                <ResponsiveContainer
-                  width="100%"
-                  height={320}
-                >
-
-                  <PieChart>
-
-                    <Pie
-                      data={
-                        sourceData
+                      if (Number(category.value) >= 100) {
+                        severity = 'High';
+                      } else if (Number(category.value) >= 50) {
+                        severity = 'Medium';
                       }
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={50}
-                      outerRadius={90}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
 
-                      {sourceData.map(
-                        (
-                          _entry,
-                          index,
-                        ) => (
-                          <Cell
-                            key={`source-${index}`}
-                            fill={
-                              COLORS[
-                                index %
-                                  COLORS.length
-                              ]
-                            }
-                          />
-                        ),
-                      )}
-
-                    </Pie>
-
-                    <Tooltip />
-
-                    <Legend
-                      verticalAlign="bottom"
-                      height={50}
-                    />
-
-                  </PieChart>
-
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[320px] flex items-center justify-center text-muted-foreground">
-                  No source data
-                </div>
-              )}
-
-            </CardContent>
-          </Card>
-
-          {/* CATEGORY */}
-
-          <Card className="bg-card border-border">
-
-            <CardHeader>
-
-              <CardTitle>
-                Category Distribution
-              </CardTitle>
-
-              <CardDescription>
-                Most common categories in
-                the selected dataset
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              {categoryCounts.length > 0 ? (
-                <div className="space-y-4">
-
-                  {categoryCounts
-                    .slice(0, 8)
-                    .map(
-                      (
-                        category,
-                        index,
-                      ) => {
-
-                        const percentage =
-                          total > 0
-                            ? Math.round(
-                                (category.value /
-                                  total) *
-                                  100,
-                              )
-                            : 0;
-
-                        return (
-                          <div
-                            key={
-                              category.name
-                            }
-                          >
-
-                            <div className="flex justify-between text-sm mb-1">
-
-                              <span className="font-medium">
-                                {
-                                  category.name
-                                }
-                              </span>
-
-                              <span className="text-muted-foreground">
-                                {
-                                  category.value
-                                }{' '}
-                                (
-                                {
-                                  percentage
-                                }
-                                %)
-                              </span>
-
-                            </div>
-
-                            <div className="h-2 rounded-full bg-secondary overflow-hidden">
-
+                      return (
+                        <tr
+                          key={`${category.name}-${index}`}
+                          className="border-b border-border last:border-0 hover:bg-muted/30"
+                        >
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-3">
                               <div
-                                className="h-full rounded-full"
+                                className="w-3 h-3 rounded-full"
                                 style={{
-                                  width: `${percentage}%`,
                                   backgroundColor:
-                                    COLORS[
+                                    CATEGORY_COLORS[
                                       index %
-                                        COLORS.length
+                                        CATEGORY_COLORS.length
                                     ],
                                 }}
                               />
-
+                              <span className="font-medium">
+                                {category.name}
+                              </span>
                             </div>
+                          </td>
 
-                          </div>
-                        );
-                      },
-                    )}
+                          <td className="py-4 px-4 font-semibold">
+                            {Number(category.value).toLocaleString()}
+                          </td>
 
-                </div>
-              ) : (
-                <div className="py-12 text-center text-muted-foreground">
-                  No category data
-                </div>
-              )}
+                          <td className="py-4 px-4 text-muted-foreground">
+                            {percentage}%
+                          </td>
 
-            </CardContent>
-          </Card>
-
-        </div>
-
-        {/* ===================================================
-            TOP CATEGORIES + PRDS
-        =================================================== */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* TOP CATEGORIES */}
-
-          <Card className="lg:col-span-2 bg-card border-border">
-
-            <CardHeader>
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <CardTitle>
-                    Top Categories
-                  </CardTitle>
-
-                  <CardDescription>
-                    Most reported categories
-                    in the selected file
-                  </CardDescription>
-
-                </div>
-
-                <Link href="/themes">
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-primary"
-                  >
-                    View all →
-                  </Button>
-
-                </Link>
-
+                          <td className="py-4 px-4">
+                            <Badge
+                              variant={
+                                severity === 'High'
+                                  ? 'destructive'
+                                  : severity === 'Medium'
+                                    ? 'secondary'
+                                    : 'outline'
+                              }
+                            >
+                              {severity}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
+            )}
+          </CardContent>
+        </Card>
 
+        {/* RECENT FEEDBACK + PRDS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Feedback</CardTitle>
+                  <CardDescription>
+                    Latest customer feedback received
+                  </CardDescription>
+                </div>
+
+                <Link href="/feedback">
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    View all
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
 
             <CardContent>
-
-              <Table>
-
-                <TableHeader>
-
-                  <TableRow className="border-border hover:bg-transparent">
-
-                    <TableHead className="text-muted-foreground">
-                      CATEGORY
-                    </TableHead>
-
-                    <TableHead className="text-muted-foreground">
-                      COUNT
-                    </TableHead>
-
-                    <TableHead className="text-muted-foreground">
-                      TREND
-                    </TableHead>
-
-                    <TableHead className="text-muted-foreground">
-                      SEVERITY
-                    </TableHead>
-
-                  </TableRow>
-
-                </TableHeader>
-
-                <TableBody>
-
-                  {topCategories.length > 0 ? (
-                    topCategories.map(
-                      (
-                        item,
-                        index,
-                      ) => (
-
-                        <TableRow
-                          key={index}
-                          className="border-border hover:bg-secondary/30 transition-colors"
-                        >
-
-                          <TableCell className="font-medium">
-                            {
-                              item.theme
-                            }
-                          </TableCell>
-
-                          <TableCell>
-                            {
-                              item.count
-                            }
-                          </TableCell>
-
-                          <TableCell>
-                            <span className="text-muted-foreground">
-                              {
-                                item.trend
-                              }
-                            </span>
-                          </TableCell>
-
-                          <TableCell>
-
-                            <Badge
-                              variant="outline"
-                              style={{
-                                color:
-                                  item.color,
-                              }}
-                            >
-                              {
-                                item.severity
-                              }
+              {isFeedbackLoading ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  Loading feedback...
+                </div>
+              ) : feedbackError ? (
+                <div className="py-8 text-center text-sm text-destructive">
+                  Unable to load recent feedback.
+                </div>
+              ) : recentFeedback.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  No recent feedback available.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentFeedback.map((feedback, index) => (
+                    <div
+                      key={
+                        feedback._id ||
+                        feedback.feedbackId ||
+                        `feedback-${index}`
+                      }
+                      className="p-4 rounded-lg border border-border"
+                    >
+                      <div className="flex items-center justify-between mb-2 gap-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {feedback.category && (
+                            <Badge variant="outline">
+                              {feedback.category}
                             </Badge>
+                          )}
 
-                          </TableCell>
+                          {feedback.priority && (
+                            <Badge
+                              variant={
+                                String(feedback.priority).toLowerCase() ===
+                                'high'
+                                  ? 'destructive'
+                                  : 'secondary'
+                              }
+                            >
+                              {feedback.priority}
+                            </Badge>
+                          )}
+                        </div>
 
-                        </TableRow>
-                      ),
-                    )
-                  ) : (
-                    <TableRow>
+                        {feedback.createdAt && (
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {new Date(
+                              feedback.createdAt,
+                            ).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
 
-                      <TableCell
-                        colSpan={4}
-                        className="text-center text-muted-foreground py-8"
-                      >
-                        No category data
-                        available
-                      </TableCell>
+                      <p className="text-sm line-clamp-2">
+                        {feedback.text ||
+                          'No feedback text available.'}
+                      </p>
 
-                    </TableRow>
-                  )}
-
-                </TableBody>
-
-              </Table>
-
+                      {feedback.source && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Source: {feedback.source}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* RECENT PRDS */}
-
-          <Card className="bg-card border-border">
-
+          <Card>
             <CardHeader>
-
               <div className="flex items-center justify-between">
-
                 <div>
-
-                  <CardTitle>
-                    Recent PRDs
-                  </CardTitle>
-
+                  <CardTitle>Recent PRDs</CardTitle>
                   <CardDescription>
-                    Latest generated
-                    documents
+                    Product requirement documents generated
                   </CardDescription>
-
                 </div>
 
                 <Link href="/prd">
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-primary"
-                  >
-                    View all →
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    View all
+                    <ArrowRight className="w-4 h-4" />
                   </Button>
-
                 </Link>
-
               </div>
-
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent>
+              {recentPRDs.length === 0 ? (
+                <div className="py-10 text-center">
+                  <FileText className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    No PRDs generated yet.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Generate a PRD from analyzed customer feedback.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentPRDs.map((prd, index) => {
+                    const status =
+                      String(prd.status).toLowerCase() === 'ready'
+                        ? 'Ready'
+                        : String(prd.status).toLowerCase() === 'review'
+                          ? 'Review'
+                          : 'Draft';
 
-              {recentPRDsData.length > 0 ? (
-                recentPRDsData.map(
-                  (prd) => (
+                    return (
+                      <div
+                        key={prd._id || `prd-${index}`}
+                        className="flex items-center justify-between gap-4 p-4 rounded-lg border border-border"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">
+                            {prd.title || 'Untitled PRD'}
+                          </p>
 
-                    <Link
-                      key={prd.id}
-                      href="/prd"
-                    >
-
-                      <div className="p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer border border-border">
-
-                        <div className="flex items-start justify-between gap-2">
-
-                          <div className="flex-1">
-
-                            <p className="font-medium text-sm">
-                              {
-                                prd.title
-                              }
-                            </p>
-
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {
-                                prd.date
-                              }
-                            </p>
-
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {
-                                prd.sections
-                              }{' '}
-                              {prd.sections ===
-                              1
-                                ? 'section'
-                                : 'sections'}
-                            </p>
-
-                          </div>
-
-                          <Badge
-                            variant={
-                              prd.status ===
-                              'Ready'
-                                ? 'default'
-                                : prd.status ===
-                                    'Review'
-                                  ? 'outline'
-                                  : 'secondary'
-                            }
-                          >
-                            {
-                              prd.status
-                            }
-                          </Badge>
-
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {prd.updatedAt
+                              ? new Date(
+                                  prd.updatedAt,
+                                ).toLocaleDateString()
+                              : 'Date unavailable'}
+                            {' · '}
+                            {Array.isArray(prd.sections)
+                              ? prd.sections.length
+                              : 0}{' '}
+                            sections
+                          </p>
                         </div>
 
+                        <Badge
+                          variant={
+                            status === 'Ready'
+                              ? 'default'
+                              : status === 'Review'
+                                ? 'secondary'
+                                : 'outline'
+                          }
+                        >
+                          {status}
+                        </Badge>
                       </div>
-
-                    </Link>
-                  ),
-                )
-              ) : (
-                <div className="text-center py-8 space-y-3">
-
-                  <p className="text-sm text-muted-foreground">
-                    No PRD drafts saved
-                    yet
-                  </p>
-
-                  <Link href="/prd">
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                    >
-                      Create your
-                      first PRD
-                    </Button>
-
-                  </Link>
-
+                    );
+                  })}
                 </div>
               )}
-
             </CardContent>
           </Card>
-
         </div>
-
-      </div>
+      </main>
     </div>
   );
 }
